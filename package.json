@@ -6,7 +6,25 @@
     "dev": "tailwindcss -i ./src/css/input.css -o ./public/css/output.css --minify --watch",
     "build": "tailwindcss -i ./src/css/input.css -o ./public/css/output.css --minify"
   },
-  "devDependencies": {
-    "tailwindcss": "^3.4.0"
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  },
+  "description": "",
+  "main": "tailwind.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alyssquarius/machine-learning.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/alyssquarius/machine-learning/issues"
+  },
+  "homepage": "https://github.com/alyssquarius/machine-learning#readme",
+  "allowScripts": {
+    "@parcel/watcher@2.5.1": true
   }
 }
