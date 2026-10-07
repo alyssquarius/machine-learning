@@ -58,10 +58,10 @@
 
   // ---------- KPI ----------
   const TONES = {
-    indigo: { chip: 'bg-indigo-50 text-indigo-600', hex: '#6366f1' },
-    violet: { chip: 'bg-violet-50 text-violet-600', hex: '#8b5cf6' },
-    emerald: { chip: 'bg-emerald-50 text-emerald-600', hex: '#10b981' },
-    amber: { chip: 'bg-amber-50 text-amber-600', hex: '#f59e0b' },
+    indigo: { chip: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400', hex: '#6366f1' },
+    violet: { chip: 'bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400', hex: '#8b5cf6' },
+    emerald: { chip: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400', hex: '#10b981' },
+    amber: { chip: 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400', hex: '#f59e0b' },
   };
   const KPIS = [
     { label: 'Dataset', value: 12, delta: '+2 baru', icon: 'database', tone: 'indigo', spark: [4, 5, 5, 7, 8, 9, 12] },
@@ -88,14 +88,14 @@
   function renderKpis() {
     $('#kpis').innerHTML = KPIS.map((k, i) => {
       const t = TONES[k.tone];
-      return `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      return `<div class="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
         <div class="flex items-center justify-between">
-          <p class="text-sm font-medium text-slate-500">${k.label}</p>
+          <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">${k.label}</p>
           <span class="flex h-10 w-10 items-center justify-center rounded-xl ${t.chip}"><svg data-icon="${k.icon}" class="h-5 w-5"></svg></span>
         </div>
-        <p class="mt-3 text-3xl font-bold tracking-tight text-slate-900"><span data-count="${k.value}" data-decimals="${k.decimals || 0}">0</span>${k.suffix || ''}</p>
+        <p class="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-100"><span data-count="${k.value}" data-decimals="${k.decimals || 0}">0</span>${k.suffix || ''}</p>
         <div class="mt-2 flex items-end justify-between gap-2">
-          <span class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"><svg data-icon="trend" class="h-3.5 w-3.5"></svg>${k.delta}</span>
+          <span class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"><svg data-icon="trend" class="h-3.5 w-3.5"></svg>${k.delta}</span>
           ${sparkline(k.spark, t.hex, i)}
         </div></div>`;
     }).join('');
@@ -106,7 +106,7 @@
   // ---------- Grafik garis ----------
   const DAYS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
   function series(range) {
-    const n = { '7H': 7, '30H': 10, '90H': 12 }[range];
+    const n = { '7H': 7, '30H': 10, '90H': 12 }[range] || 7;
     const acc = [], loss = [], labels = [];
     for (let i = 0; i < n; i++) {
       const k = i / (n - 1);
@@ -123,10 +123,17 @@
     pts.map((p, i) => {
       if (!i) return `M${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
       const q = pts[i - 1], mx = ((q[0] + p[0]) / 2).toFixed(1);
-      return `C${mx} ${q[1].toFixed(1)} ${mx} ${p[1].toFixed(1)} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+      return `C${mx} ${q[1].toFixed(1)} ${mx} ${p[1].toFixed(1)} ${p[0].toFixed(1)} ${p[0].toFixed(1)}`;
     }).join(' ');
 
-  function renderLine(range) {
+  let currentRangeState = '7H';
+
+  function renderLine(range = currentRangeState) {
+    currentRangeState = range;
+    const isDark = document.documentElement.classList.contains('dark');
+    const strokeGrid = isDark ? '#27272a' : '#e2e8f0';
+    const textFill = isDark ? '#71717a' : '#94a3b8';
+
     const s = series(range);
     const x = (i) => PL + (i * (W - PL - PR)) / (s.n - 1);
     const yAcc = (v) => PT + ((100 - v) / 50) * (H - PT - PB);
@@ -139,25 +146,26 @@
     let grid = '';
     for (let i = 0; i < 5; i++) {
       const y = PT + (i * (H - PT - PB)) / 4;
-      grid += `<line x1="${PL}" x2="${W - PR}" y1="${y}" y2="${y}" stroke="#e2e8f0" stroke-dasharray="4 4"/>
-        <text x="${PL - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#94a3b8">${100 - i * 12.5}%</text>
-        <text x="${W - PR + 8}" y="${y + 4}" font-size="11" fill="#94a3b8">${(1 - i * 0.25).toFixed(2)}</text>`;
+      grid += `<line x1="${PL}" x2="${W - PR}" y1="${y}" y2="${y}" stroke="${strokeGrid}" stroke-dasharray="4 4"/>
+        <text x="${PL - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="${textFill}">${100 - i * 12.5}%</text>
+        <text x="${W - PR + 8}" y="${y + 4}" font-size="11" fill="${textFill}">${(1 - i * 0.25).toFixed(2)}</text>`;
     }
-    const xl = s.labels.map((l, i) => `<text x="${x(i)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="#94a3b8">${l}</text>`).join('');
+    const xl = s.labels.map((l, i) => `<text x="${x(i)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="${textFill}">${l}</text>`).join('');
 
     const box = $('#line-chart');
+    if (!box) return;
     box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="h-auto w-full touch-pan-y" role="img" aria-label="Grafik akurasi dan loss">
       <defs><linearGradient id="accFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6366f1" stop-opacity=".22"/><stop offset="1" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
       ${grid}${xl}
       <path id="acc-area" d="${area}" fill="url(#accFill)" style="opacity:0;transition:opacity .8s ease .3s"/>
-      <path class="draw" pathLength="1" d="${accPath}" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round"/>
+      <path class="draw" pathLength="1" d="${accPath}" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
       <path class="draw" pathLength="1" d="${smooth(lossPts)}" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
-      <line id="xh" y1="${PT}" y2="${H - PB}" stroke="#94a3b8" stroke-dasharray="3 3" style="display:none"/>
-      <circle id="dot-acc" r="5" fill="#fff" stroke="#4f46e5" stroke-width="3" style="display:none"/>
-      <circle id="dot-loss" r="5" fill="#fff" stroke="#f43f5e" stroke-width="3" style="display:none"/>
+      <line id="xh" y1="${PT}" y2="${H - PB}" stroke="${textFill}" stroke-dasharray="3 3" style="display:none"/>
+      <circle id="dot-acc" r="5" fill="${isDark ? '#18181b' : '#fff'}" stroke="#6366f1" stroke-width="3" style="display:none"/>
+      <circle id="dot-loss" r="5" fill="${isDark ? '#18181b' : '#fff'}" stroke="#f43f5e" stroke-width="3" style="display:none"/>
       <rect id="hit" x="${PL}" y="${PT}" width="${W - PL - PR}" height="${H - PT - PB}" fill="transparent"/>
     </svg>
-    <div id="tip" class="pointer-events-none absolute z-10 hidden rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-lg" style="transform:translate(-50%,-120%)"></div>`;
+    <div id="tip" class="pointer-events-none absolute z-10 hidden rounded-lg bg-slate-900 dark:bg-zinc-800 dark:border dark:border-zinc-700 px-3 py-2 text-xs text-white shadow-lg" style="transform:translate(-50%,-120%)"></div>`;
 
     const svg = $('svg', box);
     const tip = $('#tip', box);
@@ -190,13 +198,13 @@
     const lines = box.querySelectorAll('.draw');
     const area$ = $('#acc-area', box);
     if (reduce) {
-      area$.style.opacity = 1;
+      if (area$) area$.style.opacity = 1;
       return;
     }
     lines.forEach((p) => { p.style.strokeDasharray = '1'; p.style.strokeDashoffset = '1'; });
     requestAnimationFrame(() => requestAnimationFrame(() => {
       lines.forEach((p) => { p.style.transition = 'stroke-dashoffset 1.1s ease-out'; p.style.strokeDashoffset = '0'; });
-      area$.style.opacity = 1;
+      if (area$) area$.style.opacity = 1;
     }));
   }
 
@@ -206,12 +214,13 @@
       tabs.forEach((b) => {
         const on = b.dataset.range === range;
         b.setAttribute('aria-pressed', on);
-        b.className = 'rounded-lg px-3 py-1.5 transition ' + (on ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800');
+        b.className = 'rounded-md px-4 py-1.5 text-xs font-medium transition ' + 
+          (on ? 'bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-zinc-700' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white');
       });
       renderLine(range);
     };
     tabs.forEach((b) => b.addEventListener('click', () => set(b.dataset.range)));
-    set('7H');
+    set('30H');
   }
 
   // ---------- Donut ----------
@@ -223,46 +232,58 @@
   ];
 
   function renderDonut() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const ringBg = isDark ? '#27272a' : '#f1f5f9';
+
     let acc = 0;
     const circles = DATASETS.map((d) => {
       const offset = 25 - acc;
       acc += d.pct;
       return `<circle class="seg" data-pct="${d.pct}" cx="21" cy="21" r="15.915" fill="none" stroke="${d.hex}" stroke-width="5" stroke-dasharray="0 100" stroke-dashoffset="${offset}" style="transition:stroke-dasharray .9s ease-out"/>`;
     }).join('');
-    $('#donut').innerHTML = `
+    const donutBox = $('#donut');
+    if (!donutBox) return;
+
+    donutBox.innerHTML = `
       <div class="relative mx-auto h-44 w-44">
         <svg viewBox="0 0 42 42" class="h-full w-full" role="img" aria-label="Distribusi dataset">
-          <circle cx="21" cy="21" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="5"/>${circles}
+          <circle cx="21" cy="21" r="15.915" fill="none" stroke="${ringBg}" stroke-width="5"/>${circles}
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
-          <span class="text-3xl font-bold text-slate-900">12</span>
-          <span class="text-xs text-slate-500">dataset</span>
+          <span class="text-3xl font-bold text-gray-900 dark:text-zinc-100">12</span>
+          <span class="text-xs text-gray-500 dark:text-zinc-400">dataset</span>
         </div>
       </div>
       <ul class="mt-5 space-y-2.5 text-sm">${DATASETS.map((d) => `
-        <li class="flex items-center justify-between"><span class="flex items-center gap-2 text-slate-600"><span class="h-2.5 w-2.5 rounded-full" style="background:${d.hex}"></span>${d.label}</span><span class="font-semibold">${d.pct}%</span></li>`).join('')}
+        <li class="flex items-center justify-between"><span class="flex items-center gap-2 text-gray-600 dark:text-zinc-300"><span class="h-2.5 w-2.5 rounded-full" style="background:${d.hex}"></span>${d.label}</span><span class="font-semibold text-gray-900 dark:text-zinc-100">${d.pct}%</span></li>`).join('')}
       </ul>`;
     const segs = document.querySelectorAll('#donut .seg');
     const go = () => segs.forEach((c) => { const p = Number(c.dataset.pct); c.style.strokeDasharray = `${Math.max(p - 1, 0)} ${101 - p}`; });
     if (reduce) go(); else requestAnimationFrame(() => requestAnimationFrame(go));
   }
 
-  // ---------- Bar jam belajar ----------
+  // ---------- Bar jam belajar / Pengunjung ----------
   const HOURS = [['Sen', 4.5], ['Sel', 6], ['Rab', 3], ['Kam', 7.5], ['Jum', 5], ['Sab', 8.5], ['Min', 2]];
 
   function renderBars() {
     const max = Math.max(...HOURS.map((h) => h[1]));
-    $('#hours-total').textContent = fmt(HOURS.reduce((a, h) => a + h[1], 0), 1);
+    const totalEl = $('#hours-total');
+    if (totalEl) totalEl.textContent = fmt(HOURS.reduce((a, h) => a + h[1], 0), 1);
     const total = HOURS.reduce((a, h) => a + h[1], 0);
     const best = HOURS.reduce((a, h) => (h[1] > a[1] ? h : a));
-    $('#hours-stats').innerHTML = `
-      <div><p class="text-xs text-slate-500">Rata-rata harian</p><p class="font-semibold">${fmt(total / HOURS.length, 1)} jam</p></div>
-      <div><p class="text-xs text-slate-500">Hari terbaik</p><p class="font-semibold">${best[0]} &middot; ${fmt(best[1], 1)} jam</p></div>`;
-    $('#bars').innerHTML = `<div class="flex h-full min-h-[11rem] items-end gap-2 sm:gap-3">${HOURS.map(([day, v]) => `
+    const statsEl = $('#hours-stats');
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <div><p class="text-xs text-gray-400">Rata-rata harian</p><p class="font-semibold text-white">${fmt(total / HOURS.length, 1)} jam</p></div>
+        <div><p class="text-xs text-gray-400">Hari terbaik</p><p class="font-semibold text-white">${best[0]} &middot; ${fmt(best[1], 1)} jam</p></div>`;
+    }
+    const barsEl = $('#bars');
+    if (!barsEl) return;
+    barsEl.innerHTML = `<div class="flex h-full min-h-[11rem] items-end gap-2 sm:gap-3">${HOURS.map(([day, v]) => `
       <div class="group flex h-full flex-1 flex-col items-center justify-end">
-        <span class="mb-1 text-xs font-semibold text-slate-700 opacity-0 transition group-hover:opacity-100">${fmt(v, 1)}j</span>
-        <div class="bar w-full rounded-t-lg transition-colors duration-200 ${v === max ? 'bg-gradient-to-t from-indigo-600 to-violet-500' : 'bg-indigo-200 group-hover:bg-indigo-400'}" data-px="${Math.round((v / max) * 150)}" style="height:${reduce ? Math.round((v / max) * 150) : 0}px;transition:height .8s cubic-bezier(.2,.8,.2,1),background-color .2s" title="${day}: ${fmt(v, 1)} jam"></div>
-        <span class="mt-2 text-xs text-slate-500">${day}</span>
+        <span class="mb-1 text-xs font-semibold text-gray-300 opacity-0 transition group-hover:opacity-100">${fmt(v, 1)}j</span>
+        <div class="bar w-full rounded-t-lg transition-colors duration-200 ${v === max ? 'bg-gradient-to-t from-indigo-500 to-violet-400' : 'bg-indigo-300/40 group-hover:bg-indigo-400'}" data-px="${Math.round((v / max) * 150)}" style="height:${reduce ? Math.round((v / max) * 150) : 0}px;transition:height .8s cubic-bezier(.2,.8,.2,1),background-color .2s" title="${day}: ${fmt(v, 1)} jam"></div>
+        <span class="mt-2 text-xs text-gray-400">${day}</span>
       </div>`).join('')}</div>`;
     if (reduce) return;
     requestAnimationFrame(() => requestAnimationFrame(() =>
@@ -271,10 +292,10 @@
 
   // ---------- Tabel eksperimen ----------
   const STATUS = {
-    done: { label: 'Selesai', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' },
-    running: { label: 'Berjalan', cls: 'bg-amber-50 text-amber-700 ring-amber-600/20' },
-    queued: { label: 'Antre', cls: 'bg-slate-100 text-slate-600 ring-slate-500/20' },
-    failed: { label: 'Gagal', cls: 'bg-rose-50 text-rose-700 ring-rose-600/20' },
+    done: { label: 'Selesai', cls: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 ring-emerald-600/20' },
+    running: { label: 'Berjalan', cls: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 ring-amber-600/20' },
+    queued: { label: 'Antre', cls: 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 ring-slate-500/20' },
+    failed: { label: 'Gagal', cls: 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 ring-rose-600/20' },
   };
   const EXPERIMENTS = [
     { model: 'Random Forest', dataset: 'Iris', acc: 94.2, status: 'done', time: '2 jam lalu' },
@@ -293,51 +314,65 @@
     const rows = EXPERIMENTS.filter((e) =>
       (state.status === 'all' || e.status === state.status) &&
       (!q || e.model.toLowerCase().includes(q) || e.dataset.toLowerCase().includes(q)));
-    $('#table-body').innerHTML = rows.map((e) => {
+    
+    const tableBody = $('#table-body');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = rows.map((e) => {
       const st = STATUS[e.status];
-      const acc = e.acc == null ? '<span class="text-slate-400">—</span>'
-        : `<div class="flex items-center gap-2"><span class="w-12 font-medium">${fmt(e.acc, 1)}%</span><span class="hidden h-1.5 w-16 overflow-hidden rounded-full bg-slate-100 sm:block"><span class="block h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:${e.acc}%"></span></span></div>`;
-      return `<tr class="transition hover:bg-slate-50">
-        <td class="py-3 pr-4"><p class="font-medium text-slate-900">${e.model}</p><p class="text-xs text-slate-500 md:hidden">${e.dataset}</p></td>
-        <td class="hidden py-3 pr-4 text-slate-600 md:table-cell">${e.dataset}</td>
-        <td class="py-3 pr-4">${acc}</td>
-        <td class="py-3 pr-4"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${st.cls}">${st.label}</span></td>
-        <td class="hidden py-3 text-slate-500 sm:table-cell">${e.time}</td></tr>`;
+      const acc = e.acc == null ? '<span class="text-gray-400 dark:text-zinc-600">—</span>'
+        : `<div class="flex items-center gap-2"><span class="w-12 font-medium text-gray-900 dark:text-zinc-100">${fmt(e.acc, 1)}%</span><span class="hidden h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-zinc-800 sm:block"><span class="block h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:${e.acc}%"></span></span></div>`;
+      return `<tr class="transition hover:bg-gray-50 dark:hover:bg-zinc-800/60 border-b border-gray-100 dark:border-zinc-800">
+        <td class="py-3 px-6"><p class="font-medium text-gray-900 dark:text-zinc-100">${e.model}</p><p class="text-xs text-gray-500 dark:text-zinc-400 md:hidden">${e.dataset}</p></td>
+        <td class="hidden py-3 px-6 text-gray-600 dark:text-zinc-300 md:table-cell">${e.dataset}</td>
+        <td class="py-3 px-6">${acc}</td>
+        <td class="py-3 px-6"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${st.cls}">${st.label}</span></td>
+        <td class="hidden py-3 px-6 text-gray-500 dark:text-zinc-400 sm:table-cell">${e.time}</td></tr>`;
     }).join('');
-    $('#table-empty').classList.toggle('hidden', rows.length > 0);
-    $('#table-count').textContent = `Menampilkan ${rows.length} dari ${EXPERIMENTS.length} eksperimen`;
+    
+    const emptyEl = $('#table-empty');
+    if (emptyEl) emptyEl.classList.toggle('hidden', rows.length > 0);
+    const countEl = $('#table-count');
+    if (countEl) countEl.textContent = `Menampilkan ${rows.length} dari ${EXPERIMENTS.length} data`;
   }
 
   function initTable() {
     const topSearch = $('#search'), tableSearch = $('#table-search'), filter = $('#status-filter');
     const onQuery = (src) => {
       state.q = src.value;
-      topSearch.value = tableSearch.value = src.value;
+      if (topSearch && topSearch !== src) topSearch.value = src.value;
+      if (tableSearch && tableSearch !== src) tableSearch.value = src.value;
       renderTable();
     };
-    topSearch.addEventListener('input', () => onQuery(topSearch));
-    tableSearch.addEventListener('input', () => onQuery(tableSearch));
-    filter.addEventListener('change', () => { state.status = filter.value; renderTable(); });
+    if (topSearch) topSearch.addEventListener('input', () => onQuery(topSearch));
+    if (tableSearch) tableSearch.addEventListener('input', () => onQuery(tableSearch));
+    if (filter) filter.addEventListener('change', () => { state.status = filter.value; renderTable(); });
     renderTable();
   }
 
-  // ---------- Kursus ----------
+  // ---------- Kursus / Mobil Populer ----------
   const COURSES = [
-    { title: 'Dasar Python', note: '12 dari 12 modul', pct: 100, bar: 'from-emerald-500 to-teal-500', badge: 'Selesai' },
-    { title: 'Supervised Learning', note: '7 dari 10 modul', pct: 70, bar: 'from-indigo-500 to-blue-500', badge: 'Berjalan' },
-    { title: 'Deep Learning', note: '3 dari 12 modul', pct: 25, bar: 'from-violet-500 to-fuchsia-500', badge: 'Berjalan' },
+    { title: 'Toyota Fortuner 2.8 GR Sport', note: '2024 • 12.000 km • Jakarta', pct: 98, bar: 'from-emerald-500 to-teal-500', badge: 'Populer' },
+    { title: 'Honda CR-V 2.0 RS e:HEV', note: '2023 • 8.500 km • Surabaya', pct: 85, bar: 'from-indigo-500 to-blue-500', badge: 'Hot Deal' },
+    { title: 'Hyundai Ioniq 5 Signature', note: '2023 • 15.000 km • Bandung', pct: 60, bar: 'from-violet-500 to-fuchsia-500', badge: 'Diskon' },
   ];
 
   function renderCourses() {
-    $('#courses').innerHTML = COURSES.map((c) => `
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    const coursesEl = $('#courses');
+    if (!coursesEl) return;
+    coursesEl.innerHTML = COURSES.map((c) => `
+      <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm transition hover:border-gray-300 dark:hover:border-zinc-700">
         <div class="flex items-start justify-between gap-2">
-          <p class="font-semibold leading-snug">${c.title}</p>
-          <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">${c.badge}</span>
+          <p class="font-semibold text-gray-900 dark:text-zinc-100 leading-snug text-sm">${c.title}</p>
+          <span class="shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:text-zinc-300">${c.badge}</span>
         </div>
-        <p class="mt-4 text-3xl font-bold">${c.pct}<span class="text-lg text-slate-400">%</span></p>
-        <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><div class="cbar h-full rounded-full bg-gradient-to-r ${c.bar}" data-w="${c.pct}" style="width:${reduce ? c.pct : 0}%;transition:width 1s ease-out"></div></div>
-        <p class="mt-2 text-xs text-slate-500">${c.note}</p>
+        <p class="mt-2 text-xs text-gray-500 dark:text-zinc-400">${c.note}</p>
+        <div class="mt-3 flex items-center justify-between">
+          <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-zinc-800 mr-3">
+            <div class="cbar h-full rounded-full bg-gradient-to-r ${c.bar}" data-w="${c.pct}" style="width:${reduce ? c.pct : 0}%;transition:width 1s ease-out"></div>
+          </div>
+          <span class="text-xs font-bold text-gray-700 dark:text-zinc-300">${c.pct}% minat</span>
+        </div>
       </div>`).join('');
     if (reduce) return;
     requestAnimationFrame(() => requestAnimationFrame(() =>
@@ -346,32 +381,39 @@
 
   // ---------- Aktivitas & notifikasi ----------
   const ACTIVITY = [
-    { tone: 'bg-emerald-500', text: 'Eksperimen <b>Random Forest</b> pada Iris selesai', time: '2 jam lalu' },
-    { tone: 'bg-indigo-500', text: 'Anda menyelesaikan modul <b>Cross Validation</b>', time: '5 jam lalu' },
-    { tone: 'bg-violet-500', text: 'Dataset <b>Mall Customers</b> ditambahkan', time: 'Kemarin' },
-    { tone: 'bg-amber-500', text: '<b>Neural Network</b> pada MNIST mulai dilatih', time: 'Kemarin' },
-    { tone: 'bg-rose-500', text: 'Eksperimen <b>SVM</b> pada Titanic gagal', time: '2 hari lalu' },
+    { tone: 'bg-emerald-500', text: 'Mobil <b>Honda Civic RS</b> berhasil terjual', time: '2 jam lalu' },
+    { tone: 'bg-indigo-500', text: 'Ada penawaran baru untuk <b>Toyota Fortuner</b>', time: '5 jam lalu' },
+    { tone: 'bg-violet-500', text: 'Mobil baru <b>Hyundai Ioniq 5</b> ditambahkan', time: 'Kemarin' },
+    { tone: 'bg-amber-500', text: 'Verifikasi dokumen <b>Mitsubishi Pajero</b> sedang diproses', time: 'Kemarin' },
+    { tone: 'bg-rose-500', text: 'Penawaran pada <b>BMW 320i</b> dibatalkan oleh pembeli', time: '2 hari lalu' },
   ];
   const NOTIFS = [
-    { title: 'Eksperimen selesai', body: 'Random Forest mencapai akurasi 94,2%', time: '2 jam lalu' },
-    { title: 'Modul baru tersedia', body: 'Deep Learning: CNN untuk gambar', time: 'Kemarin' },
-    { title: 'Pengingat belajar', body: 'Target mingguan tinggal 2,5 jam lagi', time: '2 hari lalu' },
+    { title: 'Mobil Terjual', body: 'Honda Civic RS telah berhasil diverifikasi dan dibayar', time: '2 jam lalu' },
+    { title: 'Penawaran Baru', body: 'Rp 480.000.000 masuk untuk Toyota Fortuner', time: '5 jam lalu' },
+    { title: 'Pengingat Target', body: 'Target penjualan bulanan tinggal 4 unit lagi', time: 'Kemarin' },
   ];
 
   function renderLists() {
-    $('#activity').innerHTML = ACTIVITY.map((a, i) => `
-      <li class="relative flex gap-3">
-        ${i < ACTIVITY.length - 1 ? '<span class="absolute left-[5px] top-4 h-full w-px bg-slate-200"></span>' : ''}
-        <span class="relative mt-1.5 h-3 w-3 shrink-0 rounded-full ring-4 ring-white ${a.tone}"></span>
-        <div><p class="text-sm text-slate-700">${a.text}</p><p class="text-xs text-slate-400">${a.time}</p></div>
-      </li>`).join('');
-    $('#notif-list').innerHTML = NOTIFS.map((n) => `
-      <li class="px-4 py-3 transition hover:bg-slate-50"><p class="text-sm font-medium">${n.title}</p><p class="text-sm text-slate-500">${n.body}</p><p class="mt-0.5 text-xs text-slate-400">${n.time}</p></li>`).join('');
+    const actEl = $('#activity');
+    if (actEl) {
+      actEl.innerHTML = ACTIVITY.map((a, i) => `
+        <li class="relative flex gap-3">
+          ${i < ACTIVITY.length - 1 ? '<span class="absolute left-[5px] top-4 h-full w-px bg-gray-200 dark:bg-zinc-800"></span>' : ''}
+          <span class="relative mt-1.5 h-3 w-3 shrink-0 rounded-full ring-4 ring-white dark:ring-zinc-900 ${a.tone}"></span>
+          <div><p class="text-sm text-gray-700 dark:text-zinc-300">${a.text}</p><p class="text-xs text-gray-400 dark:text-zinc-500">${a.time}</p></div>
+        </li>`).join('');
+    }
+    const notifEl = $('#notif-list');
+    if (notifEl) {
+      notifEl.innerHTML = NOTIFS.map((n) => `
+        <li class="px-4 py-3 rounded-lg transition hover:bg-gray-50 dark:hover:bg-zinc-800/60"><p class="text-sm font-medium text-gray-900 dark:text-zinc-100">${n.title}</p><p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">${n.body}</p><p class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">${n.time}</p></li>`).join('');
+    }
   }
 
   function renderGoal() {
     const bar = $('#goal-bar');
-    const w = `${Math.round((5.5 / 8) * 100)}%`;
+    if (!bar) return;
+    const w = '80%';
     if (reduce) bar.style.width = w;
     else requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.width = w)));
   }
@@ -390,6 +432,14 @@
       renderGoal();
     },
   };
+
+  // Re-render dynamically when theme changes
+  window.addEventListener('themechange', () => {
+    if (window.Dashboard && typeof window.Dashboard.render === 'function') {
+      renderLine();
+      renderDonut();
+    }
+  });
 
   // Ikon statis (sidebar, topbar) bisa dilukis segera.
   paintIcons();

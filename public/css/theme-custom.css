@@ -1,0 +1,303 @@
+/* ==========================================================================
+   AutoBuyCars - Dark & Light Theme Global Styles & Transitions
+   ========================================================================== */
+
+:root {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-border: #e5e7eb;
+  --color-border-subtle: #f3f4f6;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+  --color-card-bg: #ffffff;
+  --color-input-bg: #ffffff;
+  --color-input-border: #d1d5db;
+  --color-button-primary-bg: #000000;
+  --color-button-primary-text: #ffffff;
+}
+
+html.dark {
+  --color-bg-primary: #09090b;
+  --color-bg-secondary: #121215;
+  --color-bg-tertiary: #18181b;
+  --color-border: #27272a;
+  --color-border-subtle: #202023;
+  --color-text-primary: #f4f4f5;
+  --color-text-secondary: #d4d4d8;
+  --color-text-muted: #a1a1aa;
+  --color-card-bg: #18181b;
+  --color-input-bg: #18181b;
+  --color-input-border: #3f3f46;
+  --color-button-primary-bg: #f4f4f5;
+  --color-button-primary-text: #09090b;
+}
+
+/* Transisi halus saat ganti tema */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease !important;
+}
+
+/* Base Body Styles in Dark Mode */
+html.dark body {
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Auth Pages (Login, Register, Forgot, Reset) in Dark Mode */
+html.dark .auth-card,
+html.dark .bg-white {
+  background-color: var(--color-card-bg);
+}
+
+html.dark .text-black {
+  color: #ffffff !important;
+}
+
+html.dark .text-gray-900 {
+  color: #f4f4f5 !important;
+}
+
+html.dark .text-gray-700 {
+  color: #d4d4d8 !important;
+}
+
+html.dark .text-gray-600 {
+  color: #a1a1aa !important;
+}
+
+html.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+  border-color: #27272a !important;
+}
+
+html.dark .bg-gray-50 {
+  background-color: #121215 !important;
+}
+
+html.dark .bg-gray-100 {
+  background-color: #27272a !important;
+}
+
+/* Input Fields in Dark Mode */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="search"],
+html.dark select {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #3f3f46 !important;
+}
+
+html.dark input[type="text"]::placeholder,
+html.dark input[type="email"]::placeholder,
+html.dark input[type="password"]::placeholder,
+html.dark input[type="search"]::placeholder {
+  color: #71717a !important;
+}
+
+html.dark input:focus,
+html.dark select:focus {
+  border-color: #ffffff !important;
+  --tw-ring-color: #ffffff !important;
+}
+
+/* Auth Action Buttons in Dark Mode */
+html.dark button[type="submit"]:not(.keep-light),
+html.dark #submit-btn {
+  background-color: #ffffff !important;
+  color: #09090b !important;
+}
+html.dark button[type="submit"]:not(.keep-light):hover,
+html.dark #submit-btn:hover {
+  background-color: #e4e4e7 !important;
+}
+
+/* Social Buttons in Dark Mode */
+html.dark #google-login {
+  background-color: #18181b !important;
+  border-color: #3f3f46 !important;
+  color: #f4f4f5 !important;
+}
+html.dark #google-login:hover {
+  background-color: #27272a !important;
+}
+
+/* Divider in Auth Pages */
+html.dark .auth-divider-text {
+  background-color: var(--color-bg-primary) !important;
+  color: #71717a !important;
+}
+
+/* Dashboard Specific Dark Mode Rules */
+html.dark aside#sidebar {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+}
+
+html.dark header {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+}
+
+html.dark .nav-item {
+  color: #a1a1aa !important;
+}
+html.dark .nav-item:hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+html.dark .nav-active {
+  background-color: #27272a !important;
+  border-left-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+html.dark #notif-menu,
+html.dark #user-menu {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+  color: #f4f4f5 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark #user-menu .bg-gray-50 {
+  background-color: #202024 !important;
+  border-color: #27272a !important;
+}
+
+html.dark #user-menu a:hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+html.dark #notif-menu .border-b,
+html.dark #user-menu .border-b,
+html.dark #user-menu .border-t {
+  border-color: #27272a !important;
+}
+
+/* KPI Cards in Dark Mode */
+html.dark #kpis > div {
+  background: #18181b !important;
+  border: 1px solid #27272a !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4) !important;
+}
+html.dark #kpis > div:nth-child(1)::before { background: #ffffff !important; }
+html.dark #kpis h3, html.dark #kpis p.text-slate-500 { color: #a1a1aa !important; }
+html.dark #kpis h2, html.dark #kpis p.text-slate-900 { color: #f4f4f5 !important; }
+
+/* Charts & Cards in Dark Mode */
+html.dark .lg\:col-span-2.rounded-2xl,
+html.dark .space-y-6 > .rounded-2xl,
+html.dark .rounded-2xl.bg-white {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+}
+
+html.dark #range-tabs {
+  background-color: #202024 !important;
+  border-color: #27272a !important;
+}
+html.dark #range-tabs button[aria-pressed="true"],
+html.dark #range-tabs button.bg-white {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+  border-color: #3f3f46 !important;
+}
+html.dark #range-tabs button {
+  color: #a1a1aa !important;
+}
+html.dark #range-tabs button:hover {
+  color: #ffffff !important;
+}
+
+/* Table in Dark Mode */
+html.dark thead {
+  background-color: #141416 !important;
+  border-color: #27272a !important;
+}
+html.dark thead th {
+  color: #a1a1aa !important;
+}
+html.dark #table-body tr {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+}
+html.dark #table-body tr:hover {
+  background-color: #202024 !important;
+}
+html.dark #table-body td {
+  color: #d4d4d8 !important;
+}
+html.dark #table-body td p.text-slate-900 {
+  color: #f4f4f5 !important;
+}
+html.dark #table-body td p.text-slate-500 {
+  color: #a1a1aa !important;
+}
+
+/* Popular Courses / Cars in Dark Mode */
+html.dark #courses > div {
+  background: #202024 !important;
+  border: 1px solid #27272a !important;
+}
+html.dark #courses > div:hover {
+  background: #27272a !important;
+  border-color: #3f3f46 !important;
+}
+html.dark #courses h4, html.dark #courses p.text-slate-900 { color: #f4f4f5 !important; }
+html.dark #courses p.text-slate-500 { color: #a1a1aa !important; }
+
+/* Activity Timeline in Dark Mode */
+html.dark #activity li h4 { color: #f4f4f5 !important; }
+html.dark #activity li p { color: #a1a1aa !important; }
+html.dark #activity li span { color: #71717a !important; }
+html.dark #activity li > div:first-child { 
+  background: #18181b !important; 
+  border: 2px solid #ffffff !important; 
+}
+html.dark .timeline-line {
+  background: #27272a !important;
+}
+
+/* Scrollbar in Dark Mode */
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* Theme Toggle Button Style */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  color: #4b5563;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.theme-toggle-btn:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+}
+html.dark .theme-toggle-btn {
+  color: #a1a1aa;
+}
+html.dark .theme-toggle-btn:hover {
+  color: #f4f4f5;
+  background-color: #27272a;
+}

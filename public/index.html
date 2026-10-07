@@ -4,48 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AutoBuyCars - Masuk</title>
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAA8CAYAAADfYhweAAAEN0lEQVR4AexaPS80URh9shGEoBA6v0BPI1H4SgRR+K6VGhVanUQhUVCQaIQQER8J0QglSrWOQiEK8Znd933PMsnu88y9s3fmzs7Kezd5zL3nzD3P2bPX7s7upv64W14CKXK3vARcIHlxELlAXCAsATZ1O8QFwhJgU7dDXCAsATa1ukNubm5oenqaRkdHaWRkpKiFnuh9fX3N7qLZ1Fogi4uL1NLSQktLS7Szs0O7u7tFLfRE79bWVlpYWDBLIedsK4HgUZmZmaF/74FzpJMZwsPc3BxdXV2FMmAlkJWVFcpkMqEMxLEIoayuroaSjhzIx8cH7e/vh2oe5yJ4gjfTHpEDOTk5oefnZ9G3o6ODhoeHi1Lt7e2iPzzBmyACgFQAH0hvb2+Lc2pra+n4+Dj75Ionu7jr4OCAKioqhA8/b+IkBkTaIS8vL3R0dMQkiQYHB6myslLgcQF1dXXU29sr5OENHgWhASIFcnh4SK+vr0J+fHxcYHEDY2NjogW8waMgNECkQLa2toR0Q0MDdXZ2CjxuoK+vj2pqakQbP4/ipBwgdCBPT090dnaWI/U9HBoaorKysu9JEf9WVVXRwMCA6AiP8CoIBRA6kL29Pfr8/BSyfltXnBQT4PevCo/wWmjL0IH4bcWmpiZqa2srtLf187q7u6m+vl7omrzahArk4eGBLi8vRWO8ury/v2efaPGEVuz6+vqi/v5+4evi4oLgWRA+QKhA8L4inU4LueXlZaqurk60NjY2hC94hWdB+AChAjHZgj49E4EK9WwcyN3dXegryUSS+GmKq194/5kqD8aBIGlcTSoVS5SAZ3gPsmcciN+rS1CTUuEL8W4cyO3tbancP2MfhXg3DsTYxS9bkKKYDOMKtKenh1AY224DTWijMLalH8sOmZqaovv7ezo9Pc0WxsBsmYYWNOPQtx4IPiXz3qB5AeDNGjBwHhb2CA1oQdPTwBgYOA8Le7QeyOzsrNKLjlMuYoROQ8cxGeXUeiDNzc3KZjpOuYgROg0dx2SUU+uBPD4+KpvpOOUiRug0dByTUU6tB7K5ualspuOUixih09BxTEY5tR7I/Pw8nZ+fi4bAwAnCEIAGtPgyYOA4bjq3Hsjb2xt1dXXRxMQEra+vZwtjYOBMDfLzoQEtaMahbz0Q3AF8/oDrhsnJSUJhDAycjYIWNKGNwhiYDe1YArFhLCkNFwhL3gXiAmEJsKnbITIQhvznU+s7BFecSVbUx9N6IPj+I8kquUCiGkp6vfEOKS8vV3rWccpFlgmdBx3n2TAOBJ9heov5Ucfxc+Oa6zzoOM+PcSBra2vZL5Rz08YYXzKD84STOsIDvMCT5wFjYOA8THU0DqSxsZHwMyX85BHfhqEwBgZO1ahYODzACzzBGwpjYOCCfBgHEiT423kXCHsEXSAuEJYAm7od4gJhCbCp2yEskL8AAAD//35Af3oAAAAGSURBVAMALsTlllpMvCcAAAAASUVORK5CYII=" />
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAA8CAYAAADfYhweAAAEN0lEQVR4AexaPS80URh9shGEoBA6v0BPI1H4SgRR+K6VGhVanUQhUVCQaIQQER8J0QglSrWOQiEK8Znd933PMsnu88y9s3fmzs7Kezd5zL3nzD3P2bPX7s7upv64W14CKXK3vARcIHlxELlAXCAsATZ1O8QFwhJgU7dDXCAsATa1ukNubm5oenqaRkdHaWRkpKiFnuh9fX3N7qLZ1Fogi4uL1NLSQktLS7Szs0O7u7tFLfRE79bWVlpYWDBLIedsK4HgUZmZmaF/74FzpJMZwsPc3BxdXV2FMmAlkJWVFcpkMqEMxLEIoayuroaSjhzIx8cH7e/vh2oe5yJ4gjfTHpEDOTk5oefnZ9G3o6ODhoeHi1Lt7e2iPzzBmyACgFQAH0hvb2+Lc2pra+n4+Dj75Ionu7jr4OCAKioqhA8/b+IkBkTaIS8vL3R0dMQkiQYHB6myslLgcQF1dXXU29sr5OENHgWhASIFcnh4SK+vr0J+fHxcYHEDY2NjogW8waMgNECkQLa2toR0Q0MDdXZ2CjxuoK+vj2pqakQbP4/ipBwgdCBPT090dnaWI/U9HBoaorKysu9JEf9WVVXRwMCA6AiP8CoIBRA6kL29Pfr8/BSyfltXnBQT4PevCo/wWmjL0IH4bcWmpiZqa2srtLf187q7u6m+vl7omrzahArk4eGBLi8vRWO8ury/v2efaPGEVuz6+vqi/v5+4evi4oLgWRA+QKhA8L4inU4LueXlZaqurk60NjY2hC94hWdB+AChAjHZgj49E4EK9WwcyN3dXegryUSS+GmKq194/5kqD8aBIGlcTSoVS5SAZ3gPsmcciN+rS1CTUuEL8W4cyO3tbancP2MfhXg3DsTYxS9bkKKYDOMKtKenh1AY224DTWijMLalH8sOmZqaovv7ezo9Pc0WxsBsmYYWNOPQtx4IPiXz3qB5AeDNGjBwHhb2CA1oQdPTwBgYOA8Le7QeyOzsrNKLjlMuYoROQ8cxGeXUeiDNzc3KZjpOuYgROg0dx2SUU+uBPD4+KpvpOOUiRug0dByTUU6tB7K5ualspuOUixih09BxTEY5tR7I/Pw8nZ+fi4bAwAnCEIAGtPgyYOA4bjq3Hsjb2xt1dXXRxMQEra+vZwtjYOBMDfLzoQEtaMahbz0Q3AF8/oDrhsnJSUJhDAycjYIWNKGNwhiYDe1YArFhLCkNFwhL3gXiAmEJsKnbITIQhvznU+s7BFecSVbUx9N6IPj+I8kquUCiGkp6vfEOKS8vV3rWccFlgmdBx3n2TAOBJ9heov5Ucfxc+Oa6zzoOM+PcSBra2vZL5Rz08YYXzKD84STOsIDvMCT5wFjYOA8THU0DqSxsZHwMyX85BHfhqEwBgZO1ahYODzACzzBGwpjYOCCfBgHEiT423kXCHsEXSAuEJYAm7od4gJhCbCp2yEskL8AAAD//35Af3oAAAAGSURBVAMALsTlllpMvCcAAAAASUVORK5CYII=" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000000'%3E%3Cpath d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.28l1.08 3.11H5.77L6.85 7zM7.5 16c-.83 0-1.5-.67-1.5-1.5S6.67 13 7.5 13s1.5.67 1.5 1.5S8.33 16 7.5 16zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E" />
     <link rel="shortcut icon" href="favicon.ico?v=20261005" />
     <link rel="apple-touch-icon" href="favicon.png?v=20261005" />
     <script>
         (function() {
-            var iconUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAA8CAYAAADfYhweAAAEN0lEQVR4AexaPS80URh9shGEoBA6v0BPI1H4SgRR+K6VGhVanUQhUVCQaIQQER8J0QglSrWOQiEK8Znd933PMsnu88y9s3fmzs7Kezd5zL3nzD3P2bPX7s7upv64W14CKXK3vARcIHlxELlAXCAsATZ1O8QFwhJgU7dDXCAsATa1ukNubm5oenqaRkdHaWRkpKiFnuh9fX3N7qLZ1Fogi4uL1NLSQktLS7Szs0O7u7tFLfRE79bWVlpYWDBLIedsK4HgUZmZmaF/74FzpJMZwsPc3BxdXV2FMmAlkJWVFcpkMqEMxLEIoayuroaSjhzIx8cH7e/vh2oe5yJ4gjfTHpEDOTk5oefnZ9G3o6ODhoeHi1Lt7e2iPzzBmyACgFQAH0hvb2+Lc2pra+n4+Dj75Ionu7jr4OCAKioqhA8/b+IkBkTaIS8vL3R0dMQkiQYHB6myslLgcQF1dXXU29sr5OENHgWhASIFcnh4SK+vr0J+fHxcYHEDY2NjogW8waMgNECkQLa2toR0Q0MDdXZ2CjxuoK+vj2pqakQbP4/ipBwgdCBPT090dnaWI/U9HBoaorKysu9JEf9WVVXRwMCA6AiP8CoIBRA6kL29Pfr8/BSyfltXnBQT4PevCo/wWmjL0IH4bcWmpiZqa2srtLf187q7u6m+vl7omrzahArk4eGBLi8vRWO8ury/v2efaPGEVuz6+vqi/v5+4evi4oLgWRA+QKhA8L4inU4LueXlZaqurk60NjY2hC94hWdB+AChAjHZgj49E4EK9WwcyN3dXegryUSS+GmKq194/5kqD8aBIGlcTSoVS5SAZ3gPsmcciN+rS1CTUuEL8W4cyO3tbancP2MfhXg3DsTYxS9bkKKYDOMKtKenh1AY224DTWijMLalH8sOmZqaovv7ezo9Pc0WxsBsmYYWNOPQtx4IPiXz3qB5AeDNGjBwHhb2CA1oQdPTwBgYOA8Le7QeyOzsrNKLjlMuYoROQ8cxGeXUeiDNzc3KZjpOuYgROg0dx2SUU+uBPD4+KpvpOOUiRug0dByTUU6tB7K5ualspuOUixih09BxTEY5tR7I/Pw8nZ+fi4bAwAnCEIAGtPgyYOA4bjq3Hsjb2xt1dXXRxMQEra+vZwtjYOBMDfLzoQEtaMahbz0Q3AF8/oDrhsnJSUJhDAycjYIWNKGNwhiYDe1YArFhLCkNFwhL3gXiAmEJsKnbITIQhvznU+s7BFecSVbUx9N6IPj+I8kquUCiGkp6vfEOKS8vV3rWccpFlgmdBx3n2TAOBJ9heov5Ucfxc+Oa6zzoOM+PcSBra2vZL5Rz08YYXzKD84STOsIDvMCT5wFjYOA8THU0DqSxsZHwMyX85BHfhqEwBgZO1ahYODzACzzBGwpjYOCCfBgHEiT423kXCHsEXSAuEJYAm7od4gJhCbCp2yEskL8AAAD//35Af3oAAAAGSURBVAMALsTlllpMvCcAAAAASUVORK5CYII=";
-            var l = document.querySelector("link[rel*='icon']") || document.createElement('link');
-            l.type = 'image/png';
-            l.rel = 'shortcut icon';
-            l.href = iconUrl;
-            document.head.appendChild(l);
+            var savedTheme = localStorage.getItem('theme');
+            var isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
         })();
     </script>
     <link rel="stylesheet" href="css/output.css" />
+    <link rel="stylesheet" href="css/theme-custom.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #ffffff;
             margin: 0;
             padding: 0;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col md:flex-row bg-white overflow-hidden">
+<body class="min-h-screen flex flex-col md:flex-row bg-white dark:bg-zinc-950 overflow-hidden">
     <!-- Left Panel: Minimal Form -->
-    <div class="w-full md:w-1/2 flex flex-col min-h-screen p-8 lg:p-12 xl:p-20 relative bg-white">
-        <!-- Logo -->
-        <div class="flex items-center gap-2 mb-auto">
-            <svg class="w-8 h-8 text-black" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.28l1.08 3.11H5.77L6.85 7zM7.5 16c-.83 0-1.5-.67-1.5-1.5S6.67 13 7.5 13s1.5.67 1.5 1.5S8.33 16 7.5 16zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-            </svg>
-            <span class="text-xl font-bold tracking-tight text-black">AutoBuyCars</span>
+    <div class="w-full md:w-1/2 flex flex-col min-h-screen p-8 lg:p-12 xl:p-20 relative bg-white dark:bg-zinc-950">
+        <!-- Header: Logo & Theme Toggle -->
+        <div class="flex items-center justify-between mb-auto">
+            <div class="flex items-center gap-2">
+                <svg class="w-8 h-8 text-black dark:text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.28l1.08 3.11H5.77L6.85 7zM7.5 16c-.83 0-1.5-.67-1.5-1.5S6.67 13 7.5 13s1.5.67 1.5 1.5S8.33 16 7.5 16zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                </svg>
+                <span class="text-xl font-bold tracking-tight text-black dark:text-white">AutoBuyCars</span>
+            </div>
+
+            <!-- Theme Toggle Button -->
+            <button type="button" data-theme-toggle class="theme-toggle-btn border border-gray-200 dark:border-zinc-800 rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 transition" aria-label="Ganti mode tema" title="Ganti mode tema">
+                <!-- Sun icon (shown in dark mode) -->
+                <svg data-theme-icon="sun" class="w-5 h-5 hidden text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <!-- Moon icon (shown in light mode) -->
+                <svg data-theme-icon="moon" class="w-5 h-5 text-gray-600 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
         </div>
 
         <!-- Main Form Content -->
         <div class="w-full max-w-sm mx-auto my-auto py-12">
-            <h1 class="text-3xl font-bold text-black mb-2">Welcome to AutoBuyCars</h1>
-            <p class="text-gray-500 mb-8">Masuk untuk melanjutkan ke AutoBuyCars</p>
+            <h1 class="text-3xl font-bold text-black dark:text-white mb-2">Welcome to AutoBuyCars</h1>
+            <p class="text-gray-500 dark:text-zinc-400 mb-8">Masuk untuk melanjutkan ke AutoBuyCars</p>
 
             <!-- Form Message -->
             <p id="form-message" class="hidden p-4 mb-6 rounded-lg text-sm font-medium border" role="alert"></p>
@@ -53,24 +68,24 @@
             <form id="login-form" novalidate class="space-y-5">
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Email</label>
                     <input id="email" name="email" type="email" autocomplete="email" required
-                        class="w-full border border-gray-300 rounded-lg py-3 px-4 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                        class="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white rounded-lg py-3 px-4 focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
                         placeholder="nama@email.com">
                 </div>
 
                 <!-- Password -->
                 <div>
                     <div class="flex justify-between items-center mb-1">
-                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <a href="forgot-password.html" class="text-sm font-medium text-black hover:underline">Lupa sandi?</a>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-zinc-300">Password</label>
+                        <a href="forgot-password.html" class="text-sm font-medium text-black dark:text-zinc-200 hover:underline">Lupa sandi?</a>
                     </div>
                     <div class="relative">
                         <input id="password" name="password" type="password" autocomplete="current-password" required
-                            class="w-full border border-gray-300 rounded-lg py-3 px-4 pr-12 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                            class="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white rounded-lg py-3 px-4 pr-12 focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
                             placeholder="••••••••">
                         <button type="button" data-toggle-password="password"
-                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 focus:outline-none">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -81,7 +96,7 @@
 
                 <!-- Submit Button -->
                 <button id="submit-btn" type="submit"
-                    class="w-full bg-black text-white rounded-lg py-3 font-medium hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black mt-2">
+                    class="w-full bg-black dark:bg-white text-white dark:text-zinc-950 rounded-lg py-3 font-medium hover:bg-gray-800 dark:hover:bg-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black dark:focus:ring-white mt-2">
                     Masuk
                 </button>
             </form>
@@ -89,16 +104,16 @@
             <!-- Divider -->
             <div class="relative my-6">
                 <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-200"></div>
+                    <div class="w-full border-t border-gray-200 dark:border-zinc-800"></div>
                 </div>
                 <div class="relative flex justify-center text-sm">
-                    <span class="px-3 bg-white text-gray-500">atau</span>
+                    <span class="px-3 bg-white dark:bg-zinc-950 text-gray-500 dark:text-zinc-400">atau</span>
                 </div>
             </div>
 
             <!-- Google Login -->
             <button id="google-login" type="button"
-                class="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 bg-white hover:bg-gray-50 transition-colors font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200">
+                class="w-full flex items-center justify-center gap-3 border border-gray-300 dark:border-zinc-700 rounded-lg py-3 bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors font-medium text-gray-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 dark:focus:ring-zinc-700">
                 <svg class="h-5 w-5" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -108,9 +123,9 @@
                 Masuk dengan Google
             </button>
             
-            <p class="mt-8 text-center text-sm text-gray-600">
+            <p class="mt-8 text-center text-sm text-gray-600 dark:text-zinc-400">
                 Belum punya akun? 
-                <a href="register.html" class="font-medium text-black hover:underline">Daftar sekarang</a>
+                <a href="register.html" class="font-medium text-black dark:text-white hover:underline">Daftar sekarang</a>
             </p>
         </div>
         
@@ -132,13 +147,7 @@
                     "Temukan mobil impianmu dengan mudah dan cepat. AutoBuyCars memberikan pengalaman terbaik dalam jual beli mobil."
                 </blockquote>
                 <div class="flex items-center gap-4">
-                    <!-- <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold backdrop-blur-sm border border-white/30">
-                        AR
-                    </div> -->
-                    <div>
-                        <!-- <div class="font-bold text-white text-lg">Ahmad Rizki</div>
-                        <div class="text-gray-300 text-sm">Pengguna AutoBuyCars</div> -->
-                    </div>
+                    <div></div>
                 </div>
             </div>
         </div>
@@ -146,6 +155,7 @@
 
     <!-- Required Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/theme.js"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/ui.js"></script>

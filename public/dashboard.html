@@ -10,16 +10,18 @@
     <link rel="apple-touch-icon" href="favicon.png?v=20261005" />
     <script>
         (function() {
-            var iconUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAA8CAYAAADfYhweAAAEN0lEQVR4AexaPS80URh9shGEoBA6v0BPI1H4SgRR+K6VGhVanUQhUVCQaIQQER8J0QglSrWOQiEK8Znd933PMsnu88y9s3fmzs7Kezd5zL3nzD3P2bPX7s7upv64W14CKXK3vARcIHlxELlAXCAsATZ1O8QFwhJgU7dDXCAsATa1ukNubm5oenqaRkdHaWRkpKiFnuh9fX3N7qLZ1Fogi4uL1NLSQktLS7Szs0O7u7tFLfRE79bWVlpYWDBLIedsK4HgUZmZmaF/74FzpJMZwsPc3BxdXV2FMmAlkJWVFcpkMqEMxLEIoayuroaSjhzIx8cH7e/vh2oe5yJ4gjfTHpEDOTk5oefnZ9G3o6ODhoeHi1Lt7e2iPzzBmyACgFQAH0hvb2+Lc2pra+n4+Dj75Ionu7jr4OCAKioqhA8/b+IkBkTaIS8vL3R0dMQkiQYHB6myslLgcQF1dXXU29sr5OENHgWhASIFcnh4SK+vr0J+fHxcYHEDY2NjogW8waMgNECkQLa2toR0Q0MDdXZ2CjxuoK+vj2pqakQbP4/ipBwgdCBPT090dnaWI/U9HBoaorKysu9JEf9WVVXRwMCA6AiP8CoIBRA6kL29Pfr8/BSyfltXnBQT4PevCo/wWmjL0IH4bcWmpiZqa2srtLf187q7u6m+vl7omrzahArk4eGBLi8vRWO8ury/v2efaPGEVuz6+vqi/v5+4evi4oLgWRA+QKhA8L4inU4LueXlZaqurk60NjY2hC94hWdB+AChAjHZgj49E4EK9WwcyN3dXegryUSS+GmKq194/5kqD8aBIGlcTSoVS5SAZ3gPsmcciN+rS1CTUuEL8W4cyO3tbancP2MfhXg3DsTYxS9bkKKYDOMKtKenh1AY224DTWijMLalH8sOmZqaovv7ezo9Pc0WxsBsmYYWNOPQtx4IPiXz3qB5AeDNGjBwHhb2CA1oQdPTwBgYOA8Le7QeyOzsrNKLjlMuYoROQ8cxGeXUeiDNzc3KZjpOuYgROg0dx2SUU+uBPD4+KpvpOOUiRug0dByTUU6tB7K5ualspuOUixih09BxTEY5tR7I/Pw8nZ+fi4bAwAnCEIAGtPgyYOA4bjq3Hsjb2xt1dXXRxMQEra+vZwtjYOBMDfLzoQEtaMahbz0Q3AF8/oDrhsnJSUJhDAycjYIWNKGNwhiYDe1YArFhLCkNFwhL3gXiAmEJsKnbITIQhvznU+s7BFecSVbUx9N6IPj+I8kquUCiGkp6vfEOKS8vV3rWccFlgmdBx3n2TAOBJ9heov5Ucfxc+Oa6zzoOM+PcSBra2vZL5Rz08YYXzKD84STOsIDvMCT5wFjYOA8THU0DqSxsZHwMyX85BHfhqEwBgZO1ahYODzACzzBGwpjYOCCfBgHEiT423kXCHsEXSAuEJYAm7od4gJhCbCp2yEskL8AAAD//35Af3oAAAAGSURBVAMALsTlllpMvCcAAAAASUVORK5CYII=";
-            var l = document.querySelector("link[rel*='icon']") || document.createElement('link');
-            l.type = 'image/png';
-            l.rel = 'shortcut icon';
-            l.href = iconUrl;
-            document.head.appendChild(l);
+            var savedTheme = localStorage.getItem('theme');
+            var isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
         })();
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/output.css" />
+    <link rel="stylesheet" href="css/theme-custom.css" />
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         
@@ -119,116 +121,176 @@
             border-left: 3px solid #000000;
             color: #111827;
         }
+
+        /* Dark Mode Overrides for Injected Components */
+        html.dark #kpis > div {
+            background: #18181b !important;
+            border: 1px solid #27272a !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4) !important;
+        }
+        html.dark #kpis > div:nth-child(1)::before { background: #ffffff !important; }
+        html.dark #kpis h3, html.dark #kpis p.text-slate-500 { color: #a1a1aa !important; }
+        html.dark #kpis h2, html.dark #kpis p.text-slate-900 { color: #f4f4f5 !important; }
+
+        html.dark #table-body tr {
+            background: #18181b !important;
+            border-bottom: 1px solid #27272a !important;
+        }
+        html.dark #table-body tr:hover {
+            background: #27272a !important;
+        }
+        html.dark #table-body td {
+            color: #d4d4d8 !important;
+        }
+        html.dark #table-body td p.text-slate-900 { color: #f4f4f5 !important; }
+        html.dark #table-body td p.text-slate-500 { color: #a1a1aa !important; }
+
+        html.dark #courses > div {
+            background: #18181b !important;
+            border: 1px solid #27272a !important;
+        }
+        html.dark #courses > div:hover {
+            background: #27272a !important;
+            border-color: #3f3f46 !important;
+        }
+        html.dark #courses h4, html.dark #courses p.text-slate-900 { color: #f4f4f5 !important; }
+        html.dark #courses p.text-slate-500 { color: #a1a1aa !important; }
+
+        html.dark #activity li h4 { color: #f4f4f5 !important; }
+        html.dark #activity li p { color: #d4d4d8 !important; }
+        html.dark #activity li span { color: #71717a !important; }
+        html.dark #activity li > div:first-child { 
+            background: #18181b !important; 
+            border: 2px solid #ffffff !important; 
+        }
+        html.dark .timeline-line {
+            background: #27272a !important;
+        }
+        html.dark .nav-active {
+            background-color: #27272a !important;
+            border-left: 3px solid #ffffff !important;
+            color: #f4f4f5 !important;
+        }
     </style>
 </head>
-<body class="bg-gray-50 font-sans text-gray-900 antialiased selection:bg-gray-200">
+<body class="bg-gray-50 dark:bg-zinc-950 font-sans text-gray-900 dark:text-zinc-100 antialiased selection:bg-gray-200 dark:selection:bg-zinc-800">
     <!-- App Container -->
     <div id="app" class="invisible flex min-h-screen">
         <!-- Overlay -->
         <div id="overlay" class="fixed inset-0 z-40 hidden bg-gray-900/50 backdrop-blur-sm lg:hidden transition-opacity"></div>
 
         <!-- Sidebar -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 -translate-x-full bg-white border-r border-gray-200 transition-transform duration-300 lg:static lg:translate-x-0 flex flex-col shadow-sm">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 -translate-x-full bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 transition-transform duration-300 lg:static lg:translate-x-0 flex flex-col shadow-sm">
             <!-- Brand -->
             <div class="flex items-center gap-3 p-6">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-black dark:bg-white text-white dark:text-black">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.28l1.08 3.11H5.77L6.85 7zM7.5 16c-.83 0-1.5-.67-1.5-1.5S6.67 13 7.5 13s1.5.67 1.5 1.5S8.33 16 7.5 16zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
                     </svg>
                 </div>
-                <span class="text-xl font-bold tracking-tight text-gray-900">AutoBuyCars</span>
+                <span class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">AutoBuyCars</span>
             </div>
 
             <!-- Navigation -->
             <nav class="flex-1 space-y-1 px-4 overflow-y-auto mt-2">
-                <a href="#" data-nav class="nav-active flex items-center gap-3 rounded-r-lg px-3 py-2.5 font-medium text-gray-900">
+                <a href="#" data-nav class="nav-active flex items-center gap-3 rounded-r-lg px-3 py-2.5 font-medium text-gray-900 dark:text-white">
                     <svg data-icon="home" class="h-5 w-5"></svg>Dashboard
                 </a>
-                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white">
                     <svg data-icon="database" class="h-5 w-5"></svg>Jual Mobil
                 </a>
-                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white">
                     <svg data-icon="cpu" class="h-5 w-5"></svg>Beli Mobil
                 </a>
-                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white">
                     <svg data-icon="flask" class="h-5 w-5"></svg>Favorit
                 </a>
-                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white">
                     <svg data-icon="book" class="h-5 w-5"></svg>Riwayat
                 </a>
-                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+                <a href="#" data-nav class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white">
                     <svg data-icon="cog" class="h-5 w-5"></svg>Pengaturan
                 </a>
             </nav>
 
             <!-- Tip Card -->
             <div class="p-4 mt-auto">
-                <div class="rounded-xl bg-gray-50 p-4 border border-gray-200">
-                    <h4 class="font-semibold text-gray-900 mb-1">Tips Jual Cepat</h4>
-                    <p class="text-sm text-gray-600 mb-4 leading-relaxed">Tingkatkan kualitas foto mobilmu untuk menarik lebih banyak pembeli!</p>
-                    <button class="w-full rounded-lg bg-black py-2.5 text-sm font-medium text-white transition hover:bg-gray-800">Lihat Panduan</button>
+                <div class="rounded-xl bg-gray-50 dark:bg-zinc-800/60 p-4 border border-gray-200 dark:border-zinc-800">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Tips Jual Cepat</h4>
+                    <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4 leading-relaxed">Tingkatkan kualitas foto mobilmu untuk menarik lebih banyak pembeli!</p>
+                    <button class="w-full rounded-lg bg-black dark:bg-white py-2.5 text-sm font-medium text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Lihat Panduan</button>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content Wrapper -->
-        <div class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        <div class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-gray-50 dark:bg-zinc-950">
             <!-- Topbar -->
-            <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-8">
+            <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center gap-4">
-                    <button id="menu-btn" class="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg lg:hidden transition">
+                    <button id="menu-btn" class="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg lg:hidden transition">
                         <svg data-icon="menu" class="h-5 w-5"></svg>
                     </button>
                     <!-- Search -->
                     <div class="relative hidden sm:block w-64 md:w-80 group">
-                        <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors" viewBox="0 0 20 20" fill="currentColor">
+                        <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
                         </svg>
-                        <input id="search" type="search" placeholder="Cari mobil atau dealer..." class="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-500 focus:border-black focus:bg-white focus:ring-1 focus:ring-black transition-all outline-none" />
+                        <input id="search" type="search" placeholder="Cari mobil atau dealer..." class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 py-2 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-black dark:focus:ring-white transition-all outline-none" />
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 sm:gap-4">
+                    <!-- Theme Toggle -->
+                    <button type="button" data-theme-toggle class="theme-toggle-btn p-2 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition" aria-label="Ganti mode tema" title="Ganti mode tema">
+                        <svg data-theme-icon="sun" class="h-5 w-5 sm:h-6 sm:w-6 hidden text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg data-theme-icon="moon" class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+
                     <!-- Notifications -->
                     <div class="relative">
-                        <button data-menu="notif-menu" class="relative p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition">
+                        <button data-menu="notif-menu" class="relative p-2 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition">
                             <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            <span id="notif-dot" class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white hidden"></span>
+                            <span id="notif-dot" class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white dark:border-zinc-900 hidden"></span>
                         </button>
-                        <div id="notif-menu" class="absolute right-0 mt-3 w-80 origin-top-right rounded-xl bg-white p-4 shadow-lg border border-gray-200 hidden z-50">
-                            <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
-                                <h3 class="font-semibold text-gray-900">Notifikasi</h3>
-                                <button id="mark-read" class="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">Tandai dibaca</button>
+                        <div id="notif-menu" class="absolute right-0 mt-3 w-80 origin-top-right rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-lg border border-gray-200 dark:border-zinc-800 hidden z-50">
+                            <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-100 dark:border-zinc-800">
+                                <h3 class="font-semibold text-gray-900 dark:text-white">Notifikasi</h3>
+                                <button id="mark-read" class="text-xs font-medium text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors">Tandai dibaca</button>
                             </div>
                             <ul id="notif-list" class="space-y-3 max-h-64 overflow-y-auto">
-                                <li class="text-sm text-gray-500 text-center py-4">Tidak ada notifikasi baru</li>
+                                <li class="text-sm text-gray-500 dark:text-zinc-400 text-center py-4">Tidak ada notifikasi baru</li>
                             </ul>
                         </div>
                     </div>
 
-                    <div class="h-8 w-px bg-gray-200 hidden sm:block"></div>
+                    <div class="h-8 w-px bg-gray-200 dark:bg-zinc-800 hidden sm:block"></div>
 
                     <!-- User Menu -->
                     <div class="relative">
-                        <button data-menu="user-menu" class="flex items-center gap-2 rounded-full p-1 pr-3 hover:bg-gray-100 transition focus:outline-none">
-                            <div class="relative h-8 w-8 rounded-full bg-black flex items-center justify-center overflow-hidden">
+                        <button data-menu="user-menu" class="flex items-center gap-2 rounded-full p-1 pr-3 hover:bg-gray-100 dark:hover:bg-zinc-800 transition focus:outline-none">
+                            <div class="relative h-8 w-8 rounded-full bg-black dark:bg-zinc-800 flex items-center justify-center overflow-hidden">
                                 <img id="avatar" src="" alt="User" class="hidden h-full w-full object-cover" />
                                 <span id="avatar-initial" class="text-sm font-bold text-white">U</span>
                             </div>
-                            <span id="user-name-short" class="hidden sm:block text-sm font-medium text-gray-700">User</span>
-                            <svg class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                            <span id="user-name-short" class="hidden sm:block text-sm font-medium text-gray-700 dark:text-zinc-200">User</span>
+                            <svg class="h-4 w-4 text-gray-500 dark:text-zinc-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
                         </button>
-                        <div id="user-menu" class="absolute right-0 mt-3 w-56 origin-top-right rounded-xl bg-white p-2 shadow-lg border border-gray-200 hidden z-50">
-                            <div class="px-3 py-3 border-b border-gray-100 mb-1 bg-gray-50 rounded-t-lg">
-                                <p id="user-name" class="font-medium text-gray-900 truncate">User Name</p>
-                                <p id="user-email" class="text-xs text-gray-500 truncate mt-0.5">user@example.com</p>
+                        <div id="user-menu" class="absolute right-0 mt-3 w-56 origin-top-right rounded-xl bg-white dark:bg-zinc-900 p-2 shadow-lg border border-gray-200 dark:border-zinc-800 hidden z-50">
+                            <div class="px-3 py-3 border-b border-gray-100 dark:border-zinc-800 mb-1 bg-gray-50 dark:bg-zinc-800 rounded-t-lg">
+                                <p id="user-name" class="font-medium text-gray-900 dark:text-white truncate">User Name</p>
+                                <p id="user-email" class="text-xs text-gray-500 dark:text-zinc-400 truncate mt-0.5">user@example.com</p>
                             </div>
-                            <a href="#" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">Profil Saya</a>
-                            <a href="#" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">Pengaturan Akun</a>
-                            <div class="my-1 border-t border-gray-100"></div>
-                            <button id="logout" class="block w-full text-left rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 font-medium transition">Keluar</button>
+                            <a href="#" class="block rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition">Profil Saya</a>
+                            <a href="#" class="block rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition">Pengaturan Akun</a>
+                            <div class="my-1 border-t border-gray-100 dark:border-zinc-800"></div>
+                            <button id="logout" class="block w-full text-left rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium transition">Keluar</button>
                         </div>
                     </div>
                 </div>
@@ -236,7 +298,7 @@
 
             <main class="flex-1 p-4 sm:p-6 lg:p-8">
                 <!-- Banner Section -->
-                <div class="relative overflow-hidden rounded-2xl bg-gray-900 p-6 sm:p-8 text-white shadow-sm mb-8">
+                <div class="relative overflow-hidden rounded-2xl bg-gray-900 p-6 sm:p-8 text-white shadow-sm mb-8 border border-gray-800">
                     <!-- Subtle background with image -->
                     <div class="absolute inset-0 opacity-10 bg-[url('images/car-hero.jpg')] bg-cover bg-center"></div>
                     <div class="absolute inset-0 bg-gray-900/80"></div>
@@ -276,28 +338,28 @@
                 <!-- Charts Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <!-- Line Chart -->
-                    <div class="lg:col-span-2 rounded-2xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div class="lg:col-span-2 rounded-2xl bg-white dark:bg-zinc-900 p-6 shadow-sm border border-gray-200 dark:border-zinc-800">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900">Statistik penjualan</h2>
-                                <p class="text-sm text-gray-500 mt-0.5">Performa penjualan 90 hari terakhir</p>
+                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Statistik penjualan</h2>
+                                <p class="text-sm text-gray-500 dark:text-zinc-400 mt-0.5">Performa penjualan 90 hari terakhir</p>
                             </div>
-                            <div id="range-tabs" class="flex rounded-lg bg-gray-100 p-1 border border-gray-200 self-start sm:self-auto">
-                                <button data-range="7H" class="rounded-md px-4 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition">7H</button>
-                                <button data-range="30H" class="rounded-md bg-white px-4 py-1.5 text-xs font-medium text-gray-900 shadow-sm transition border border-gray-200">30H</button>
-                                <button data-range="90H" class="rounded-md px-4 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition">90H</button>
+                            <div id="range-tabs" class="flex rounded-lg bg-gray-100 dark:bg-zinc-800 p-1 border border-gray-200 dark:border-zinc-700 self-start sm:self-auto">
+                                <button data-range="7H" class="rounded-md px-4 py-1.5 text-xs font-medium text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition">7H</button>
+                                <button data-range="30H" class="rounded-md bg-white dark:bg-zinc-700 px-4 py-1.5 text-xs font-medium text-gray-900 dark:text-white shadow-sm transition border border-gray-200 dark:border-zinc-600">30H</button>
+                                <button data-range="90H" class="rounded-md px-4 py-1.5 text-xs font-medium text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition">90H</button>
                             </div>
                         </div>
-                        <div id="line-chart" class="h-72 w-full flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-gray-200 border-dashed">
+                        <div id="line-chart" class="h-72 w-full flex items-center justify-center text-gray-400 bg-gray-50 dark:bg-zinc-950/50 rounded-xl border border-gray-200 dark:border-zinc-800 border-dashed">
                             <!-- Chart injected here -->
                         </div>
                     </div>
 
                     <!-- Donut Chart -->
-                    <div class="rounded-2xl bg-white p-6 shadow-sm border border-gray-200 flex flex-col">
-                        <h2 class="text-lg font-bold text-gray-900">Jenis mobil</h2>
-                        <p class="text-sm text-gray-500 mt-0.5 mb-6">Distribusi berdasarkan kategori</p>
-                        <div id="donut" class="flex-1 min-h-50 w-full flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-gray-200 border-dashed">
+                    <div class="rounded-2xl bg-white dark:bg-zinc-900 p-6 shadow-sm border border-gray-200 dark:border-zinc-800 flex flex-col">
+                        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Jenis mobil</h2>
+                        <p class="text-sm text-gray-500 dark:text-zinc-400 mt-0.5 mb-6">Distribusi berdasarkan kategori</p>
+                        <div id="donut" class="flex-1 min-h-50 w-full flex items-center justify-center text-gray-400 bg-gray-50 dark:bg-zinc-950/50 rounded-xl border border-gray-200 dark:border-zinc-800 border-dashed">
                             <!-- Donut chart injected here -->
                         </div>
                     </div>
@@ -306,20 +368,20 @@
                 <!-- Table & Side Panels Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Table Section -->
-                    <div class="lg:col-span-2 rounded-2xl bg-white shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                        <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="lg:col-span-2 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm border border-gray-200 dark:border-zinc-800 overflow-hidden flex flex-col">
+                        <div class="p-6 border-b border-gray-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900">Daftar Inventaris</h2>
-                                <p class="text-sm text-gray-500 mt-0.5">Kelola mobil yang sedang didaftarkan</p>
+                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Daftar Inventaris</h2>
+                                <p class="text-sm text-gray-500 dark:text-zinc-400 mt-0.5">Kelola mobil yang sedang didaftarkan</p>
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3">
                                 <div class="relative group">
-                                    <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
                                     </svg>
-                                    <input id="table-search" type="search" placeholder="Cari mobil..." class="w-full sm:w-56 rounded-lg border border-gray-300 bg-gray-50 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-black focus:bg-white focus:ring-1 focus:ring-black outline-none transition" />
+                                    <input id="table-search" type="search" placeholder="Cari mobil..." class="w-full sm:w-56 rounded-lg border border-gray-300 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
                                 </div>
-                                <select id="status-filter" class="rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm text-gray-900 bg-gray-50 focus:border-black focus:ring-1 focus:ring-black focus:bg-white outline-none transition appearance-none">
+                                <select id="status-filter" class="rounded-lg border border-gray-300 dark:border-zinc-700 py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-zinc-800 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white focus:bg-white dark:focus:bg-zinc-900 outline-none transition appearance-none">
                                     <option value="all">Semua status</option>
                                     <option value="done">Terjual</option>
                                     <option value="running">Dijual</option>
@@ -329,8 +391,8 @@
                             </div>
                         </div>
                         <div class="overflow-x-auto flex-1">
-                            <table class="w-full text-left text-sm text-gray-600 whitespace-nowrap">
-                                <thead class="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+                            <table class="w-full text-left text-sm text-gray-600 dark:text-zinc-300 whitespace-nowrap">
+                                <thead class="bg-gray-50 dark:bg-zinc-950 text-xs uppercase text-gray-500 dark:text-zinc-400 border-b border-gray-200 dark:border-zinc-800">
                                     <tr>
                                         <th class="px-6 py-4 font-semibold tracking-wider">Mobil</th>
                                         <th class="px-6 py-4 font-semibold tracking-wider">Harga</th>
@@ -338,24 +400,24 @@
                                         <th class="px-6 py-4 font-semibold tracking-wider">Waktu</th>
                                     </tr>
                                 </thead>
-                                <tbody id="table-body" class="bg-white">
+                                <tbody id="table-body" class="bg-white dark:bg-zinc-900">
                                     <!-- Table Rows injected via JS -->
                                 </tbody>
                             </table>
                         </div>
-                        <div class="p-4 sm:p-6 text-center border-t border-gray-200 bg-gray-50">
-                            <p id="table-empty" class="text-sm text-gray-500 hidden">Tidak ada data ditemukan</p>
-                            <p id="table-count" class="text-sm font-medium text-gray-500">Menampilkan 0 data</p>
+                        <div class="p-4 sm:p-6 text-center border-t border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/60">
+                            <p id="table-empty" class="text-sm text-gray-500 dark:text-zinc-400 hidden">Tidak ada data ditemukan</p>
+                            <p id="table-count" class="text-sm font-medium text-gray-500 dark:text-zinc-400">Menampilkan 0 data</p>
                         </div>
                     </div>
 
                     <!-- Right Column -->
                     <div class="space-y-6">
                         <!-- Mobil Populer -->
-                        <div class="rounded-2xl bg-white p-6 shadow-sm border border-gray-200">
+                        <div class="rounded-2xl bg-white dark:bg-zinc-900 p-6 shadow-sm border border-gray-200 dark:border-zinc-800">
                             <div class="flex items-center justify-between mb-5">
-                                <h2 class="text-base font-bold text-gray-900">Mobil Populer</h2>
-                                <a href="#" class="text-xs font-semibold text-black hover:underline transition-all">Lihat Semua</a>
+                                <h2 class="text-base font-bold text-gray-900 dark:text-white">Mobil Populer</h2>
+                                <a href="#" class="text-xs font-semibold text-black dark:text-white hover:underline transition-all">Lihat Semua</a>
                             </div>
                             <div id="courses" class="space-y-4">
                                 <!-- Items injected via JS -->
@@ -372,17 +434,17 @@
                             <div id="bars" class="flex h-24 items-end gap-2">
                                 <!-- Bars injected via JS -->
                             </div>
-                            <div id="hours-stats" class="mt-4 text-xs font-medium text-gray-400">
+                            <div id="hours-stats" class="mt-4 text-xs font-medium text-gray-400 flex justify-between">
                                 <!-- Stats injected via JS -->
                             </div>
                         </div>
 
                         <!-- Recent Activity -->
-                        <div class="rounded-2xl bg-white p-6 shadow-sm border border-gray-200">
-                            <h2 class="text-base font-bold text-gray-900 mb-5">Aktivitas Terbaru</h2>
+                        <div class="rounded-2xl bg-white dark:bg-zinc-900 p-6 shadow-sm border border-gray-200 dark:border-zinc-800">
+                            <h2 class="text-base font-bold text-gray-900 dark:text-white mb-5">Aktivitas Terbaru</h2>
                             <div class="relative">
                                 <!-- Vertical Timeline Line -->
-                                <div class="timeline-line absolute inset-y-0 left-2.75 w-0.5 rounded-full"></div>
+                                <div class="timeline-line absolute inset-y-0 left-2.75 w-0.5 rounded-full bg-gray-200 dark:bg-zinc-800"></div>
                                 <ul id="activity" class="space-y-6 relative">
                                     <!-- Timeline items injected via JS -->
                                 </ul>
@@ -392,12 +454,12 @@
                 </div>
 
                 <!-- Footer -->
-                <footer class="mt-10 border-t border-gray-200 pt-6 pb-2 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p class="text-sm font-medium text-gray-500">&copy; 2026 AutoBuyCars. All rights reserved.</p>
-                    <div class="flex gap-4 text-sm text-gray-500">
-                        <a href="#" class="hover:text-gray-900 transition-colors">Privasi</a>
-                        <a href="#" class="hover:text-gray-900 transition-colors">Syarat</a>
-                        <a href="#" class="hover:text-gray-900 transition-colors">Bantuan</a>
+                <footer class="mt-10 border-t border-gray-200 dark:border-zinc-800 pt-6 pb-2 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p class="text-sm font-medium text-gray-500 dark:text-zinc-400">&copy; 2026 AutoBuyCars. All rights reserved.</p>
+                    <div class="flex gap-4 text-sm text-gray-500 dark:text-zinc-400">
+                        <a href="#" class="hover:text-gray-900 dark:hover:text-white transition-colors">Privasi</a>
+                        <a href="#" class="hover:text-gray-900 dark:hover:text-white transition-colors">Syarat</a>
+                        <a href="#" class="hover:text-gray-900 dark:hover:text-white transition-colors">Bantuan</a>
                     </div>
                 </footer>
             </main>
@@ -406,6 +468,7 @@
 
     <!-- Required Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/theme.js"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/dashboard-widgets.js"></script>

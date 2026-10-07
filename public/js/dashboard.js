@@ -5,21 +5,22 @@ const sidebar = $('#sidebar');
 const overlay = $('#overlay');
 
 function setSidebar(open) {
+  if (!sidebar || !overlay) return;
   sidebar.classList.toggle('-translate-x-full', !open);
   overlay.classList.toggle('hidden', !open);
   document.body.classList.toggle('overflow-hidden', open);
 }
-$('#menu-btn').addEventListener('click', () => setSidebar(true));
-overlay.addEventListener('click', () => setSidebar(false));
+
+if ($('#menu-btn')) $('#menu-btn').addEventListener('click', () => setSidebar(true));
+if (overlay) overlay.addEventListener('click', () => setSidebar(false));
 
 document.querySelectorAll('[data-nav]').forEach((link) => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
     document.querySelectorAll('[data-nav]').forEach((l) => {
       const on = l === link;
-      l.classList.toggle('bg-white/10', on);
-      l.classList.toggle('text-white', on);
-      l.classList.toggle('text-slate-400', !on);
+      l.classList.toggle('nav-active', on);
+      l.classList.toggle('nav-item', !on);
     });
     setSidebar(false);
   });
@@ -31,17 +32,21 @@ const triggers = document.querySelectorAll('[data-menu]');
 function closeMenus(except) {
   triggers.forEach((t) => {
     if (t === except) return;
-    document.getElementById(t.dataset.menu).classList.add('hidden');
+    const el = document.getElementById(t.dataset.menu);
+    if (el) el.classList.add('hidden');
     t.setAttribute('aria-expanded', 'false');
   });
 }
+
 triggers.forEach((t) =>
   t.addEventListener('click', (e) => {
     e.stopPropagation();
     closeMenus(t);
     const menu = document.getElementById(t.dataset.menu);
-    const open = menu.classList.toggle('hidden') === false;
-    t.setAttribute('aria-expanded', String(open));
+    if (menu) {
+      const open = menu.classList.toggle('hidden') === false;
+      t.setAttribute('aria-expanded', String(open));
+    }
   })
 );
 document.addEventListener('click', (e) => {
@@ -53,13 +58,20 @@ document.addEventListener('keydown', (e) => {
     setSidebar(false);
   }
 });
-$('#mark-read').addEventListener('click', () => $('#notif-dot').classList.add('hidden'));
+if ($('#mark-read')) {
+  $('#mark-read').addEventListener('click', () => {
+    const dot = $('#notif-dot');
+    if (dot) dot.classList.add('hidden');
+  });
+}
 
 // ---------- Logout ----------
-$('#logout').addEventListener('click', async () => {
-  await window.supabaseClient.auth.signOut();
-  window.location.replace('index.html');
-});
+if ($('#logout')) {
+  $('#logout').addEventListener('click', async () => {
+    await window.supabaseClient.auth.signOut();
+    window.location.replace('index.html');
+  });
+}
 
 // ---------- Sesi & data pengguna ----------
 (async () => {
@@ -73,33 +85,39 @@ $('#logout').addEventListener('click', async () => {
   const name = meta.full_name || meta.name || user.email;
   const first = name.split(' ')[0];
 
-  $('#user-name').textContent = name;
-  $('#user-email').textContent = user.email;
-  $('#user-name-short').textContent = first;
-  $('#greeting-name').textContent = first;
-  $('#avatar-initial').textContent = name.trim().charAt(0).toUpperCase();
+  if ($('#user-name')) $('#user-name').textContent = name;
+  if ($('#user-email')) $('#user-email').textContent = user.email;
+  if ($('#user-name-short')) $('#user-name-short').textContent = first;
+  if ($('#greeting-name')) $('#greeting-name').textContent = first;
+  if ($('#avatar-initial')) $('#avatar-initial').textContent = name.trim().charAt(0).toUpperCase();
 
   if (meta.avatar_url) {
     const img = $('#avatar');
-    img.addEventListener('error', () => {
-      img.classList.add('hidden');
-      $('#avatar-initial').classList.remove('hidden');
-    });
-    img.src = meta.avatar_url;
-    img.classList.remove('hidden');
-    $('#avatar-initial').classList.add('hidden');
+    if (img) {
+      img.addEventListener('error', () => {
+        img.classList.add('hidden');
+        if ($('#avatar-initial')) $('#avatar-initial').classList.remove('hidden');
+      });
+      img.src = meta.avatar_url;
+      img.classList.remove('hidden');
+      if ($('#avatar-initial')) $('#avatar-initial').classList.add('hidden');
+    }
   }
 
   const now = new Date();
   const h = now.getHours();
-  $('#greeting').textContent =
-    h < 11 ? 'Selamat pagi' : h < 15 ? 'Selamat siang' : h < 18 ? 'Selamat sore' : 'Selamat malam';
-  $('#date').textContent = now.toLocaleDateString('id-ID', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  });
+  if ($('#greeting')) {
+    $('#greeting').textContent =
+      h < 11 ? 'Selamat pagi' : h < 15 ? 'Selamat siang' : h < 18 ? 'Selamat sore' : 'Selamat malam';
+  }
+  if ($('#date')) {
+    $('#date').textContent = now.toLocaleDateString('id-ID', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+  }
 
-  $('#app').classList.remove('invisible');
-  window.Dashboard.render();
+  if ($('#app')) $('#app').classList.remove('invisible');
+  if (window.Dashboard) window.Dashboard.render();
 
   // Sesi berakhir di tab lain: kembali ke login.
   window.supabaseClient.auth.onAuthStateChange((event) => {

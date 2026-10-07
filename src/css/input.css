@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
+@import "../../public/css/theme-custom.css";
+
+@variant dark (&:where(.dark, .dark *));
 
 @media (prefers-reduced-motion: reduce) {
   *,

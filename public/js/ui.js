@@ -3,8 +3,10 @@ window.ui = {
   show(el, type, message) {
     el.textContent = message;
     el.className =
-      'rounded-xl px-4 py-3 text-sm ' +
-      (type === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700');
+      'rounded-xl px-4 py-3 text-sm border ' +
+      (type === 'error'
+        ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50'
+        : 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/50');
   },
 
   hide(el) {
@@ -50,6 +52,7 @@ window.ui = {
 // Tombol "Lihat/Sembunyi" password: <button data-toggle-password="id-input">
 document.querySelectorAll('[data-toggle-password]').forEach((btn) => {
   const input = document.getElementById(btn.dataset.togglePassword);
+  if (!input) return;
   btn.addEventListener('click', () => {
     const show = input.type === 'password';
     input.type = show ? 'text' : 'password';
