@@ -39,10 +39,6 @@ html.dark {
   --color-zinc-950: #1c1c22;
   --color-zinc-900: #222229;
   --color-zinc-800: #2e2e36;
-  /* Redupkan abu terang yang dipakai tombol di dark mode */
-  --color-zinc-200: #8e8e96;
-  --color-zinc-100: #9d9da7;
-  --color-zinc-300: #8e8e96;
   /* Redupkan SEMUA utilitas putih Tailwind saat dark (anti-silau).
      Tailwind v4 memakai var(--color-white) untuk dark:bg-white,
      dark:text-white, dark:border-white, focus:ring-white, dsb. */
@@ -65,8 +61,7 @@ html.dark body {
 }
 
 /* Auth Pages (Login, Register, Forgot, Reset) in Dark Mode */
-html.dark .auth-card,
-html.dark .bg-white {
+html.dark .auth-card {
   background-color: var(--color-card-bg);
 }
 
@@ -359,4 +354,21 @@ html.dark [data-widget="banner"] #banner-sub,
 html.dark [data-widget="banner"] #goal-note,
 html.dark [data-widget="activity"] #hours-stats {
   color: #9a9aa3 !important;
+}
+
+/* Tombol utama di banner: pastikan kontras & kelihatan di dark mode.
+   (Abu terang + teks gelap, bukan gelap-di-atas-gelap) */
+html.dark [data-widget="banner"] a[href="#/beli"] {
+  background-color: #d6d6dc !important;
+  color: #1c1c22 !important;
+  border-color: transparent !important;
+}
+html.dark [data-widget="banner"] a[href="#/beli"]:hover {
+  background-color: #e4e4e7 !important;
+  color: #1c1c22 !important;
+}
+html.dark [data-widget="banner"] #banner-fav {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #d6d6dc !important;
 }
