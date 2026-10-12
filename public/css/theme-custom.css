@@ -138,14 +138,14 @@ html.dark .auth-divider-text {
   color: #71717a !important;
 }
 
-/* Dashboard Specific Dark Mode Rules */
+/* Dashboard Specific Dark Mode Rules - selaras website (zinc-950) */
 html.dark aside#sidebar {
-  background-color: #18181b !important;
+  background-color: #09090b !important;
   border-color: #27272a !important;
 }
 
 html.dark header {
-  background-color: #18181b !important;
+  background-color: #09090b !important;
   border-color: #27272a !important;
 }
 
@@ -153,30 +153,30 @@ html.dark .nav-item {
   color: #a1a1aa !important;
 }
 html.dark .nav-item:hover {
-  background-color: #27272a !important;
+  background-color: #18181b !important;
   color: #ffffff !important;
 }
 html.dark .nav-active {
-  background-color: #27272a !important;
+  background-color: #18181b !important;
   border-left-color: #ffffff !important;
   color: #ffffff !important;
 }
 
 html.dark #notif-menu,
 html.dark #user-menu {
-  background-color: #18181b !important;
+  background-color: #09090b !important;
   border-color: #27272a !important;
   color: #f4f4f5 !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
 }
 
 html.dark #user-menu .bg-gray-50 {
-  background-color: #202024 !important;
+  background-color: #18181b !important;
   border-color: #27272a !important;
 }
 
 html.dark #user-menu a:hover {
-  background-color: #27272a !important;
+  background-color: #18181b !important;
   color: #ffffff !important;
 }
 
@@ -188,29 +188,32 @@ html.dark #user-menu .border-t {
 
 /* KPI Cards in Dark Mode */
 html.dark #kpis > div {
-  background: #18181b !important;
+  background: #09090b !important;
   border: 1px solid #27272a !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4) !important;
+  box-shadow: none !important;
 }
-html.dark #kpis > div:nth-child(1)::before { background: #ffffff !important; }
+html.dark #kpis > div:nth-child(1)::before { background: #fafafa !important; }
+html.dark #kpis > div:nth-child(2)::before { background: #a1a1aa !important; }
+html.dark #kpis > div:nth-child(3)::before { background: #71717a !important; }
+html.dark #kpis > div:nth-child(4)::before { background: #3f3f46 !important; }
 html.dark #kpis h3, html.dark #kpis p.text-slate-500 { color: #a1a1aa !important; }
 html.dark #kpis h2, html.dark #kpis p.text-slate-900 { color: #f4f4f5 !important; }
 
 /* Charts & Cards in Dark Mode */
-html.dark .lg\:col-span-2.rounded-2xl,
-html.dark .space-y-6 > .rounded-2xl,
-html.dark .rounded-2xl.bg-white {
+html.dark .lg\:col-span-2.rounded-xl,
+html.dark .space-y-6 > .rounded-xl,
+html.dark .rounded-xl.bg-white {
   background-color: #18181b !important;
   border-color: #27272a !important;
 }
 
 html.dark #range-tabs {
-  background-color: #202024 !important;
+  background-color: #18181b !important;
   border-color: #27272a !important;
 }
 html.dark #range-tabs button[aria-pressed="true"],
 html.dark #range-tabs button.bg-white {
-  background-color: #27272a !important;
+  background-color: #09090b !important;
   color: #ffffff !important;
   border-color: #3f3f46 !important;
 }
@@ -223,18 +226,18 @@ html.dark #range-tabs button:hover {
 
 /* Table in Dark Mode */
 html.dark thead {
-  background-color: #141416 !important;
+  background-color: #09090b !important;
   border-color: #27272a !important;
 }
 html.dark thead th {
   color: #a1a1aa !important;
 }
 html.dark #table-body tr {
-  background-color: #18181b !important;
+  background-color: transparent !important;
   border-color: #27272a !important;
 }
 html.dark #table-body tr:hover {
-  background-color: #202024 !important;
+  background-color: #18181b !important;
 }
 html.dark #table-body td {
   color: #d4d4d8 !important;
@@ -248,11 +251,11 @@ html.dark #table-body td p.text-slate-500 {
 
 /* Popular Courses / Cars in Dark Mode */
 html.dark #courses > div {
-  background: #202024 !important;
+  background: transparent !important;
   border: 1px solid #27272a !important;
 }
 html.dark #courses > div:hover {
-  background: #27272a !important;
+  background: #18181b !important;
   border-color: #3f3f46 !important;
 }
 html.dark #courses h4, html.dark #courses p.text-slate-900 { color: #f4f4f5 !important; }
@@ -263,7 +266,7 @@ html.dark #activity li h4 { color: #f4f4f5 !important; }
 html.dark #activity li p { color: #a1a1aa !important; }
 html.dark #activity li span { color: #71717a !important; }
 html.dark #activity li > div:first-child { 
-  background: #18181b !important; 
+  background: #09090b !important; 
   border: 2px solid #ffffff !important; 
 }
 html.dark .timeline-line {

@@ -1,9 +1,12 @@
-// Widget dashboard (data contoh). Semua grafik digambar dengan SVG murni.
+// Widget dashboard (data dari CarStore). Grafik digambar dengan SVG murni.
 (() => {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (sel, root = document) => root.querySelector(sel);
   const fmt = (n, d = 0) =>
     n.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const store = () => window.CarStore;
+  const rp = (n) => (window.fmtRp ? window.fmtRp(n) : 'Rp ' + Number(n || 0).toLocaleString('id-ID'));
+  const ago = (ts) => (window.timeAgo ? window.timeAgo(ts) : '');
 
   // ---------- Ikon ----------
   const ICONS = {
@@ -23,6 +26,12 @@
     check: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
     plus: 'M12 4v16m8-8H4',
     x: 'M6 18L18 6M6 6l12 12',
+    tag: 'M7 7h.01M7 3h5.586a1 1 0 01.707.293l7.414 7.414a1 1 0 010 1.414l-5.586 5.586a1 1 0 01-1.414 0L5.293 10.293A1 1 0 015 9.586V4a1 1 0 011-1z',
+    cart: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z',
+    heart: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
+    history: 'M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8m0-5v5h5',
+    trash: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+    eye: 'M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z',
   };
 
   function paintIcons(root = document) {
@@ -56,19 +65,57 @@
     requestAnimationFrame(step);
   }
 
-  // ---------- KPI ----------
+  // ---------- KPI (dari CarStore) ----------
   const TONES = {
-    indigo: { chip: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400', hex: '#6366f1' },
-    violet: { chip: 'bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400', hex: '#8b5cf6' },
-    emerald: { chip: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400', hex: '#10b981' },
-    amber: { chip: 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400', hex: '#f59e0b' },
+    ink: { chip: 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950', hex: '#09090b' },
+    stone: { chip: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200', hex: '#52525b' },
+    gray: { chip: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300', hex: '#a1a1aa' },
+    line: { chip: 'bg-gray-50 dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-200 dark:border-zinc-800', hex: '#d4d4d8' },
   };
-  const KPIS = [
-    { label: 'Dataset', value: 12, delta: '+2 baru', icon: 'database', tone: 'indigo', spark: [4, 5, 5, 7, 8, 9, 12] },
-    { label: 'Model dilatih', value: 28, delta: '+5 baru', icon: 'cpu', tone: 'violet', spark: [10, 12, 15, 16, 20, 24, 28] },
-    { label: 'Akurasi terbaik', value: 94.2, decimals: 1, suffix: '%', delta: '+1,8%', icon: 'check', tone: 'emerald', spark: [82, 85, 88, 90, 91, 93, 94.2] },
-    { label: 'Jam belajar', value: 36, suffix: ' jam', delta: '+4 jam', icon: 'clock', tone: 'amber', spark: [18, 22, 25, 28, 30, 33, 36] },
-  ];
+  const sparkOf = (v) => {
+    const b = Math.max(2, Number(v) || 0);
+    return [b - 2, b - 1, b - 1, b, b, b, b].map((x) => Math.max(0, x));
+  };
+
+  function renderKpis() {
+    const box = $('#kpis');
+    if (!box || !store()) return;
+    const s = store().stats();
+    const KPIS = [
+      { label: 'Total Listing', value: s.total, delta: `${s.active} aktif`, icon: 'database', tone: 'ink', spark: sparkOf(s.total) },
+      { label: 'Terjual', value: s.sold, delta: `${s.pending} menunggu`, icon: 'check', tone: 'stone', spark: sparkOf(s.sold) },
+      { label: 'Favorit', value: s.favCount, delta: 'disimpan', icon: 'heart', tone: 'gray', spark: sparkOf(s.favCount) },
+      { label: 'Nilai Aktif', value: s.activeValue, money: true, delta: 'estimasi', icon: 'tag', tone: 'line', spark: sparkOf(s.active) },
+    ];
+    box.innerHTML = KPIS.map((k, i) => {
+      const t = TONES[k.tone];
+      const val = k.money
+        ? `<span class="text-2xl" data-count="${k.value}" data-decimals="0">0</span>`
+        : `<span data-count="${k.value}" data-decimals="${k.decimals || 0}">0</span>${k.suffix || ''}`;
+      return `<div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 transition hover:bg-gray-50 dark:hover:bg-zinc-800/60">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">${k.label}</p>
+          <span class="flex h-10 w-10 items-center justify-center rounded-lg ${t.chip}"><svg data-icon="${k.icon}" class="h-5 w-5"></svg></span>
+        </div>
+        <p class="mt-3 ${k.money ? '' : 'text-3xl'} font-bold tracking-tight text-slate-900 dark:text-zinc-100">${val}${k.money ? '' : ''}</p>
+        ${k.money ? `<p class="text-xs text-gray-500 dark:text-zinc-400 mt-1" data-money-label="${k.value}">${rp(k.value)}</p>` : ''}
+        <div class="mt-2 flex items-end justify-between gap-2">
+          <span class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-zinc-950 dark:bg-white px-2 py-0.5 text-xs font-medium text-white dark:text-zinc-950"><svg data-icon="trend" class="h-3.5 w-3.5"></svg>${k.delta}</span>
+          ${sparkline(k.spark, t.hex, i)}
+        </div></div>`;
+    }).join('');
+    paintIcons(box);
+    box.querySelectorAll('[data-count]').forEach((el) => {
+      if (Number(el.dataset.count) > 100000) {
+        // Nilai rupiah: tampil ringkas agar tidak overflow
+        const v = Number(el.dataset.count);
+        el.textContent = v >= 1e9 ? (v / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' M' : fmt(v);
+        const lbl = el.closest('div')?.parentElement?.querySelector('[data-money-label]');
+        return;
+      }
+      countUp(el);
+    });
+  }
 
   function sparkline(values, hex, id) {
     const w = 120, h = 36, p = 2;
@@ -83,24 +130,6 @@
       <defs><linearGradient id="sg${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hex}" stop-opacity=".25"/><stop offset="1" stop-color="${hex}" stop-opacity="0"/></linearGradient></defs>
       <path d="${area}" fill="url(#sg${id})"/>
       <path d="${line}" fill="none" stroke="${hex}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  }
-
-  function renderKpis() {
-    $('#kpis').innerHTML = KPIS.map((k, i) => {
-      const t = TONES[k.tone];
-      return `<div class="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-        <div class="flex items-center justify-between">
-          <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">${k.label}</p>
-          <span class="flex h-10 w-10 items-center justify-center rounded-xl ${t.chip}"><svg data-icon="${k.icon}" class="h-5 w-5"></svg></span>
-        </div>
-        <p class="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-100"><span data-count="${k.value}" data-decimals="${k.decimals || 0}">0</span>${k.suffix || ''}</p>
-        <div class="mt-2 flex items-end justify-between gap-2">
-          <span class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"><svg data-icon="trend" class="h-3.5 w-3.5"></svg>${k.delta}</span>
-          ${sparkline(k.spark, t.hex, i)}
-        </div></div>`;
-    }).join('');
-    paintIcons($('#kpis'));
-    document.querySelectorAll('#kpis [data-count]').forEach(countUp);
   }
 
   // ---------- Grafik garis ----------
@@ -131,8 +160,10 @@
   function renderLine(range = currentRangeState) {
     currentRangeState = range;
     const isDark = document.documentElement.classList.contains('dark');
-    const strokeGrid = isDark ? '#27272a' : '#e2e8f0';
-    const textFill = isDark ? '#71717a' : '#94a3b8';
+    const strokeGrid = isDark ? '#27272a' : '#e5e7eb';
+    const textFill = isDark ? '#a1a1aa' : '#6b7280';
+    const ink = isDark ? '#fafafa' : '#09090b';
+    const soft = isDark ? '#71717a' : '#a1a1aa';
 
     const s = series(range);
     const x = (i) => PL + (i * (W - PL - PR)) / (s.n - 1);
@@ -155,17 +186,17 @@
     const box = $('#line-chart');
     if (!box) return;
     box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="h-auto w-full touch-pan-y" role="img" aria-label="Grafik akurasi dan loss">
-      <defs><linearGradient id="accFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6366f1" stop-opacity=".22"/><stop offset="1" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+      <defs><linearGradient id="accFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ink}" stop-opacity=".14"/><stop offset="1" stop-color="${ink}" stop-opacity="0"/></linearGradient></defs>
       ${grid}${xl}
       <path id="acc-area" d="${area}" fill="url(#accFill)" style="opacity:0;transition:opacity .8s ease .3s"/>
-      <path class="draw" pathLength="1" d="${accPath}" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
-      <path class="draw" pathLength="1" d="${smooth(lossPts)}" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+      <path class="draw" pathLength="1" d="${accPath}" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>
+      <path class="draw" pathLength="1" d="${smooth(lossPts)}" fill="none" stroke="${soft}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 5"/>
       <line id="xh" y1="${PT}" y2="${H - PB}" stroke="${textFill}" stroke-dasharray="3 3" style="display:none"/>
-      <circle id="dot-acc" r="5" fill="${isDark ? '#18181b' : '#fff'}" stroke="#6366f1" stroke-width="3" style="display:none"/>
-      <circle id="dot-loss" r="5" fill="${isDark ? '#18181b' : '#fff'}" stroke="#f43f5e" stroke-width="3" style="display:none"/>
+      <circle id="dot-acc" r="5" fill="${isDark ? '#09090b' : '#fff'}" stroke="${ink}" stroke-width="3" style="display:none"/>
+      <circle id="dot-loss" r="5" fill="${isDark ? '#09090b' : '#fff'}" stroke="${soft}" stroke-width="3" style="display:none"/>
       <rect id="hit" x="${PL}" y="${PT}" width="${W - PL - PR}" height="${H - PT - PB}" fill="transparent"/>
     </svg>
-    <div id="tip" class="pointer-events-none absolute z-10 hidden rounded-lg bg-slate-900 dark:bg-zinc-800 dark:border dark:border-zinc-700 px-3 py-2 text-xs text-white shadow-lg" style="transform:translate(-50%,-120%)"></div>`;
+    <div id="tip" class="pointer-events-none absolute z-10 hidden rounded-lg bg-zinc-950 dark:bg-white dark:border dark:border-zinc-200 px-3 py-2 text-xs text-white dark:text-zinc-950 shadow-lg" style="transform:translate(-50%,-120%)"></div>`;
 
     const svg = $('svg', box);
     const tip = $('#tip', box);
@@ -185,8 +216,8 @@
       dl.setAttribute('cx', x(i)); dl.setAttribute('cy', yLoss(s.loss[i]));
       [xh, da, dl].forEach((el) => (el.style.display = ''));
       tip.innerHTML = `<p class="mb-1 font-semibold">${s.labels[i]}</p>
-        <p class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-indigo-400"></span>Akurasi ${fmt(s.acc[i], 1)}%</p>
-        <p class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-rose-400"></span>Loss ${fmt(s.loss[i], 2)}</p>`;
+        <p class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-current opacity-90"></span>Akurasi ${fmt(s.acc[i], 1)}%</p>
+        <p class="flex items-center gap-1.5 opacity-70"><span class="h-2 w-2 rounded-full bg-current opacity-60"></span>Loss ${fmt(s.loss[i], 2)}</p>`;
       tip.classList.remove('hidden');
       const left = Math.max(60, Math.min(r.width - 60, (x(i) / W) * r.width));
       tip.style.left = `${left}px`;
@@ -210,12 +241,13 @@
 
   function initRangeTabs() {
     const tabs = document.querySelectorAll('#range-tabs [data-range]');
+    if (!tabs.length) return;
     const set = (range) => {
       tabs.forEach((b) => {
         const on = b.dataset.range === range;
         b.setAttribute('aria-pressed', on);
-        b.className = 'rounded-md px-4 py-1.5 text-xs font-medium transition ' + 
-          (on ? 'bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-zinc-700' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white');
+        b.className = 'rounded-md px-4 py-1.5 text-xs font-medium transition ' +
+          (on ? 'bg-white dark:bg-zinc-950 text-black dark:text-white shadow-sm border border-gray-200 dark:border-zinc-700' : 'text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white');
       });
       renderLine(range);
     };
@@ -223,46 +255,43 @@
     set('30H');
   }
 
-  // ---------- Donut ----------
-  const DATASETS = [
-    { label: 'Tabular', pct: 40, hex: '#6366f1' },
-    { label: 'Gambar', pct: 25, hex: '#8b5cf6' },
-    { label: 'Teks', pct: 20, hex: '#06b6d4' },
-    { label: 'Time series', pct: 15, hex: '#f59e0b' },
-  ];
+  // ---------- Donut (dari CarStore) ----------
+  const MONO = ['#09090b', '#52525b', '#a1a1aa', '#d4d4d8', '#e4e4e7', '#71717a'];
 
   function renderDonut() {
+    const donutBox = $('#donut');
+    if (!donutBox || !store()) return;
     const isDark = document.documentElement.classList.contains('dark');
-    const ringBg = isDark ? '#27272a' : '#f1f5f9';
+    const ringBg = isDark ? '#27272a' : '#e5e7eb';
+    const dist = store().categoryDist();
+    const total = store().stats().total;
 
     let acc = 0;
-    const circles = DATASETS.map((d) => {
+    const circles = dist.map((d, i) => {
       const offset = 25 - acc;
       acc += d.pct;
-      return `<circle class="seg" data-pct="${d.pct}" cx="21" cy="21" r="15.915" fill="none" stroke="${d.hex}" stroke-width="5" stroke-dasharray="0 100" stroke-dashoffset="${offset}" style="transition:stroke-dasharray .9s ease-out"/>`;
+      return `<circle class="seg" data-pct="${d.pct}" cx="21" cy="21" r="15.915" fill="none" stroke="${MONO[i % MONO.length]}" stroke-width="5" stroke-dasharray="0 100" stroke-dashoffset="${offset}" style="transition:stroke-dasharray .9s ease-out"/>`;
     }).join('');
-    const donutBox = $('#donut');
-    if (!donutBox) return;
 
     donutBox.innerHTML = `
       <div class="relative mx-auto h-44 w-44">
-        <svg viewBox="0 0 42 42" class="h-full w-full" role="img" aria-label="Distribusi dataset">
+        <svg viewBox="0 0 42 42" class="h-full w-full" role="img" aria-label="Distribusi kategori mobil">
           <circle cx="21" cy="21" r="15.915" fill="none" stroke="${ringBg}" stroke-width="5"/>${circles}
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
-          <span class="text-3xl font-bold text-gray-900 dark:text-zinc-100">12</span>
-          <span class="text-xs text-gray-500 dark:text-zinc-400">dataset</span>
+          <span class="text-3xl font-bold text-gray-900 dark:text-zinc-100">${total}</span>
+          <span class="text-xs text-gray-500 dark:text-zinc-400">mobil</span>
         </div>
       </div>
-      <ul class="mt-5 space-y-2.5 text-sm">${DATASETS.map((d) => `
-        <li class="flex items-center justify-between"><span class="flex items-center gap-2 text-gray-600 dark:text-zinc-300"><span class="h-2.5 w-2.5 rounded-full" style="background:${d.hex}"></span>${d.label}</span><span class="font-semibold text-gray-900 dark:text-zinc-100">${d.pct}%</span></li>`).join('')}
+      <ul class="mt-5 space-y-2.5 text-sm">${dist.map((d, i) => `
+        <li class="flex items-center justify-between"><span class="flex items-center gap-2 text-gray-600 dark:text-zinc-300"><span class="h-2.5 w-2.5 rounded-full" style="background:${MONO[i % MONO.length]}"></span>${d.label}</span><span class="font-semibold text-gray-900 dark:text-zinc-100">${d.pct}%</span></li>`).join('')}
       </ul>`;
-    const segs = document.querySelectorAll('#donut .seg');
+    const segs = donutBox.querySelectorAll('.seg');
     const go = () => segs.forEach((c) => { const p = Number(c.dataset.pct); c.style.strokeDasharray = `${Math.max(p - 1, 0)} ${101 - p}`; });
     if (reduce) go(); else requestAnimationFrame(() => requestAnimationFrame(go));
   }
 
-  // ---------- Bar jam belajar / Pengunjung ----------
+  // ---------- Bar pengunjung ----------
   const HOURS = [['Sen', 4.5], ['Sel', 6], ['Rab', 3], ['Kam', 7.5], ['Jum', 5], ['Sab', 8.5], ['Min', 2]];
 
   function renderBars() {
@@ -274,66 +303,53 @@
     const statsEl = $('#hours-stats');
     if (statsEl) {
       statsEl.innerHTML = `
-        <div><p class="text-xs text-gray-400">Rata-rata harian</p><p class="font-semibold text-white">${fmt(total / HOURS.length, 1)} jam</p></div>
-        <div><p class="text-xs text-gray-400">Hari terbaik</p><p class="font-semibold text-white">${best[0]} &middot; ${fmt(best[1], 1)} jam</p></div>`;
+        <div><p class="text-xs text-gray-400 dark:text-zinc-500">Rata-rata harian</p><p class="font-semibold text-white dark:text-zinc-950">${fmt(total / HOURS.length, 1)} jam</p></div>
+        <div class="text-right"><p class="text-xs text-gray-400 dark:text-zinc-500">Hari terbaik</p><p class="font-semibold text-white dark:text-zinc-950">${best[0]} &middot; ${fmt(best[1], 1)} jam</p></div>`;
     }
     const barsEl = $('#bars');
     if (!barsEl) return;
     barsEl.innerHTML = `<div class="flex h-full min-h-[11rem] items-end gap-2 sm:gap-3">${HOURS.map(([day, v]) => `
       <div class="group flex h-full flex-1 flex-col items-center justify-end">
-        <span class="mb-1 text-xs font-semibold text-gray-300 opacity-0 transition group-hover:opacity-100">${fmt(v, 1)}j</span>
-        <div class="bar w-full rounded-t-lg transition-colors duration-200 ${v === max ? 'bg-gradient-to-t from-indigo-500 to-violet-400' : 'bg-indigo-300/40 group-hover:bg-indigo-400'}" data-px="${Math.round((v / max) * 150)}" style="height:${reduce ? Math.round((v / max) * 150) : 0}px;transition:height .8s cubic-bezier(.2,.8,.2,1),background-color .2s" title="${day}: ${fmt(v, 1)} jam"></div>
-        <span class="mt-2 text-xs text-gray-400">${day}</span>
+        <span class="mb-1 text-xs font-semibold text-white dark:text-zinc-950 opacity-0 transition group-hover:opacity-100">${fmt(v, 1)}j</span>
+        <div class="bar w-full rounded-t-md transition-colors duration-200 ${v === max ? 'bg-white dark:bg-zinc-950' : 'bg-white/40 dark:bg-zinc-950/30 group-hover:bg-white/70 dark:group-hover:bg-zinc-950/60'}" data-px="${Math.round((v / max) * 150)}" style="height:${reduce ? Math.round((v / max) * 150) : 0}px;transition:height .8s cubic-bezier(.2,.8,.2,1),background-color .2s" title="${day}: ${fmt(v, 1)} jam"></div>
+        <span class="mt-2 text-xs text-gray-400 dark:text-zinc-500">${day}</span>
       </div>`).join('')}</div>`;
     if (reduce) return;
     requestAnimationFrame(() => requestAnimationFrame(() =>
       document.querySelectorAll('#bars .bar').forEach((b, i) => setTimeout(() => (b.style.height = `${b.dataset.px}px`), i * 70))));
   }
 
-  // ---------- Tabel eksperimen ----------
+  // ---------- Tabel inventaris (dari CarStore) ----------
   const STATUS = {
-    done: { label: 'Selesai', cls: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 ring-emerald-600/20' },
-    running: { label: 'Berjalan', cls: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 ring-amber-600/20' },
-    queued: { label: 'Antre', cls: 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 ring-slate-500/20' },
-    failed: { label: 'Gagal', cls: 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 ring-rose-600/20' },
+    done: { label: 'Terjual', cls: 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 ring-zinc-950/20 dark:ring-white/20' },
+    running: { label: 'Dijual', cls: 'bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white ring-zinc-950/20 dark:ring-white/20 border border-gray-200 dark:border-zinc-700' },
+    queued: { label: 'Menunggu', cls: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 ring-gray-500/20' },
+    failed: { label: 'Ditolak', cls: 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 ring-red-600/20 dark:ring-red-400/20' },
   };
-  const EXPERIMENTS = [
-    { model: 'Random Forest', dataset: 'Iris', acc: 94.2, status: 'done', time: '2 jam lalu' },
-    { model: 'Logistic Regression', dataset: 'Titanic', acc: 81.5, status: 'done', time: '5 jam lalu' },
-    { model: 'Neural Network', dataset: 'MNIST', acc: null, status: 'running', time: 'Berjalan 12 mnt' },
-    { model: 'K-Means', dataset: 'Mall Customers', acc: null, status: 'queued', time: 'Menunggu' },
-    { model: 'Gradient Boosting', dataset: 'House Prices', acc: 89.7, status: 'done', time: 'Kemarin' },
-    { model: 'SVM', dataset: 'Titanic', acc: null, status: 'failed', time: '2 hari lalu' },
-    { model: 'CNN', dataset: 'CIFAR-10', acc: 87.3, status: 'done', time: '3 hari lalu' },
-    { model: 'Naive Bayes', dataset: 'Spam SMS', acc: 96.1, status: 'done', time: '4 hari lalu' },
-  ];
   const state = { q: '', status: 'all' };
 
   function renderTable() {
-    const q = state.q.trim().toLowerCase();
-    const rows = EXPERIMENTS.filter((e) =>
-      (state.status === 'all' || e.status === state.status) &&
-      (!q || e.model.toLowerCase().includes(q) || e.dataset.toLowerCase().includes(q)));
-    
     const tableBody = $('#table-body');
-    if (!tableBody) return;
+    if (!tableBody || !store()) return;
+    const q = state.q.trim().toLowerCase();
+    const all = store().all();
+    const rows = all.filter((c) =>
+      (state.status === 'all' || c.status === state.status) &&
+      (!q || c.title.toLowerCase().includes(q) || (c.location || '').toLowerCase().includes(q) || (c.category || '').toLowerCase().includes(q)));
 
-    tableBody.innerHTML = rows.map((e) => {
-      const st = STATUS[e.status];
-      const acc = e.acc == null ? '<span class="text-gray-400 dark:text-zinc-600">—</span>'
-        : `<div class="flex items-center gap-2"><span class="w-12 font-medium text-gray-900 dark:text-zinc-100">${fmt(e.acc, 1)}%</span><span class="hidden h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-zinc-800 sm:block"><span class="block h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:${e.acc}%"></span></span></div>`;
-      return `<tr class="transition hover:bg-gray-50 dark:hover:bg-zinc-800/60 border-b border-gray-100 dark:border-zinc-800">
-        <td class="py-3 px-6"><p class="font-medium text-gray-900 dark:text-zinc-100">${e.model}</p><p class="text-xs text-gray-500 dark:text-zinc-400 md:hidden">${e.dataset}</p></td>
-        <td class="hidden py-3 px-6 text-gray-600 dark:text-zinc-300 md:table-cell">${e.dataset}</td>
-        <td class="py-3 px-6">${acc}</td>
+    tableBody.innerHTML = rows.map((c) => {
+      const st = STATUS[c.status] || STATUS.queued;
+      return `<tr class="transition hover:bg-gray-50 dark:hover:bg-zinc-800/60 border-b border-gray-100 dark:border-zinc-800 cursor-pointer" data-detail="${c.id}">
+        <td class="py-3 px-6"><p class="font-medium text-black dark:text-white">${c.title}</p><p class="text-xs text-gray-500 dark:text-zinc-400">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p></td>
+        <td class="py-3 px-6 font-semibold text-black dark:text-white">${rp(c.price)}</td>
         <td class="py-3 px-6"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${st.cls}">${st.label}</span></td>
-        <td class="hidden py-3 px-6 text-gray-500 dark:text-zinc-400 sm:table-cell">${e.time}</td></tr>`;
+        <td class="py-3 px-6 text-gray-500 dark:text-zinc-400">${ago(c.createdAt)}</td></tr>`;
     }).join('');
-    
+
     const emptyEl = $('#table-empty');
     if (emptyEl) emptyEl.classList.toggle('hidden', rows.length > 0);
     const countEl = $('#table-count');
-    if (countEl) countEl.textContent = `Menampilkan ${rows.length} dari ${EXPERIMENTS.length} data`;
+    if (countEl) countEl.textContent = `Menampilkan ${rows.length} dari ${all.length} data`;
   }
 
   function initTable() {
@@ -350,28 +366,24 @@
     renderTable();
   }
 
-  // ---------- Kursus / Mobil Populer ----------
-  const COURSES = [
-    { title: 'Toyota Fortuner 2.8 GR Sport', note: '2024 • 12.000 km • Jakarta', pct: 98, bar: 'from-emerald-500 to-teal-500', badge: 'Populer' },
-    { title: 'Honda CR-V 2.0 RS e:HEV', note: '2023 • 8.500 km • Surabaya', pct: 85, bar: 'from-indigo-500 to-blue-500', badge: 'Hot Deal' },
-    { title: 'Hyundai Ioniq 5 Signature', note: '2023 • 15.000 km • Bandung', pct: 60, bar: 'from-violet-500 to-fuchsia-500', badge: 'Diskon' },
-  ];
-
+  // ---------- Mobil Populer (dari CarStore) ----------
   function renderCourses() {
     const coursesEl = $('#courses');
-    if (!coursesEl) return;
-    coursesEl.innerHTML = COURSES.map((c) => `
-      <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm transition hover:border-gray-300 dark:hover:border-zinc-700">
+    if (!coursesEl || !store()) return;
+    const list = store().popular(3);
+    coursesEl.innerHTML = list.map((c) => `
+      <div class="rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 transition hover:border-gray-300 dark:hover:border-zinc-700 cursor-pointer" data-detail="${c.id}">
         <div class="flex items-start justify-between gap-2">
-          <p class="font-semibold text-gray-900 dark:text-zinc-100 leading-snug text-sm">${c.title}</p>
-          <span class="shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:text-zinc-300">${c.badge}</span>
+          <p class="font-semibold text-black dark:text-white leading-snug text-sm">${c.title}</p>
+          <span class="shrink-0 rounded-full bg-zinc-950 dark:bg-white px-2 py-0.5 text-[11px] font-medium text-white dark:text-zinc-950">${c.badge || c.category}</span>
         </div>
-        <p class="mt-2 text-xs text-gray-500 dark:text-zinc-400">${c.note}</p>
+        <p class="mt-2 text-xs text-gray-500 dark:text-zinc-400">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p>
+        <div class="mt-1 text-sm font-bold text-black dark:text-white">${rp(c.price)}</div>
         <div class="mt-3 flex items-center justify-between">
           <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-zinc-800 mr-3">
-            <div class="cbar h-full rounded-full bg-gradient-to-r ${c.bar}" data-w="${c.pct}" style="width:${reduce ? c.pct : 0}%;transition:width 1s ease-out"></div>
+            <div class="cbar h-full rounded-full bg-zinc-950 dark:bg-white" data-w="${c.interest || 0}" style="width:${reduce ? (c.interest || 0) : 0}%;transition:width 1s ease-out"></div>
           </div>
-          <span class="text-xs font-bold text-gray-700 dark:text-zinc-300">${c.pct}% minat</span>
+          <span class="text-xs font-bold text-gray-700 dark:text-zinc-300">${c.interest || 0}% minat</span>
         </div>
       </div>`).join('');
     if (reduce) return;
@@ -379,43 +391,85 @@
       document.querySelectorAll('#courses .cbar').forEach((b) => (b.style.width = `${b.dataset.w}%`))));
   }
 
-  // ---------- Aktivitas & notifikasi ----------
-  const ACTIVITY = [
-    { tone: 'bg-emerald-500', text: 'Mobil <b>Honda Civic RS</b> berhasil terjual', time: '2 jam lalu' },
-    { tone: 'bg-indigo-500', text: 'Ada penawaran baru untuk <b>Toyota Fortuner</b>', time: '5 jam lalu' },
-    { tone: 'bg-violet-500', text: 'Mobil baru <b>Hyundai Ioniq 5</b> ditambahkan', time: 'Kemarin' },
-    { tone: 'bg-amber-500', text: 'Verifikasi dokumen <b>Mitsubishi Pajero</b> sedang diproses', time: 'Kemarin' },
-    { tone: 'bg-rose-500', text: 'Penawaran pada <b>BMW 320i</b> dibatalkan oleh pembeli', time: '2 hari lalu' },
-  ];
-  const NOTIFS = [
-    { title: 'Mobil Terjual', body: 'Honda Civic RS telah berhasil diverifikasi dan dibayar', time: '2 jam lalu' },
-    { title: 'Penawaran Baru', body: 'Rp 480.000.000 masuk untuk Toyota Fortuner', time: '5 jam lalu' },
-    { title: 'Pengingat Target', body: 'Target penjualan bulanan tinggal 4 unit lagi', time: 'Kemarin' },
-  ];
+  // ---------- Aktivitas & notifikasi (dari CarStore) ----------
+  const TONE_BY_TYPE = {
+    beli: 'bg-zinc-950 dark:bg-white',
+    jual: 'bg-zinc-500',
+    tawar: 'bg-zinc-400',
+    favorit: 'bg-zinc-400',
+    status: 'bg-zinc-500',
+    verifikasi: 'bg-zinc-300 dark:bg-zinc-600',
+    batal: 'bg-red-500',
+    hapus: 'bg-zinc-300 dark:bg-zinc-600',
+  };
+  const TITLE_BY_TYPE = {
+    beli: 'Pembelian', jual: 'Penjualan', tawar: 'Penawaran', favorit: 'Favorit',
+    status: 'Status', verifikasi: 'Verifikasi', batal: 'Pembatalan', hapus: 'Dihapus',
+  };
 
   function renderLists() {
+    if (!store()) return;
+    const hist = store().history();
     const actEl = $('#activity');
     if (actEl) {
-      actEl.innerHTML = ACTIVITY.map((a, i) => `
+      const items = hist.slice(0, 5);
+      actEl.innerHTML = items.length ? items.map((a, i) => `
         <li class="relative flex gap-3">
-          ${i < ACTIVITY.length - 1 ? '<span class="absolute left-[5px] top-4 h-full w-px bg-gray-200 dark:bg-zinc-800"></span>' : ''}
-          <span class="relative mt-1.5 h-3 w-3 shrink-0 rounded-full ring-4 ring-white dark:ring-zinc-900 ${a.tone}"></span>
-          <div><p class="text-sm text-gray-700 dark:text-zinc-300">${a.text}</p><p class="text-xs text-gray-400 dark:text-zinc-500">${a.time}</p></div>
-        </li>`).join('');
+          ${i < items.length - 1 ? '<span class="absolute left-[5px] top-4 h-full w-px bg-gray-200 dark:bg-zinc-800"></span>' : ''}
+          <span class="relative mt-1.5 h-3 w-3 shrink-0 rounded-full ring-4 ring-white dark:ring-zinc-900 ${TONE_BY_TYPE[a.type] || 'bg-zinc-400'}"></span>
+          <div><p class="text-sm text-gray-700 dark:text-zinc-300">${a.text}</p><p class="text-xs text-gray-400 dark:text-zinc-500">${ago(a.ts)}</p></div>
+        </li>`).join('') : '<li class="text-sm text-gray-500 dark:text-zinc-400">Belum ada aktivitas.</li>';
     }
     const notifEl = $('#notif-list');
     if (notifEl) {
-      notifEl.innerHTML = NOTIFS.map((n) => `
-        <li class="px-4 py-3 rounded-lg transition hover:bg-gray-50 dark:hover:bg-zinc-800/60"><p class="text-sm font-medium text-gray-900 dark:text-zinc-100">${n.title}</p><p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">${n.body}</p><p class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">${n.time}</p></li>`).join('');
+      const items = hist.slice(0, 3);
+      notifEl.innerHTML = items.length ? items.map((n) => `
+        <li class="px-4 py-3 rounded-lg transition hover:bg-gray-50 dark:hover:bg-zinc-800/60"><p class="text-sm font-medium text-gray-900 dark:text-zinc-100">${TITLE_BY_TYPE[n.type] || 'Info'}</p><p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">${n.text}</p><p class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">${ago(n.ts)}</p></li>`).join('')
+        : '<li class="text-sm text-gray-500 dark:text-zinc-400 text-center py-4">Tidak ada notifikasi baru</li>';
+      const dot = $('#notif-dot');
+      if (dot) dot.classList.toggle('hidden', !(hist[0] && (Date.now() - hist[0].ts) < 24 * 3600 * 1000));
     }
   }
 
+  // ---------- Banner & target (dari CarStore) ----------
   function renderGoal() {
+    if (!store()) return;
+    const s = store().stats();
+    const target = store().getTarget();
+    const pct = Math.min(100, Math.round((s.sold / Math.max(1, target)) * 100));
     const bar = $('#goal-bar');
-    if (!bar) return;
-    const w = '80%';
-    if (reduce) bar.style.width = w;
-    else requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.width = w)));
+    if (bar) {
+      if (reduce) bar.style.width = pct + '%';
+      else requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.width = pct + '%')));
+    }
+    const pctEl = $('#goal-pct');
+    if (pctEl) pctEl.textContent = pct + '%';
+    const note = $('#goal-note');
+    if (note) {
+      const sisa = Math.max(0, target - s.sold);
+      note.textContent = sisa === 0 ? 'Target bulan ini tercapai! 🎉' : `${sisa} mobil lagi menuju target bulan ini!`;
+    }
+    const sub = $('#banner-sub');
+    if (sub) sub.textContent = `Anda punya ${s.active} mobil aktif dan ${s.sold} terjual. Temukan penawaran terbaik hari ini untuk mobil idamanmu di AutoBuyCars.`;
+    const fav = $('#banner-fav');
+    if (fav) fav.textContent = `🚗 ${s.favCount} mobil difavoritkan`;
+    const navFav = $('#nav-fav-count');
+    if (navFav) {
+      navFav.textContent = s.favCount;
+      navFav.classList.toggle('hidden', s.favCount === 0);
+    }
+  }
+
+  function refresh() {
+    paintIcons();
+    renderKpis();
+    renderLine();
+    renderDonut();
+    renderBars();
+    renderTable();
+    renderCourses();
+    renderLists();
+    renderGoal();
   }
 
   window.Dashboard = {
@@ -431,14 +485,16 @@
       renderLists();
       renderGoal();
     },
+    refresh,
   };
 
-  // Re-render dynamically when theme changes
+  // Re-render saat tema berubah atau data toko berubah
   window.addEventListener('themechange', () => {
-    if (window.Dashboard && typeof window.Dashboard.render === 'function') {
-      renderLine();
-      renderDonut();
-    }
+    renderLine();
+    renderDonut();
+  });
+  window.addEventListener('storechange', () => {
+    refresh();
   });
 
   // Ikon statis (sidebar, topbar) bisa dilukis segera.

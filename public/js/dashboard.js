@@ -14,17 +14,16 @@ function setSidebar(open) {
 if ($('#menu-btn')) $('#menu-btn').addEventListener('click', () => setSidebar(true));
 if (overlay) overlay.addEventListener('click', () => setSidebar(false));
 
-document.querySelectorAll('[data-nav]').forEach((link) => {
-  link.addEventListener('click', (e) => {
-    e.preventDefault();
-    document.querySelectorAll('[data-nav]').forEach((l) => {
-      const on = l === link;
-      l.classList.toggle('nav-active', on);
-      l.classList.toggle('nav-item', !on);
-    });
-    setSidebar(false);
+// Navigasi antar halaman (#/dashboard, #/jual, ...) ditangani marketplace.js.
+// Di sini hanya sediakan helper agar status aktif nav selalu sinkron.
+window.setActiveNav = function (name) {
+  document.querySelectorAll('[data-nav]').forEach((l) => {
+    const on = l.dataset.nav === name;
+    l.classList.toggle('nav-active', on);
+    l.classList.toggle('nav-item', !on);
   });
-});
+};
+window.closeSidebar = () => setSidebar(false);
 
 // ---------- Dropdown (notifikasi & menu pengguna) ----------
 const triggers = document.querySelectorAll('[data-menu]');
@@ -68,19 +67,66 @@ if ($('#mark-read')) {
 // ---------- Logout ----------
 if ($('#logout')) {
   $('#logout').addEventListener('click', async () => {
-    await window.supabaseClient.auth.signOut();
-    window.location.replace('index.html');
+    try {
+      await window.supabaseClient?.auth.signOut();
+    } catch (err) {
+      console.error('[dashboard] logout gagal:', err);
+    } finally {
+      window.location.replace('index.html');
+    }
   });
 }
 
 // ---------- Sesi & data pengguna ----------
+// Catatan: UI jangan dikunci di balik `invisible` bila Supabase gagal/offline.
+// Router marketplace tetap jalan; blok ini hanya mengisi profil bila sesi ada.
+function unhideApp() {
+  if ($('#app')) $('#app').classList.remove('invisible');
+}
+
+function renderDashboardSafe() {
+  try {
+    if (window.Dashboard) window.Dashboard.render();
+  } catch (err) {
+    console.error('[dashboard] render gagal:', err);
+  }
+  // Pastikan rute hash awal (mis. #/jual) diterapkan walau sesi tertahan.
+  try {
+    if (window.__showPage && window.__route) window.__showPage(window.__route());
+  } catch (err) {
+    console.error('[dashboard] terapkan rute awal gagal:', err);
+  }
+}
+
 (async () => {
-  const { data } = await window.supabaseClient.auth.getSession();
+  // Fallback: jangan biarkan layar tetap invisible lebih dari 1,5 dtk.
+  setTimeout(() => {
+    unhideApp();
+    if (!window.__dashboardRendered) {
+      window.__dashboardRendered = true;
+      renderDashboardSafe();
+    }
+  }, 1500);
+
+  let session = null;
+  try {
+    if (!window.supabaseClient) throw new Error('supabaseClient belum siap');
+    const { data } = await window.supabaseClient.auth.getSession();
+    session = data?.session || null;
+  } catch (err) {
+    console.error('[dashboard] cek sesi gagal (mode demo):', err);
+    unhideApp();
+    if (!window.__dashboardRendered) {
+      window.__dashboardRendered = true;
+      renderDashboardSafe();
+    }
+    return;
+  }
 
   // Belum login: kembali ke halaman login.
-  if (!data.session) return window.location.replace('index.html');
+  if (!session) return window.location.replace('index.html');
 
-  const user = data.session.user;
+  const user = session.user;
   const meta = user.user_metadata || {};
   const name = meta.full_name || meta.name || user.email;
   const first = name.split(' ')[0];
@@ -116,11 +162,17 @@ if ($('#logout')) {
     });
   }
 
-  if ($('#app')) $('#app').classList.remove('invisible');
-  if (window.Dashboard) window.Dashboard.render();
+  unhideApp();
+  window.__dashboardRendered = true;
+  if (window.fillSettingsProfile) window.fillSettingsProfile(user);
+  renderDashboardSafe();
 
   // Sesi berakhir di tab lain: kembali ke login.
-  window.supabaseClient.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_OUT') window.location.replace('index.html');
-  });
+  try {
+    window.supabaseClient.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') window.location.replace('index.html');
+    });
+  } catch (err) {
+    console.error('[dashboard] auth listener gagal:', err);
+  }
 })();
