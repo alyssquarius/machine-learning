@@ -158,37 +158,37 @@
 
   function card(c, opts = {}) {
     const st = STATUS_LABEL[c.status] || c.status;
-    return `<article class="overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition hover:border-gray-300 dark:hover:border-zinc-700">
+    return `<article class="flex flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition hover:border-gray-300 dark:hover:border-zinc-700">
       <div class="relative cursor-pointer" data-detail="${c.id}">${carArt(c)}${favBtn(c)}
         <span class="absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${STATUS_CLS[c.status] || STATUS_CLS.queued}">${st}</span>
       </div>
-      <div class="p-4">
-        <h3 class="font-bold text-black dark:text-white leading-snug cursor-pointer hover:underline" data-detail="${c.id}">${c.title}</h3>
-        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p>
-        <div class="mt-2 flex items-center justify-between">
-          <p class="font-bold text-black dark:text-white">${rp(c.price)}</p>
-          <span class="text-[11px] font-medium text-gray-500 dark:text-zinc-400">${c.category || ''}</span>
+      <div class="flex flex-1 flex-col p-4">
+        <h3 class="font-bold text-black dark:text-white leading-snug cursor-pointer hover:underline line-clamp-2 min-h-[2.75rem]" data-detail="${c.id}">${c.title}</h3>
+        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 truncate">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p>
+        <div class="mt-2 flex items-center justify-between gap-2">
+          <p class="font-bold text-black dark:text-white truncate">${rp(c.price)}</p>
+          <span class="shrink-0 text-[11px] font-medium text-gray-500 dark:text-zinc-400">${c.category || ''}</span>
         </div>
-        <div class="mt-3 flex gap-2">
+        <div class="mt-3 flex flex-wrap gap-2">
           ${c.status === 'running' && !opts.sell
-            ? `<button data-buy="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Beli Sekarang</button>
-               <button data-offer="${c.id}" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tawar</button>`
+            ? `<button data-buy="${c.id}" class="min-w-[7rem] flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Beli Sekarang</button>
+               <button data-offer="${c.id}" class="min-w-[5rem] flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tawar</button>`
             : c.status === 'queued' && !opts.sell
               ? `<button data-offer="${c.id}" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tawar</button>`
               : ''}
-          ${offerBadge(c)}
           ${opts.sell
             ? (c.status === 'queued'
-              ? `<button data-publish="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tayangkan</button>`
+              ? `<button data-publish="${c.id}" class="min-w-[7rem] flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tayangkan</button>`
               : c.status === 'running'
-                ? `<button data-sold="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tandai Terjual</button>`
-                : `<button data-relist="${c.id}" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Jual Lagi</button>`)
+                ? `<button data-sold="${c.id}" class="min-w-[7rem] flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tandai Terjual</button>`
+                : `<button data-relist="${c.id}" class="min-w-[7rem] flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Jual Lagi</button>`)
             : ''}
           ${opts.sell ? `<button data-edit="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800" title="Edit"><svg data-icon="edit" class="h-4 w-4 pointer-events-none"></svg></button>` : ''}
           ${opts.sell ? `<button data-duplicate="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800" title="Duplikat">⧉</button>` : ''}
           ${opts.sell ? `<button data-del="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-gray-500 dark:text-zinc-400 transition hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900" title="Hapus"><svg data-icon="trash" class="h-4 w-4 pointer-events-none"></svg></button>` : ''}
           <button data-detail="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Detail</button>
         </div>
+        ${!opts.sell && offerBadge(c) ? `<div class="mt-2">${offerBadge(c)}</div>` : ''}
         ${opts.sell ? offerList(c, true) : ''}
       </div>
     </article>`;
@@ -570,9 +570,9 @@
     if (ul) {
       ul.innerHTML = list.map((h, i) => `
         <li class="relative flex gap-3">
-          ${i < list.length - 1 ? '<span class="absolute left-[5px] top-4 h-full w-px bg-gray-200 dark:bg-zinc-800"></span>' : ''}
+          ${i < list.length - 1 ? '<span class="absolute left-[5px] top-4 -bottom-5 w-px bg-gray-200 dark:bg-zinc-800" aria-hidden="true"></span>' : ''}
           <span class="relative mt-1.5 h-3 w-3 shrink-0 rounded-full ring-4 ring-white dark:ring-zinc-900 ${HIST_TONE[h.type] || 'bg-zinc-400'}"></span>
-          <div class="flex-1"><p class="text-sm text-gray-700 dark:text-zinc-300">${h.text}</p><p class="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">${ago(h.ts)}${h.carId ? ` • <button data-detail="${h.carId}" class="font-semibold underline underline-offset-2 hover:opacity-70">Lihat mobil</button>` : ''}</p></div>
+          <div class="min-w-0 flex-1"><p class="text-sm text-gray-700 dark:text-zinc-300 break-words">${h.text}</p><p class="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">${ago(h.ts)}${h.carId ? ` • <button data-detail="${h.carId}" class="font-semibold underline underline-offset-2 hover:opacity-70">Lihat mobil</button>` : ''}</p></div>
         </li>`).join('');
     }
     const empty = $('#hist-empty');

@@ -1,8 +1,50 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
-@import "../../public/css/theme-custom.css";
 
 @variant dark (&:where(.dark, .dark *));
+
+/* Semua tampilan memakai utilitas Tailwind.
+   Dua state nav + skeleton didefinisikan sebagai utilitas Tailwind
+   (bukan CSS manual) agar bisa dipakai via class + dark: variant. */
+
+@utility shimmer {
+  background: linear-gradient(90deg, var(--color-gray-100) 25%, var(--color-gray-200) 50%, var(--color-gray-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@utility nav-item {
+  border-left: 3px solid transparent;
+  color: var(--color-gray-600);
+  transition: all 0.2s ease;
+  &:hover {
+    background-color: var(--color-gray-100);
+    color: var(--color-gray-900);
+  }
+  &:where(.dark, .dark *) {
+    color: var(--color-zinc-400);
+  }
+  &:where(.dark, .dark *):hover {
+    background-color: var(--color-zinc-800);
+    color: var(--color-white);
+  }
+}
+
+@utility nav-active {
+  background-color: var(--color-gray-100);
+  border-left: 3px solid var(--color-black);
+  color: var(--color-gray-900);
+  &:where(.dark, .dark *) {
+    background-color: var(--color-zinc-800);
+    border-left-color: var(--color-white);
+    color: var(--color-white);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

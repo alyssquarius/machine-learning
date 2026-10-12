@@ -97,11 +97,11 @@
         : `<span data-count="${k.value}" data-decimals="${k.decimals || 0}">0</span>${k.suffix || ''}`;
       return `<div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm transition hover:bg-gray-50 dark:hover:bg-zinc-800/60">
         <span class="absolute inset-y-0 left-0 w-1 ${k.bar || 'bg-zinc-950 dark:bg-white'}" aria-hidden="true"></span>
-        <div class="flex items-center justify-between">
-          <p class="text-sm font-medium text-gray-500 dark:text-zinc-400">${k.label}</p>
-          <span class="flex h-10 w-10 items-center justify-center rounded-lg ${t.chip}"><svg data-icon="${k.icon}" class="h-5 w-5"></svg></span>
+        <div class="flex items-center justify-between gap-3">
+          <p class="min-w-0 text-sm font-medium text-gray-500 dark:text-zinc-400 truncate">${k.label}</p>
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${t.chip}"><svg data-icon="${k.icon}" class="h-5 w-5"></svg></span>
         </div>
-        <p class="mt-3 ${k.money ? '' : 'text-3xl'} font-bold tracking-tight text-gray-900 dark:text-zinc-100">${val}${k.money ? '' : ''}</p>
+        <p class="mt-3 ${k.money ? 'text-lg sm:text-2xl break-words' : 'text-3xl'} font-bold tracking-tight text-gray-900 dark:text-zinc-100">${val}${k.money ? '' : ''}</p>
         ${k.money ? `<p class="text-xs text-gray-500 dark:text-zinc-400 mt-1" data-money-label="${k.value}">${rp(k.value)}</p>` : ''}
         <div class="mt-2 flex items-end justify-between gap-2">
           <span class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-zinc-950 dark:bg-white px-2 py-0.5 text-xs font-medium text-white dark:text-zinc-950"><svg data-icon="trend" class="h-3.5 w-3.5"></svg>${k.delta}</span>
@@ -495,9 +495,9 @@
       const items = hist.slice(0, 5);
       actEl.innerHTML = items.length ? items.map((a, i) => `
         <li class="relative flex gap-3">
-          ${i < items.length - 1 ? '<span class="absolute left-[5px] top-4 h-full w-px bg-gray-200 dark:bg-zinc-800"></span>' : ''}
+          ${i < items.length - 1 ? '<span class="absolute left-[5px] top-4 -bottom-6 w-px bg-gray-200 dark:bg-zinc-800" aria-hidden="true"></span>' : ''}
           <span class="relative mt-1.5 h-3 w-3 shrink-0 rounded-full ring-4 ring-white dark:ring-zinc-900 ${TONE_BY_TYPE[a.type] || 'bg-zinc-400'}"></span>
-          <div><p class="text-sm text-gray-700 dark:text-zinc-300">${a.text}${goCar(a)}</p><p class="text-xs text-gray-400 dark:text-zinc-500">${ago(a.ts)}</p></div>
+          <div class="min-w-0 flex-1"><p class="text-sm text-gray-700 dark:text-zinc-300 break-words">${a.text}${goCar(a)}</p><p class="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">${ago(a.ts)}</p></div>
         </li>`).join('') : '<li class="text-sm text-gray-500 dark:text-zinc-400">Belum ada aktivitas.</li>';
     }
     const notifEl = $('#notif-list');
@@ -510,25 +510,21 @@
     }
   }
 
-  // Dot notifikasi terintegrasi: sembunyi hanya bila semua sudah dibaca.
+  // ---------- Badge notifikasi (dari CarStore) ----------
+  // Selalu dot kecil di sudut tombol (1.25rem). Angka 9+ tetap muat via padding,
+  // tapi ukuran tombol tidak ikut melebar karena badge absolute.
   function paintNotifDot() {
     const dot = $('#notif-dot');
     if (!dot || !store()) return;
     const unread = typeof store().unreadCount === 'function'
       ? store().unreadCount()
       : (store().history()[0] && (Date.now() - store().history()[0].ts) < 24 * 3600 * 1000 ? 1 : 0);
-    // Badge angka bila > 1 agar informatif.
-    if (unread > 1) {
-      dot.classList.remove('hidden');
-      dot.classList.add('flex');
-      dot.style.cssText = 'width:auto;min-width:1.25rem;height:1.25rem;padding:0 .3rem;align-items:center;justify-content:center;font-size:10px;font-weight:700;';
-      dot.textContent = unread > 9 ? '9+' : String(unread);
-    } else {
-      dot.classList.toggle('hidden', unread === 0);
-      dot.classList.remove('flex');
-      dot.style.cssText = '';
-      dot.textContent = '';
-    }
+    dot.classList.toggle('hidden', unread === 0);
+    dot.classList.toggle('flex', unread > 0);
+    dot.textContent = unread === 0 ? '' : unread > 9 ? '9+' : String(unread);
+    // Samakan ukuran bila jumlah digit berubah (1 -> 9+).
+    dot.classList.toggle('min-w-5', unread <= 9);
+    dot.classList.toggle('min-w-6', unread > 9);
   }
 
   // ---------- Banner & target (dari CarStore) ----------

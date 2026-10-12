@@ -4,6 +4,9 @@ module.exports = {
   content: ['./public/**/*.html', './public/**/*.js'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       keyframes: {
         gradient: {
           '0%, 100%': { backgroundPosition: '0% 50%' },
