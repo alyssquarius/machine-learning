@@ -278,12 +278,27 @@
       return car;
     },
 
-    buy(id) {
+    buy(id, opts = {}) {
       const car = cars.find((c) => c.id === id);
       if (!car || car.status === 'done') return false;
       car.status = 'done';
       car.badge = 'Terjual';
-      this.log('beli', `Mobil <b>${car.title}</b> berhasil dibeli (${window.fmtRp(car.price)})`, true);
+      const method = opts.method === 'kredit' ? 'kredit' : 'tunai';
+      car.purchase = {
+        method,
+        dp: Number(opts.dp) || 0,
+        tenor: Number(opts.tenor) || 0,
+        rate: Number(opts.rate) || 0,
+        installment: Number(opts.installment) || 0,
+        name: (opts.name || '').trim(),
+        phone: (opts.phone || '').trim(),
+        ts: Date.now(),
+      };
+      if (method === 'kredit') {
+        this.log('beli', `Mobil <b>${car.title}</b> dibeli kredit — DP ${window.fmtRp(car.purchase.dp)}, ${car.purchase.tenor}× ${window.fmtRp(car.purchase.installment)}/bln`, true);
+      } else {
+        this.log('beli', `Mobil <b>${car.title}</b> berhasil dibeli tunai (${window.fmtRp(car.price)})`, true);
+      }
       persist();
       return true;
     },

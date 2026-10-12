@@ -599,6 +599,120 @@
   function closeOfferModal() {
     $('#modal-offer')?.classList.add('hidden');
   }
+
+  // ---------- MODAL CHECKOUT ----------
+  const checkoutState = { method: 'tunai', tenor: 36 };
+  function checkoutCalc(price, dp, tenor, rate) {
+    const principal = Math.max(0, price - dp);
+    const total = principal * (1 + (rate / 100) * (tenor / 12));
+    const monthly = tenor > 0 ? Math.round(total / tenor) : 0;
+    return { principal, total: Math.round(total), monthly };
+  }
+  function paintPayButtons() {
+    $$('#checkout-methods [data-pay]').forEach((b) => {
+      const on = b.dataset.pay === checkoutState.method;
+      b.className = 'rounded-lg border px-4 py-2.5 text-sm font-semibold transition ' + (on
+        ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white'
+        : 'border-gray-300 dark:border-zinc-700 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800');
+    });
+    $$('#checkout-tenors [data-tenor]').forEach((b) => {
+      const on = Number(b.dataset.tenor) === checkoutState.tenor;
+      b.className = 'rounded-full px-4 py-1.5 text-xs font-medium transition border ' + (on
+        ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white'
+        : 'border-gray-300 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:text-black dark:hover:text-white');
+    });
+    const credit = $('#checkout-credit');
+    if (credit) credit.classList.toggle('hidden', checkoutState.method !== 'kredit');
+  }
+  function paintCheckoutSim() {
+    const id = $('#checkout-car-id')?.value;
+    const c = id ? store().get(id) : null;
+    const price = c ? Number(c.price) : 0;
+    const dp = Math.max(0, Number($('#checkout-dp')?.value) || 0);
+    const rate = Math.max(0, Number($('#checkout-rate')?.value) || 0);
+    const tenor = checkoutState.tenor;
+    const box = $('#checkout-sim-detail');
+    const inst = $('#checkout-installment');
+    const sum = $('#checkout-summary');
+    if (checkoutState.method === 'kredit') {
+      const r = checkoutCalc(price, dp, tenor, rate);
+      if (inst) inst.textContent = rp(r.monthly);
+      if (box) box.textContent = `Pinjaman ${rp(r.principal)} • tenor ${tenor} bln • bunga ${rate}%/thn • total bayar ${rp(r.total + dp)}`;
+      if (sum) sum.innerHTML = `<b class="text-black dark:text-white">${c ? c.title : ''}</b> — harga ${rp(price)}, DP ${rp(dp)}, sisa ${rp(r.principal)}, cicilan <b class="text-black dark:text-white">${rp(r.monthly)}/bln</b> × ${tenor} bln.`;
+      return r;
+    }
+    if (inst) inst.textContent = rp(0);
+    if (box) box.textContent = '';
+    if (sum) sum.innerHTML = `<b class="text-black dark:text-white">${c ? c.title : ''}</b> — bayar tunai penuh <b class="text-black dark:text-white">${rp(price)}</b>. Serah terima setelah pembayaran terverifikasi.`;
+    return null;
+  }
+  function openCheckoutModal(id) {
+    const c = store().get(id);
+    if (!c) { toast('Mobil tidak ditemukan.'); return; }
+    if (c.status !== 'running') { toast('Mobil ini tidak tersedia untuk dibeli.'); return; }
+    const m = $('#modal-checkout');
+    if (!m) { toast('Form checkout tidak ditemukan.'); return; }
+    $('#checkout-car-id').value = id;
+    checkoutState.method = 'tunai';
+    checkoutState.tenor = 36;
+    const name = $('#checkout-car-name');
+    if (name) name.textContent = `${c.title} • ${rp(c.price)}`;
+    const nm = $('#checkout-name');
+    if (nm) nm.value = '';
+    const ph = $('#checkout-phone');
+    if (ph) ph.value = '';
+    const dp = $('#checkout-dp');
+    if (dp) dp.value = Math.round(c.price * 0.2);
+    const msg = $('#checkout-msg');
+    if (msg) msg.className = 'hidden';
+    closeDetail();
+    paintPayButtons();
+    paintCheckoutSim();
+    m.classList.remove('hidden');
+    setTimeout(() => nm?.focus(), 50);
+  }
+  function closeCheckoutModal() {
+    $('#modal-checkout')?.classList.add('hidden');
+  }
+  function submitCheckout(e) {
+    e.preventDefault();
+    const id = $('#checkout-car-id')?.value;
+    const c = id ? store().get(id) : null;
+    const msg = $('#checkout-msg');
+    const show = (t) => {
+      if (!msg) return;
+      msg.textContent = t;
+      msg.className = 'rounded-lg p-3 text-sm font-medium border mb-4 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50';
+    };
+    if (!c) return show('Mobil tidak valid.');
+    const name = ($('#checkout-name')?.value || '').trim();
+    const phone = ($('#checkout-phone')?.value || '').trim();
+    if (name.length < 3) return show('Isi nama pembeli (min. 3 karakter).');
+    if (phone.replace(/\D/g, '').length < 9) return show('Isi nomor HP yang valid (min. 9 digit).');
+    let payload = { method: 'tunai', name, phone };
+    if (checkoutState.method === 'kredit') {
+      const price = Number(c.price);
+      const dp = Math.max(0, Number($('#checkout-dp')?.value) || 0);
+      const rate = Math.max(0, Number($('#checkout-rate')?.value) || 0);
+      const tenor = checkoutState.tenor;
+      if (dp < price * 0.1) return show(`DP minimal 10% (${rp(Math.round(price * 0.1))}).`);
+      if (dp >= price) return show('DP harus lebih kecil dari harga mobil.');
+      const r = checkoutCalc(price, dp, tenor, rate);
+      payload = { method: 'kredit', name, phone, dp, tenor, rate, installment: r.monthly };
+    }
+    const ok = store().buy(id, payload);
+    if (!ok) return show('Gagal memproses pembelian.');
+    $('#form-checkout')?.reset();
+    closeCheckoutModal();
+    if (!$('#modal-detail')?.classList.contains('hidden')) closeDetail();
+    const r = currentRoute();
+    if (r === 'beli') renderBuy();
+    if (r === 'favorit') renderFav();
+    if (r === 'jual') renderSell();
+    toast(payload.method === 'kredit'
+      ? `Pembelian kredit berhasil! Cicilan ${rp(payload.installment)}/bln × ${payload.tenor} bln.`
+      : 'Pembelian tunai berhasil! Cek menu Riwayat.');
+  }
   function submitOffer(e) {
     e.preventDefault();
     const id = $('#offer-car-id')?.value;
@@ -639,17 +753,8 @@
     }
     const buy = e.target.closest('[data-buy]');
     if (buy) {
-      const id = buy.dataset.buy;
-      const c = store().get(id);
-      closeDetail();
-      if (c && c.status !== 'running') { toast('Mobil ini tidak tersedia untuk dibeli.'); return; }
-      if (c && confirm(`Beli "${c.title}" seharga ${rp(c.price)}?`)) {
-        store().buy(id);
-        toast('Pembelian berhasil! Cek menu Riwayat.');
-        const r = currentRoute();
-        if (r === 'beli') renderBuy();
-        if (r === 'favorit') renderFav();
-      }
+      e.stopPropagation();
+      safe(() => openCheckoutModal(buy.dataset.buy), 'open-checkout')();
       return;
     }
     const pub = e.target.closest('[data-publish]');
@@ -732,11 +837,12 @@
     }
     if (e.target.closest('[data-close-detail]')) { closeDetail(); return; }
     if (e.target.closest('[data-close-offer]')) { closeOfferModal(); return; }
+    if (e.target.closest('[data-close-checkout]')) { closeCheckoutModal(); return; }
     if (e.target.closest('[data-close-sell]')) { closeSellModal(); return; }
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeDetail(); closeSellModal(); closeOfferModal(); }
+    if (e.key === 'Escape') { closeDetail(); closeSellModal(); closeOfferModal(); closeCheckoutModal(); }
   });
 
   // Listener tombol jual dipasang via delegasi klik global juga,
@@ -768,6 +874,31 @@
     try {
       $('#form-offer')?.addEventListener('submit', submitOffer);
     } catch (err) { console.error('[marketplace] bind form-offer gagal:', err); }
+    try {
+      $('#form-checkout')?.addEventListener('submit', submitCheckout);
+    } catch (err) { console.error('[marketplace] bind form-checkout gagal:', err); }
+    // Metode bayar + tenor + input simulasi di modal checkout (dirender sekali, tetap di DOM).
+    try {
+      $$('#checkout-methods [data-pay]').forEach((b) =>
+        b.addEventListener('click', () => {
+          checkoutState.method = b.dataset.pay;
+          paintPayButtons();
+          paintCheckoutSim();
+        }));
+      $$('#checkout-tenors [data-tenor]').forEach((b) =>
+        b.addEventListener('click', () => {
+          checkoutState.tenor = Number(b.dataset.tenor);
+          paintPayButtons();
+          paintCheckoutSim();
+        }));
+      let simT = null;
+      const onSim = () => {
+        clearTimeout(simT);
+        simT = setTimeout(() => safe(paintCheckoutSim, 'sim-cicilan')(), 250);
+      };
+      $('#checkout-dp')?.addEventListener('input', onSim);
+      $('#checkout-rate')?.addEventListener('input', onSim);
+    } catch (err) { console.error('[marketplace] bind checkout gagal:', err); }
 
     try {
       $('#buy-search')?.addEventListener('input', (e) => { buyState.q = e.target.value; safe(renderBuy, 'render-beli-q')(); });
