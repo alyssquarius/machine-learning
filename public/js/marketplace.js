@@ -228,6 +228,7 @@
     }
     editingId = null;
     $('#form-sell')?.reset();
+    fillSellLocs('');
     const title = $('#sell-modal-title');
     if (title) title.textContent = 'Tambah Listing';
     const sub = $('#sell-modal-sub');
@@ -256,7 +257,7 @@
     set('#sell-price', c.price);
     set('#sell-year', c.year);
     set('#sell-km', c.km);
-    set('#sell-location', c.location === '-' ? '' : c.location);
+    fillSellLocs(c.location && c.location !== '-' ? c.location : '');
     set('#sell-category', c.category);
     set('#sell-image', (c.image || '').startsWith('http') && !c.image.includes('wikimedia.org') && !c.image.includes('unsplash.com') ? c.image : '');
     set('#sell-desc', c.description);
@@ -288,6 +289,8 @@
     if (title.length < 4) return show('Judul mobil minimal 4 karakter.');
     if (!price || price < 1000000) return show('Harga minimal Rp 1.000.000.');
     if (!year || year < 1990 || year > 2026) return show('Tahun harus antara 1990–2026.');
+    const locVal = ($('#sell-location')?.value || '').trim();
+    if (!locVal) return show('Pilih kota lokasi mobil.');
     // Mode edit: perbarui listing yang ada.
     if (editingId) {
       const ok = store().edit(editingId, {
@@ -295,7 +298,7 @@
         price,
         year,
         km: $('#sell-km').value,
-        location: $('#sell-location').value.trim() || '-',
+        location: locVal,
         category: $('#sell-category').value,
         image: $('#sell-image').value,
         description: $('#sell-desc').value,
@@ -314,7 +317,7 @@
       price,
       year,
       km: $('#sell-km').value,
-      location: $('#sell-location').value.trim() || '-',
+      location: locVal,
       category: $('#sell-category').value,
       image: $('#sell-image').value,
       description: $('#sell-desc').value,
@@ -341,12 +344,32 @@
 
   function fillBuyLocs() {
     const sel = $('#buy-loc');
-    if (!sel || !store()) return;
-    const locs = [...new Set(store().all().map((c) => (c.location || '-').trim()).filter(Boolean))].sort();
+    if (!sel) return;
+    // Master kota se-Indonesia (dari store.js), plus kota lama dari data agar tak hilang.
+    const master = window.INDONESIA_CITIES || [];
+    const used = store() ? [...new Set(store().all().map((c) => (c.location || '').trim()).filter((x) => x && x !== '-'))] : [];
+    const locs = [...new Set([...master, ...used])].sort((a, b) => a.localeCompare(b, 'id'));
     const cur = buyState.loc;
     sel.innerHTML = '<option value="all">Semua lokasi</option>' + locs.map((c) => `<option value="${c}">${c}</option>`).join('');
     sel.value = locs.includes(cur) ? cur : 'all';
     buyState.loc = sel.value;
+  }
+
+  // Isi dropdown kota di form Jual (optgroup per provinsi, seperti kategori).
+  function fillSellLocs(keep) {
+    const sel = $('#sell-location');
+    if (!sel) return;
+    const groups = window.CITY_GROUPS || {};
+    const used = store() ? [...new Set(store().all().map((c) => (c.location || '').trim()).filter((x) => x && x !== '-'))] : [];
+    const inMaster = new Set(Object.values(groups).flat());
+    const extra = used.filter((x) => !inMaster.has(x)).sort((a, b) => a.localeCompare(b, 'id'));
+    let html = '<option value="">Pilih kota...</option>';
+    Object.keys(groups).sort((a, b) => a.localeCompare(b, 'id')).forEach((prov) => {
+      html += `<optgroup label="${prov}">` + groups[prov].map((c) => `<option value="${c}">${c}</option>`).join('') + '</optgroup>';
+    });
+    if (extra.length) html += `<optgroup label="Lainnya">` + extra.map((c) => `<option value="${c}">${c}</option>`).join('') + '</optgroup>';
+    sel.innerHTML = html;
+    if (keep) sel.value = keep;
   }
 
   function fillBuyYears() {
