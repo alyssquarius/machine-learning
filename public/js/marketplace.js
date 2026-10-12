@@ -185,6 +185,7 @@
                 : `<button data-relist="${c.id}" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Jual Lagi</button>`)
             : ''}
           ${opts.sell ? `<button data-edit="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800" title="Edit"><svg data-icon="edit" class="h-4 w-4 pointer-events-none"></svg></button>` : ''}
+          ${opts.sell ? `<button data-duplicate="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800" title="Duplikat">⧉</button>` : ''}
           ${opts.sell ? `<button data-del="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-gray-500 dark:text-zinc-400 transition hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900" title="Hapus"><svg data-icon="trash" class="h-4 w-4 pointer-events-none"></svg></button>` : ''}
           <button data-detail="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Detail</button>
         </div>
@@ -486,6 +487,8 @@
     if (grid) grid.classList.toggle('hidden', list.length === 0);
     const lbl = $('#fav-count-label');
     if (lbl) lbl.textContent = list.length;
+    const clearBtn = $('#fav-clear');
+    if (clearBtn) clearBtn.classList.toggle('hidden', list.length === 0);
     paint();
   }
 
@@ -520,6 +523,10 @@
     if (!store()) return;
     const input = $('#target-input');
     if (input && document.activeElement !== input) input.value = store().getTarget();
+    const dn = $('#displayname-input');
+    if (dn && document.activeElement !== dn && typeof store().getDisplayName === 'function') {
+      dn.value = store().getDisplayName();
+    }
     paintThemeButtons();
   }
 
@@ -811,6 +818,51 @@
       safe(() => openEditModal(editBtn.dataset.edit), 'open-edit')();
       return;
     }
+    // Tombol Duplikat di halaman Jual.
+    const dupBtn = e.target.closest('[data-duplicate]');
+    if (dupBtn) {
+      e.stopPropagation();
+      const copy = store().duplicate(dupBtn.dataset.duplicate);
+      if (copy) {
+        toast(`"${copy.title}" diduplikat, menunggu verifikasi.`);
+        sellState.filter = 'all';
+        if (currentRoute() === 'jual') renderSell();
+      } else {
+        toast('Gagal menduplikat listing.');
+      }
+      return;
+    }
+    // Hapus semua favorit.
+    if (e.target.closest('#fav-clear')) {
+      if (!store().favorites().length) return;
+      if (!confirm('Hapus semua favorit?')) return;
+      const n = store().clearFavs();
+      toast(`${n} favorit dihapus.`);
+      renderFav();
+      return;
+    }
+    // Unduh riwayat CSV.
+    if (e.target.closest('#hist-export')) {
+      const csv = store().exportHistoryCSV();
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'riwayat-autobuycars.csv';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      toast('Riwayat diunduh sebagai CSV.');
+      return;
+    }
+    // Hapus riwayat.
+    if (e.target.closest('#hist-clear')) {
+      if (!store().history().length) { toast('Riwayat sudah kosong.'); return; }
+      if (!confirm('Hapus seluruh riwayat aktivitas?')) return;
+      store().clearHistory();
+      toast('Riwayat dihapus.');
+      renderHist();
+      return;
+    }
     // Terima / tolak tawaran.
     const acc = e.target.closest('[data-accept]');
     if (acc) {
@@ -899,7 +951,6 @@
   }
   // ---------- Bind halaman ----------
   // Catatan: semua aksi kartu/modal juga ditangani delegasi klik global di atas,
-  // Catatan: semua aksi kartu/modal juga ditangani delegasi klik global di atas,
   // jadi bind() ini hanya untuk filter & form — boleh gagal sebagian tanpa mematikan navigasi.
   function bind() {
     try {
@@ -984,6 +1035,19 @@
         toast('Target penjualan disimpan.');
       });
     } catch (err) { console.error('[marketplace] bind target gagal:', err); }
+
+    try {
+      $('#displayname-save')?.addEventListener('click', () => {
+        if (!store() || typeof store().setDisplayName !== 'function') { toast('Data belum siap. Muat ulang halaman.'); return; }
+        const v = ($('#displayname-input')?.value || '').trim();
+        if (v.length < 2) { toast('Nama tampilan minimal 2 karakter.'); return; }
+        store().setDisplayName(v);
+        toast(`Nama tampilan disimpan: ${v}.`);
+      });
+      $('#displayname-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); $('#displayname-save')?.click(); }
+      });
+    } catch (err) { console.error('[marketplace] bind displayname gagal:', err); }
 
     try {
       $$('#set-theme-group [data-set-theme]').forEach((b) =>

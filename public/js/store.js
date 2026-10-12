@@ -90,7 +90,7 @@
   let cars = load(LS_CARS, SEED_CARS);
   let favs = load(LS_FAVS, SEED_FAVS);
   let hist = load(LS_HIST, SEED_HIST);
-  let settings = load(LS_SET, { target: 10 });
+  let settings = Object.assign({ target: 10, displayName: '', notifRead: 0 }, load(LS_SET, {}));
 
   // Samakan favorit dengan id mobil yang masih ada.
   favs = favs.filter((id) => cars.some((c) => c.id === id));
@@ -335,18 +335,68 @@
         save(LS_HIST, hist);
         save(LS_CARS, cars);
         save(LS_FAVS, favs);
+        emit();
       }
     },
 
     getTarget() { try { return Number(settings.target) || 10; } catch { return 10; } },
     setTarget(n) { settings.target = Math.max(1, Number(n) || 10); persist(); },
 
+    // ---------- Profil lokal + notifikasi (terintegrasi dashboard) ----------
+    getDisplayName() { try { return (settings.displayName || '').trim(); } catch { return ''; } },
+    setDisplayName(n) {
+      settings.displayName = (n || '').trim().slice(0, 40);
+      persist();
+      return settings.displayName;
+    },
+    getNotifRead() { try { return Number(settings.notifRead) || 0; } catch { return 0; } },
+    markNotifsRead() { settings.notifRead = Date.now(); persist(); },
+    unreadCount() {
+      const read = this.getNotifRead();
+      if (!hist.length) return 0;
+      return hist.filter((h) => h.ts > read).length;
+    },
+    clearHistory() { hist = []; persist(); },
+    exportHistoryCSV() {
+      const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const rows = [['waktu', 'tipe', 'teks']];
+      this.history().forEach((h) => {
+        rows.push([new Date(h.ts).toLocaleString('id-ID'), h.type, h.text.replace(/<[^>]+>/g, '')]);
+      });
+      return rows.map((r) => r.map(esc).join(',')).join('\n');
+    },
+
     reset() {
       cars = clone(SEED_CARS);
       favs = [...SEED_FAVS];
       hist = clone(SEED_HIST).map((h) => ({ ...h, ts: Date.now() - (now - h.ts) }));
-      settings = { target: 10 };
+      settings = { target: 10, displayName: '', notifRead: Date.now() };
       persist();
+    },
+
+    // ---------- Aksi tambahan yang kurang ----------
+    duplicate(id) {
+      const src = cars.find((c) => c.id === id);
+      if (!src) return null;
+      const car = clone(src);
+      car.id = uid('c');
+      car.title = `${src.title} (Salinan)`;
+      car.status = 'queued';
+      car.badge = 'Baru';
+      car.offers = [];
+      delete car.purchase;
+      car.createdAt = Date.now();
+      cars.unshift(car);
+      this.log('jual', `Listing <b>${car.title}</b> diduplikat dari <b>${src.title}</b>`, true, car.id);
+      persist();
+      return car;
+    },
+    clearFavs() {
+      const n = favs.length;
+      favs = [];
+      if (n) this.log('favorit', `${n} mobil dihapus dari favorit`, true);
+      persist();
+      return n;
     },
   };
 })();

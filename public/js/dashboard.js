@@ -59,8 +59,13 @@ document.addEventListener('keydown', (e) => {
 });
 if ($('#mark-read')) {
   $('#mark-read').addEventListener('click', () => {
-    const dot = $('#notif-dot');
-    if (dot) dot.classList.add('hidden');
+    // Terintegrasi: catat waktu baca agar dot tidak muncul lagi sampai ada aktivitas baru.
+    try { window.CarStore?.markNotifsRead(); } catch { /* abaikan */ }
+    if (window.Dashboard?.paintNotifDot) window.Dashboard.paintNotifDot();
+    else {
+      const dot = $('#notif-dot');
+      if (dot) dot.classList.add('hidden');
+    }
   });
 }
 

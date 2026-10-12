@@ -235,7 +235,7 @@
                         <svg data-icon="menu" class="h-5 w-5"></svg>
                     </button>
                     <!-- Search -->
-                    <div class="relative hidden sm:block w-64 md:w-80 group">
+                    <div class="relative w-40 sm:w-64 md:w-80 group">
                         <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
                         </svg>
@@ -539,7 +539,10 @@
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-black dark:text-white">Favorit</h1>
                     <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1"><span id="fav-count-label">0</span> mobil kamu simpan.</p>
                   </div>
-                  <a href="#/beli" class="inline-flex items-center gap-2 rounded-lg bg-black dark:bg-white px-5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Cari Mobil</a>
+                  <div class="flex gap-2 self-start sm:self-auto">
+                    <button id="fav-clear" class="hidden rounded-lg border border-gray-300 dark:border-zinc-700 px-5 py-2.5 text-sm font-semibold text-gray-500 dark:text-zinc-400 transition hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900">Hapus Semua</button>
+                    <a href="#/beli" class="inline-flex items-center gap-2 rounded-lg bg-black dark:bg-white px-5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Cari Mobil</a>
+                  </div>
                 </div>
                 <div id="fav-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"></div>
                 <div id="fav-empty" class="hidden text-center py-16 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700">
@@ -557,16 +560,20 @@
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-black dark:text-white">Riwayat</h1>
                     <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1"><span id="hist-count">0</span> aktivitas tercatat.</p>
                   </div>
-                  <select id="hist-filter" class="rounded-lg border border-gray-300 dark:border-zinc-700 py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-white bg-white dark:bg-zinc-900 focus:border-black dark:focus:border-white outline-none transition appearance-none self-start sm:self-auto">
-                    <option value="all">Semua aktivitas</option>
-                    <option value="beli">Pembelian</option>
-                    <option value="jual">Penjualan</option>
-                    <option value="tawar">Penawaran</option>
-                    <option value="favorit">Favorit</option>
-                    <option value="status">Status</option>
-                    <option value="verifikasi">Verifikasi</option>
-                    <option value="batal">Pembatalan</option>
-                  </select>
+                  <div class="flex flex-wrap gap-2 self-start sm:self-auto">
+                    <button id="hist-export" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Unduh CSV</button>
+                    <button id="hist-clear" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-gray-500 dark:text-zinc-400 transition hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900">Hapus</button>
+                    <select id="hist-filter" class="rounded-lg border border-gray-300 dark:border-zinc-700 py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-white bg-white dark:bg-zinc-900 focus:border-black dark:focus:border-white outline-none transition appearance-none">
+                      <option value="all">Semua aktivitas</option>
+                      <option value="beli">Pembelian</option>
+                      <option value="jual">Penjualan</option>
+                      <option value="tawar">Penawaran</option>
+                      <option value="favorit">Favorit</option>
+                      <option value="status">Status</option>
+                      <option value="verifikasi">Verifikasi</option>
+                      <option value="batal">Pembatalan</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
                   <ul id="hist-list" class="space-y-5"></ul>
@@ -583,10 +590,14 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
                     <h2 class="font-bold text-black dark:text-white mb-1">Profil</h2>
-                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Info akun yang sedang masuk.</p>
-                    <div class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-zinc-800 p-4">
+                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Nama tampilan lokal untuk sapaan & banner (tersimpan di perangkat).</p>
+                    <div class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-zinc-800 p-4 mb-4">
                       <div class="h-11 w-11 rounded-full bg-black dark:bg-white flex items-center justify-center text-white dark:text-zinc-950 font-bold text-lg" id="set-avatar">U</div>
                       <div class="min-w-0"><p id="set-name" class="font-semibold text-black dark:text-white truncate">User</p><p id="set-email" class="text-xs text-gray-500 dark:text-zinc-400 truncate">user@example.com</p></div>
+                    </div>
+                    <div class="flex gap-3">
+                      <input id="displayname-input" type="text" maxlength="40" placeholder="cth: Budi" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2.5 px-4 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
+                      <button id="displayname-save" class="shrink-0 rounded-lg bg-black dark:bg-white px-5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Simpan</button>
                     </div>
                   </div>
                   <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">

@@ -506,12 +506,42 @@
       notifEl.innerHTML = items.length ? items.map((n) => `
         <li class="px-4 py-3 rounded-lg transition hover:bg-gray-50 dark:hover:bg-zinc-800/60"><p class="text-sm font-medium text-gray-900 dark:text-zinc-100">${TITLE_BY_TYPE[n.type] || 'Info'}</p><p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">${n.text}</p><p class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">${ago(n.ts)}${goCar(n)}</p></li>`).join('')
         : '<li class="text-sm text-gray-500 dark:text-zinc-400 text-center py-4">Tidak ada notifikasi baru</li>';
-      const dot = $('#notif-dot');
-      if (dot) dot.classList.toggle('hidden', !(hist[0] && (Date.now() - hist[0].ts) < 24 * 3600 * 1000));
+      paintNotifDot();
+    }
+  }
+
+  // Dot notifikasi terintegrasi: sembunyi hanya bila semua sudah dibaca.
+  function paintNotifDot() {
+    const dot = $('#notif-dot');
+    if (!dot || !store()) return;
+    const unread = typeof store().unreadCount === 'function'
+      ? store().unreadCount()
+      : (store().history()[0] && (Date.now() - store().history()[0].ts) < 24 * 3600 * 1000 ? 1 : 0);
+    // Badge angka bila > 1 agar informatif.
+    if (unread > 1) {
+      dot.classList.remove('hidden');
+      dot.classList.add('flex');
+      dot.style.cssText = 'width:auto;min-width:1.25rem;height:1.25rem;padding:0 .3rem;align-items:center;justify-content:center;font-size:10px;font-weight:700;';
+      dot.textContent = unread > 9 ? '9+' : String(unread);
+    } else {
+      dot.classList.toggle('hidden', unread === 0);
+      dot.classList.remove('flex');
+      dot.style.cssText = '';
+      dot.textContent = '';
     }
   }
 
   // ---------- Banner & target (dari CarStore) ----------
+  function greetingName() {
+    // Prioritas: nama tampilan lokal (Pengaturan) > nama Supabase > "User".
+    try {
+      const local = store()?.getDisplayName?.();
+      if (local) return local;
+    } catch { /* abaikan */ }
+    const el = $('#greeting-name');
+    const cur = (el?.textContent || '').trim();
+    return cur && cur !== 'User' ? cur : 'User';
+  }
   function renderGoal() {
     if (!store()) return;
     const s = store().stats();
@@ -533,6 +563,9 @@
     if (sub) sub.textContent = `Anda punya ${s.active} mobil aktif dan ${s.sold} terjual. Temukan penawaran terbaik hari ini untuk mobil idamanmu di AutoBuyCars.`;
     const fav = $('#banner-fav');
     if (fav) fav.textContent = `🚗 ${s.favCount} mobil difavoritkan`;
+    // Sapaan banner ikut nama tampilan lokal.
+    const gname = $('#greeting-name');
+    if (gname) gname.textContent = greetingName();
     const navFav = $('#nav-fav-count');
     if (navFav) {
       navFav.textContent = s.favCount;
@@ -554,6 +587,7 @@
 
   window.Dashboard = {
     paintIcons,
+    paintNotifDot,
     render() {
       paintIcons();
       renderKpis();
