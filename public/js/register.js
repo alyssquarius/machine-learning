@@ -59,6 +59,13 @@ form.addEventListener('submit', async (e) => {
   ui.setLoading(submitBtn, false);
 });
 
+// Kalau sudah login, langsung ke dashboard.
+if (window.supabaseClient?.auth) {
+  window.supabaseClient.auth.getSession().then(({ data }) => {
+    if (data?.session) window.location.replace('dashboard.html');
+  });
+}
+
 // Indikator kekuatan password.
 const passwordInput = document.getElementById('password');
 const bars = document.querySelectorAll('#strength span');

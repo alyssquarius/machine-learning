@@ -214,9 +214,7 @@
           ${c.status === 'running' && !opts.sell
             ? `<button data-buy="${c.id}" class="min-w-[7rem] flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Beli Sekarang</button>
                <button data-offer="${c.id}" class="min-w-[5rem] flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tawar</button>`
-            : c.status === 'queued' && !opts.sell
-              ? `<button data-offer="${c.id}" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tawar</button>`
-              : ''}
+            : ''}
           ${opts.sell
             ? (c.status === 'queued'
               ? `<button data-publish="${c.id}" class="min-w-[7rem] flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tayangkan</button>`
@@ -331,7 +329,8 @@
     };
     if (title.length < 4) return show('Judul mobil minimal 4 karakter.');
     if (!price || price < 1000000) return show('Harga minimal Rp 1.000.000.');
-    if (!year || year < 1990 || year > 2026) return show('Tahun harus antara 1990–2026.');
+    const maxYear = new Date().getFullYear();
+    if (!year || year < 1990 || year > maxYear) return show(`Tahun harus antara 1990–${maxYear}.`);
     const locVal = ($('#sell-location')?.value || '').trim();
     if (!locVal) return show('Pilih kota lokasi mobil.');
     // Mode edit: perbarui listing yang ada.
@@ -533,7 +532,8 @@
     fillBuyLocs();
     fillBuyYears();
     paintPriceChips();
-    let list = store().all().filter((c) => c.status === 'running' || c.status === 'queued');
+    // Hanya yang siap dibeli (running). Menunggu verifikasi (queued) tidak tampil di Beli.
+    let list = store().all().filter((c) => c.status === 'running');
     const q = buyState.q.trim().toLowerCase();
     if (q) list = list.filter((c) => c.title.toLowerCase().includes(q) || (c.location || '').toLowerCase().includes(q) || (c.category || '').toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q));
     if (buyState.cat !== 'all') list = list.filter((c) => c.category === buyState.cat);
@@ -684,7 +684,7 @@
           <button data-fav="${c.id}" class="flex-1 rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${on ? 'bg-zinc-950 dark:bg-white border-zinc-950 dark:border-white text-white dark:text-zinc-950' : 'border-gray-300 dark:border-zinc-700 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800'}">${on ? '★ Favorit' : '☆ Simpan Favorit'}</button>
         </div>
         ${c.status !== 'done' ? `<button data-offer="${c.id}" class="mt-2 w-full rounded-lg border border-gray-300 dark:border-zinc-700 py-2.5 text-sm font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Ajukan Tawaran</button>` : ''}
-        ${c.status === 'queued' ? `<button data-publish="${c.id}" class="mt-2 w-full rounded-lg border border-gray-300 dark:border-zinc-700 py-2.5 text-sm font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tayangkan Listing</button>` : ''}
+        ${c.status === 'queued' && currentRoute() === 'jual' ? `<button data-publish="${c.id}" class="mt-2 w-full rounded-lg bg-black dark:bg-white py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tayangkan Listing</button>` : ''}
         <div class="mt-4">
           <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Penawaran (${store().offersFor(c.id).length})</h4>
           ${offerList(c) || '<p class="text-xs text-gray-500 dark:text-zinc-400">Belum ada tawaran. Jadilah yang pertama!</p>'}
@@ -1251,13 +1251,25 @@
       $('#logout-2')?.addEventListener('click', doLogout);
     } catch (err) { console.error('[marketplace] bind logout gagal:', err); }
 
-    // Search global di topbar ikut memfilter halaman Beli
+    // Search global di topbar: kontekstual per halaman.
+    // - Di Beli: filter grid Beli. - Di Dashboard: biarkan initTable() yang filter tabel.
+    // - Di halaman lain: bawa query ke Beli agar hasil terlihat.
     try {
       $('#search')?.addEventListener('input', (e) => {
-        buyState.q = e.target.value;
-        const bs = $('#buy-search');
-        if (bs) bs.value = e.target.value;
-        if (currentRoute() === 'beli') safe(renderBuy, 'render-beli-topq')();
+        const v = e.target.value;
+        const r = currentRoute();
+        if (r === 'beli') {
+          buyState.q = v;
+          const bs = $('#buy-search');
+          if (bs) bs.value = v;
+          safe(renderBuy, 'render-beli-topq')();
+        } else if (r !== 'dashboard') {
+          buyState.q = v;
+          const bs = $('#buy-search');
+          if (bs) bs.value = v;
+          if (v.trim()) location.hash = '#/beli';
+        }
+        // r === 'dashboard': ditangani dashboard-widgets initTable (filter tabel).
       });
     } catch (err) { console.error('[marketplace] bind top-search gagal:', err); }
 
@@ -1288,6 +1300,11 @@
   }
 
   function bootMarketplace() {
+    try {
+      // Tahun maks form Jual mengikuti tahun berjalan (tidak hard-code 2026).
+      const y = $('#sell-year');
+      if (y) y.max = String(new Date().getFullYear());
+    } catch { /* abaikan */ }
     try { bindGuide(); } catch (err) { console.error('[marketplace] bindGuide gagal:', err); }
     try { bind(); } catch (err) { console.error('[marketplace] bind() gagal:', err); }
     try { showPage(currentRoute()); } catch (err) { console.error('[marketplace] showPage awal gagal:', err); }

@@ -188,7 +188,7 @@
     pts.map((p, i) => {
       if (!i) return `M${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
       const q = pts[i - 1], mx = ((q[0] + p[0]) / 2).toFixed(1);
-      return `C${mx} ${q[1].toFixed(1)} ${mx} ${p[1].toFixed(1)} ${p[0].toFixed(1)} ${p[0].toFixed(1)}`;
+      return `C${mx} ${q[1].toFixed(1)} ${mx} ${p[1].toFixed(1)} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
     }).join(' ');
 
   let currentRangeState = '7H';
@@ -537,7 +537,9 @@
     if (!store()) return;
     const s = store().stats();
     const target = store().getTarget();
-    const pct = Math.min(100, Math.round((s.sold / Math.max(1, target)) * 100));
+    // Target = bulanan: pakai penjualan bulan berjalan, bukan all-time.
+    const soldMonth = typeof store().soldThisMonth === 'function' ? store().soldThisMonth() : s.sold;
+    const pct = Math.min(100, Math.round((soldMonth / Math.max(1, target)) * 100));
     const bar = $('#goal-bar');
     if (bar) {
       if (reduce) bar.style.width = pct + '%';
@@ -547,7 +549,7 @@
     if (pctEl) pctEl.textContent = pct + '%';
     const note = $('#goal-note');
     if (note) {
-      const sisa = Math.max(0, target - s.sold);
+      const sisa = Math.max(0, target - soldMonth);
       note.textContent = sisa === 0 ? 'Target bulan ini tercapai! 🎉' : `${sisa} mobil lagi menuju target bulan ini!`;
     }
     const sub = $('#banner-sub');

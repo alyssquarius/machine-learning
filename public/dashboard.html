@@ -21,6 +21,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/output.css" />
+    <link rel="stylesheet" href="css/theme-custom.css" />
     <style>
         /* Sidebar collapse (desktop) */
         #sidebar { transition: width .3s ease, transform .3s ease; }
@@ -32,7 +33,9 @@
             #sidebar.sidebar-collapsed #sidebar-tip { display: none; }
             #sidebar.sidebar-collapsed .brand-wrap { justify-content: center; padding-left: 1rem; padding-right: 1rem; }
             #sidebar.sidebar-collapsed nav { padding-left: .75rem; padding-right: .75rem; }
-            #sidebar.sidebar-collapsed nav a { justify-content: center; padding-left: .75rem; padding-right: .75rem; }
+            #sidebar.sidebar-collapsed nav a { justify-content: center; padding-left: .75rem; padding-right: .75rem; border-left-color: transparent; }
+            #sidebar.sidebar-collapsed nav a.nav-active { border-left-color: transparent; background-color: var(--color-gray-100); }
+            .dark #sidebar.sidebar-collapsed nav a.nav-active { background-color: var(--color-zinc-800); }
         }
     </style>
 </head>

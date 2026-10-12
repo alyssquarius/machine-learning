@@ -313,15 +313,20 @@
       const title = (data.title || '').trim();
       const price = Number(data.price) || 0;
       const year = Number(data.year) || car.year;
-      if (title.length < 4 || !price || price < 1000000 || !year || year < 1990 || year > 2026) return null;
+      const maxYear = new Date().getFullYear();
+      if (title.length < 4 || !price || price < 1000000 || !year || year < 1990 || year > maxYear) return null;
       car.title = title;
       car.price = price;
       car.year = year;
       car.km = Number(data.km) || 0;
       car.location = (data.location || '').trim() || '-';
       car.category = data.category || car.category;
-      const img = (data.image || '').trim();
-      if (Object.prototype.hasOwnProperty.call(data, 'image')) car.image = img;
+      if (Object.prototype.hasOwnProperty.call(data, 'image')) {
+        const img = (data.image || '').trim();
+        // Kosong = pertahankan foto lama (jangan timpa jadi string kosong).
+        // Khusus reset eksplisit, panggil update(id, {image: ''}).
+        if (img) car.image = img;
+      }
       car.description = (data.description || '').trim();
       this.log('jual', `Listing <b>${car.title}</b> diperbarui`, true);
       persist();
@@ -359,6 +364,11 @@
     },
     totalRevenue() {
       return cars.filter((c) => c.status === 'done').reduce((a, c) => a + (Number(c.price) || 0), 0);
+    },
+    soldThisMonth() {
+      const d = new Date();
+      const start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+      return this.soldEvents().filter((ts) => ts >= start).length;
     },
     soldEvents() {
       // Waktu terjual: pakai purchase.ts bila ada, sonst createdAt.

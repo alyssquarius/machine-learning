@@ -7,6 +7,13 @@ const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches;
 
 function setMobile(open) {
   if (!sidebar || !overlay) return;
+  // Desktop: jangan utak-atik translate sidebar (mode collapse pakai class sendiri).
+  // Di sini cukup pastikan overlay mati & scroll pulih.
+  if (isDesktop()) {
+    overlay.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    return;
+  }
   sidebar.classList.toggle('-translate-x-full', !open);
   overlay.classList.toggle('hidden', !open);
   document.body.classList.toggle('overflow-hidden', open && !isDesktop());
