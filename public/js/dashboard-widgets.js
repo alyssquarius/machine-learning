@@ -68,10 +68,10 @@
 
   // ---------- KPI (dari CarStore) ----------
   const TONES = {
-    ink: { chip: 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950', hex: '#09090b' },
-    stone: { chip: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200', hex: '#52525b' },
-    gray: { chip: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300', hex: '#a1a1aa' },
-    line: { chip: 'bg-gray-50 dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-200 dark:border-zinc-800', hex: '#d4d4d8' },
+    ink: { chip: 'bg-zinc-950 dark:bg-zinc-700 text-white dark:text-zinc-100', hex: '#3a3a43' },
+    stone: { chip: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300', hex: '#52525b' },
+    gray: { chip: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300', hex: '#6d6d77' },
+    line: { chip: 'bg-gray-50 dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-200 dark:border-zinc-800', hex: '#8e8e96' },
   };
   const sparkOf = (v) => {
     const b = Math.max(2, Number(v) || 0);
@@ -85,10 +85,10 @@
     const revenue = store().totalRevenue();
     const pendingOffers = store().pendingOffersCount();
     const KPIS = [
-      { label: 'Total Listing', value: s.total, delta: `${s.active} aktif`, icon: 'database', tone: 'ink', bar: 'bg-zinc-950 dark:bg-white', spark: sparkOf(s.total) },
-      { label: 'Terjual', value: s.sold, delta: `${s.pending} menunggu`, icon: 'check', tone: 'stone', bar: 'bg-zinc-500 dark:bg-zinc-400', spark: sparkOf(s.sold) },
-      { label: 'Tawaran Masuk', value: pendingOffers, delta: 'menunggu putusan', icon: 'tag', tone: 'gray', bar: 'bg-zinc-400 dark:bg-zinc-500', spark: sparkOf(pendingOffers) },
-      { label: 'Omzet Terjual', value: revenue, money: true, delta: `${s.sold} unit`, icon: 'cart', tone: 'line', bar: 'bg-zinc-300 dark:bg-zinc-600', spark: sparkOf(s.sold) },
+      { label: 'Total Listing', value: s.total, delta: `${s.active} aktif`, icon: 'database', tone: 'ink', bar: 'bg-zinc-950 dark:bg-zinc-600', spark: sparkOf(s.total) },
+      { label: 'Terjual', value: s.sold, delta: `${s.pending} menunggu`, icon: 'check', tone: 'stone', bar: 'bg-zinc-500 dark:bg-zinc-500', spark: sparkOf(s.sold) },
+      { label: 'Tawaran Masuk', value: pendingOffers, delta: 'menunggu putusan', icon: 'tag', tone: 'gray', bar: 'bg-zinc-400 dark:bg-zinc-600', spark: sparkOf(pendingOffers) },
+      { label: 'Omzet Terjual', value: revenue, money: true, delta: `${s.sold} unit`, icon: 'cart', tone: 'line', bar: 'bg-zinc-300 dark:bg-zinc-700', spark: sparkOf(s.sold) },
     ];
     box.innerHTML = KPIS.map((k, i) => {
       const t = TONES[k.tone];
@@ -96,15 +96,15 @@
         ? `<span class="text-2xl" data-count="${k.value}" data-decimals="0">0</span>`
         : `<span data-count="${k.value}" data-decimals="${k.decimals || 0}">0</span>${k.suffix || ''}`;
       return `<div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm transition hover:bg-gray-50 dark:hover:bg-zinc-800/60">
-        <span class="absolute inset-y-0 left-0 w-1 ${k.bar || 'bg-zinc-950 dark:bg-white'}" aria-hidden="true"></span>
+        <span class="absolute inset-y-0 left-0 w-1 ${k.bar || 'bg-zinc-950 dark:bg-zinc-600'}" aria-hidden="true"></span>
         <div class="flex items-center justify-between gap-3">
           <p class="min-w-0 text-sm font-medium text-gray-500 dark:text-zinc-400 truncate">${k.label}</p>
           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${t.chip}"><svg data-icon="${k.icon}" class="h-5 w-5"></svg></span>
         </div>
-        <p class="mt-3 ${k.money ? 'text-lg sm:text-2xl break-words' : 'text-3xl'} font-bold tracking-tight text-gray-900 dark:text-zinc-100">${val}${k.money ? '' : ''}</p>
+        <p class="mt-3 ${k.money ? 'text-lg sm:text-2xl break-words' : 'text-3xl'} font-bold tracking-tight text-gray-900 dark:text-zinc-200">${val}${k.money ? '' : ''}</p>
         ${k.money ? `<p class="text-xs text-gray-500 dark:text-zinc-400 mt-1" data-money-label="${k.value}">${rp(k.value)}</p>` : ''}
         <div class="mt-2 flex items-end justify-between gap-2">
-          <span class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-zinc-950 dark:bg-white px-2 py-0.5 text-xs font-medium text-white dark:text-zinc-950"><svg data-icon="trend" class="h-3.5 w-3.5"></svg>${k.delta}</span>
+          <span class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-zinc-950 dark:bg-zinc-700 px-2 py-0.5 text-xs font-medium text-white dark:text-zinc-100"><svg data-icon="trend" class="h-3.5 w-3.5"></svg>${k.delta}</span>
           ${sparkline(k.spark, t.hex, i)}
         </div></div>`;
     }).join('');
@@ -366,14 +366,14 @@
     const statsEl = $('#hours-stats');
     if (statsEl) {
       statsEl.innerHTML = `
-        <div><p class="text-xs text-gray-400 dark:text-zinc-500">Tawaran menunggu</p><p class="font-semibold text-white dark:text-zinc-950">${totalOffers} tawaran</p></div>
-        <div class="text-right"><p class="text-xs text-gray-400 dark:text-zinc-500">Hari teramai</p><p class="font-semibold text-white dark:text-zinc-950">${best[0]} &middot; ${fmt(best[1], 1)}</p></div>`;
+        <div><p class="text-xs text-gray-400 dark:text-zinc-500">Tawaran menunggu</p><p class="font-semibold text-white dark:text-zinc-200">${totalOffers} tawaran</p></div>
+        <div class="text-right"><p class="text-xs text-gray-400 dark:text-zinc-500">Hari teramai</p><p class="font-semibold text-white dark:text-zinc-200">${best[0]} &middot; ${fmt(best[1], 1)}</p></div>`;
     }
     const barsEl = $('#bars');
     if (!barsEl) return;
     barsEl.innerHTML = `<div class="flex h-36 items-end gap-2 sm:gap-3 overflow-hidden">${HOURS.map(([day, v]) => `
       <div class="group flex h-full min-w-0 flex-1 flex-col items-center justify-end overflow-hidden">
-        <div class="bar w-full max-w-10 rounded-t-md transition-colors duration-200 ${v === max ? 'bg-white dark:bg-zinc-950' : 'bg-white/40 dark:bg-zinc-950/30 group-hover:bg-white/70 dark:group-hover:bg-zinc-950/60'}" data-px="${Math.round((v / max) * 108)}" style="height:${reduce ? Math.round((v / max) * 108) : 0}px;transition:height .8s cubic-bezier(.2,.8,.2,1),background-color .2s" title="${day}: ${fmt(v, 1)}"></div>
+        <div class="bar w-full max-w-10 rounded-t-md transition-colors duration-200 ${v === max ? 'bg-white dark:bg-zinc-300' : 'bg-white/40 dark:bg-white/15 group-hover:bg-white/70 dark:group-hover:bg-white/30'}" data-px="${Math.round((v / max) * 108)}" style="height:${reduce ? Math.round((v / max) * 108) : 0}px;transition:height .8s cubic-bezier(.2,.8,.2,1),background-color .2s" title="${day}: ${fmt(v, 1)}"></div>
         <span class="mt-2 shrink-0 text-[11px] leading-none text-gray-400 dark:text-zinc-500">${day}</span>
       </div>`).join('')}</div>`;
     if (reduce) return;

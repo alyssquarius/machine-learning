@@ -18,20 +18,36 @@
   --color-button-primary-text: #ffffff;
 }
 
+/* Dark mode: sengaja TIDAK pakai hitam pekat + putih murni (menyilaukan).
+   Latar sedikit terangkat, teks putih diredupkan ke abu terang. */
 html.dark {
-  --color-bg-primary: #09090b;
-  --color-bg-secondary: #121215;
-  --color-bg-tertiary: #18181b;
-  --color-border: #27272a;
-  --color-border-subtle: #202023;
-  --color-text-primary: #f4f4f5;
-  --color-text-secondary: #d4d4d8;
-  --color-text-muted: #a1a1aa;
-  --color-card-bg: #18181b;
-  --color-input-bg: #18181b;
-  --color-input-border: #3f3f46;
-  --color-button-primary-bg: #f4f4f5;
-  --color-button-primary-text: #09090b;
+  --color-bg-primary: #131318;
+  --color-bg-secondary: #1a1a20;
+  --color-bg-tertiary: #222229;
+  --color-border: #2e2e36;
+  --color-border-subtle: #26262d;
+  --color-text-primary: #b9b9c1;
+  --color-text-secondary: #9d9da7;
+  --color-text-muted: #7c7c86;
+  --color-card-bg: #1a1a20;
+  --color-input-bg: #1e1e25;
+  --color-input-border: #3a3a44;
+  --color-button-primary-bg: #9d9da7;
+  --color-button-primary-text: #1a1a20;
+  /* Angkat hitam pekat Tailwind agar kontras tidak "nembak".
+     Ini yang bikin body/sidebar/header (dark:bg-zinc-950) tidak terlalu hitam. */
+  --color-zinc-950: #1c1c22;
+  --color-zinc-900: #222229;
+  --color-zinc-800: #2e2e36;
+  /* Redupkan abu terang yang dipakai tombol di dark mode */
+  --color-zinc-200: #8e8e96;
+  --color-zinc-100: #9d9da7;
+  --color-zinc-300: #8e8e96;
+  /* Redupkan SEMUA utilitas putih Tailwind saat dark (anti-silau).
+     Tailwind v4 memakai var(--color-white) untuk dark:bg-white,
+     dark:text-white, dark:border-white, focus:ring-white, dsb. */
+  --color-white: #b9b9c1;
+  color-scheme: dark;
 }
 
 /* Transisi halus saat ganti tema */
@@ -55,36 +71,36 @@ html.dark .bg-white {
 }
 
 html.dark .text-black {
-  color: #ffffff !important;
+  color: #d6d6dc !important;
 }
 
 html.dark .text-gray-900 {
-  color: #f4f4f5 !important;
+  color: #cfcfd6 !important;
 }
 
 html.dark .text-gray-700 {
-  color: #d4d4d8 !important;
+  color: #b3b3bb !important;
 }
 
 html.dark .text-gray-600 {
-  color: #a1a1aa !important;
+  color: #9a9aa3 !important;
 }
 
 html.dark .text-gray-500 {
-  color: #9ca3af !important;
+  color: #85858f !important;
 }
 
 html.dark .border-gray-200,
 html.dark .border-gray-300 {
-  border-color: #27272a !important;
+  border-color: #2b2b32 !important;
 }
 
 html.dark .bg-gray-50 {
-  background-color: #121215 !important;
+  background-color: #141419 !important;
 }
 
 html.dark .bg-gray-100 {
-  background-color: #27272a !important;
+  background-color: #232329 !important;
 }
 
 /* Input Fields in Dark Mode */
@@ -92,193 +108,199 @@ html.dark input[type="text"],
 html.dark input[type="email"],
 html.dark input[type="password"],
 html.dark input[type="search"],
-html.dark select {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-color: #3f3f46 !important;
+html.dark input[type="number"],
+html.dark input[type="tel"],
+html.dark select,
+html.dark textarea {
+  background-color: #1a1a20 !important;
+  color: #cfcfd6 !important;
+  border-color: #3a3a43 !important;
 }
 
 html.dark input[type="text"]::placeholder,
 html.dark input[type="email"]::placeholder,
 html.dark input[type="password"]::placeholder,
-html.dark input[type="search"]::placeholder {
-  color: #71717a !important;
+html.dark input[type="search"]::placeholder,
+html.dark textarea::placeholder {
+  color: #6d6d77 !important;
 }
 
+/* Fokus diredupkan: abu netral, bukan putih menyala */
 html.dark input:focus,
-html.dark select:focus {
-  border-color: #ffffff !important;
-  --tw-ring-color: #ffffff !important;
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #52525c !important;
+  --tw-ring-color: #52525c !important;
 }
 
-/* Auth Action Buttons in Dark Mode */
+/* Tombol primer di dark mode: abu terang, bukan putih menyala */
 html.dark button[type="submit"]:not(.keep-light),
 html.dark #submit-btn {
-  background-color: #ffffff !important;
-  color: #09090b !important;
+  background-color: #c9c9d1 !important;
+  color: #17171c !important;
 }
 html.dark button[type="submit"]:not(.keep-light):hover,
 html.dark #submit-btn:hover {
-  background-color: #e4e4e7 !important;
+  background-color: #d6d6dc !important;
 }
 
 /* Social Buttons in Dark Mode */
 html.dark #google-login {
-  background-color: #18181b !important;
-  border-color: #3f3f46 !important;
-  color: #f4f4f5 !important;
+  background-color: #1a1a20 !important;
+  border-color: #3a3a43 !important;
+  color: #cfcfd6 !important;
 }
 html.dark #google-login:hover {
-  background-color: #27272a !important;
+  background-color: #232329 !important;
 }
 
 /* Divider in Auth Pages */
 html.dark .auth-divider-text {
   background-color: var(--color-bg-primary) !important;
-  color: #71717a !important;
+  color: #6d6d77 !important;
 }
 
-/* Dashboard Specific Dark Mode Rules - selaras website (zinc-950) */
+/* Dashboard Specific Dark Mode Rules */
 html.dark aside#sidebar {
-  background-color: #09090b !important;
-  border-color: #27272a !important;
+  background-color: #101014 !important;
+  border-color: #2b2b32 !important;
 }
 
 html.dark header {
-  background-color: #09090b !important;
-  border-color: #27272a !important;
+  background-color: #101014 !important;
+  border-color: #2b2b32 !important;
 }
 
 html.dark .nav-item {
-  color: #a1a1aa !important;
+  color: #9a9aa3 !important;
 }
 html.dark .nav-item:hover {
-  background-color: #18181b !important;
-  color: #ffffff !important;
+  background-color: #1e1e24 !important;
+  color: #d6d6dc !important;
 }
 html.dark .nav-active {
-  background-color: #18181b !important;
-  border-left-color: #ffffff !important;
-  color: #ffffff !important;
+  background-color: #1e1e24 !important;
+  border-left-color: #8e8e96 !important;
+  color: #d6d6dc !important;
 }
 
 html.dark #notif-menu,
 html.dark #user-menu {
-  background-color: #09090b !important;
-  border-color: #27272a !important;
-  color: #f4f4f5 !important;
+  background-color: #141419 !important;
+  border-color: #2b2b32 !important;
+  color: #cfcfd6 !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
 }
 
 html.dark #user-menu .bg-gray-50 {
-  background-color: #18181b !important;
-  border-color: #27272a !important;
+  background-color: #1e1e24 !important;
+  border-color: #2b2b32 !important;
 }
 
 html.dark #user-menu a:hover {
-  background-color: #18181b !important;
-  color: #ffffff !important;
+  background-color: #1e1e24 !important;
+  color: #d6d6dc !important;
 }
 
 html.dark #notif-menu .border-b,
 html.dark #user-menu .border-b,
 html.dark #user-menu .border-t {
-  border-color: #27272a !important;
+  border-color: #2b2b32 !important;
 }
 
 /* KPI Cards in Dark Mode */
 html.dark #kpis > div {
-  background: #09090b !important;
-  border: 1px solid #27272a !important;
+  background: #141419 !important;
+  border: 1px solid #2b2b32 !important;
   box-shadow: none !important;
 }
-html.dark #kpis > div:nth-child(1)::before { background: #fafafa !important; }
-html.dark #kpis > div:nth-child(2)::before { background: #a1a1aa !important; }
-html.dark #kpis > div:nth-child(3)::before { background: #71717a !important; }
-html.dark #kpis > div:nth-child(4)::before { background: #3f3f46 !important; }
-html.dark #kpis h3, html.dark #kpis p.text-slate-500 { color: #a1a1aa !important; }
-html.dark #kpis h2, html.dark #kpis p.text-slate-900 { color: #f4f4f5 !important; }
+html.dark #kpis > div:nth-child(1)::before { background: #8e8e96 !important; }
+html.dark #kpis > div:nth-child(2)::before { background: #6d6d77 !important; }
+html.dark #kpis > div:nth-child(3)::before { background: #52525c !important; }
+html.dark #kpis > div:nth-child(4)::before { background: #3a3a43 !important; }
+html.dark #kpis h3, html.dark #kpis p.text-slate-500 { color: #9a9aa3 !important; }
+html.dark #kpis h2, html.dark #kpis p.text-slate-900 { color: #cfcfd6 !important; }
 
 /* Charts & Cards in Dark Mode */
 html.dark .lg\:col-span-2.rounded-xl,
 html.dark .space-y-6 > .rounded-xl,
 html.dark .rounded-xl.bg-white {
-  background-color: #18181b !important;
-  border-color: #27272a !important;
+  background-color: #17171c !important;
+  border-color: #2b2b32 !important;
 }
 
 html.dark #range-tabs {
-  background-color: #18181b !important;
-  border-color: #27272a !important;
+  background-color: #1e1e24 !important;
+  border-color: #2b2b32 !important;
 }
 html.dark #range-tabs button[aria-pressed="true"],
 html.dark #range-tabs button.bg-white {
-  background-color: #09090b !important;
-  color: #ffffff !important;
-  border-color: #3f3f46 !important;
+  background-color: #2b2b32 !important;
+  color: #d6d6dc !important;
+  border-color: #3a3a43 !important;
 }
 html.dark #range-tabs button {
-  color: #a1a1aa !important;
+  color: #9a9aa3 !important;
 }
 html.dark #range-tabs button:hover {
-  color: #ffffff !important;
+  color: #d6d6dc !important;
 }
 
 /* Table in Dark Mode */
 html.dark thead {
-  background-color: #09090b !important;
-  border-color: #27272a !important;
+  background-color: #141419 !important;
+  border-color: #2b2b32 !important;
 }
 html.dark thead th {
-  color: #a1a1aa !important;
+  color: #9a9aa3 !important;
 }
 html.dark #table-body tr {
   background-color: transparent !important;
-  border-color: #27272a !important;
+  border-color: #2b2b32 !important;
 }
 html.dark #table-body tr:hover {
-  background-color: #18181b !important;
+  background-color: #1e1e24 !important;
 }
 html.dark #table-body td {
-  color: #d4d4d8 !important;
+  color: #b3b3bb !important;
 }
 html.dark #table-body td p.text-slate-900 {
-  color: #f4f4f5 !important;
+  color: #cfcfd6 !important;
 }
 html.dark #table-body td p.text-slate-500 {
-  color: #a1a1aa !important;
+  color: #9a9aa3 !important;
 }
 
 /* Popular Courses / Cars in Dark Mode */
 html.dark #courses > div {
   background: transparent !important;
-  border: 1px solid #27272a !important;
+  border: 1px solid #2b2b32 !important;
 }
 html.dark #courses > div:hover {
-  background: #18181b !important;
-  border-color: #3f3f46 !important;
+  background: #1e1e24 !important;
+  border-color: #3a3a43 !important;
 }
-html.dark #courses h4, html.dark #courses p.text-slate-900 { color: #f4f4f5 !important; }
-html.dark #courses p.text-slate-500 { color: #a1a1aa !important; }
+html.dark #courses h4, html.dark #courses p.text-slate-900 { color: #cfcfd6 !important; }
+html.dark #courses p.text-slate-500 { color: #9a9aa3 !important; }
 
 /* Activity Timeline in Dark Mode */
-html.dark #activity li h4 { color: #f4f4f5 !important; }
-html.dark #activity li p { color: #a1a1aa !important; }
-html.dark #activity li span { color: #71717a !important; }
-html.dark #activity li > div:first-child { 
-  background: #09090b !important; 
-  border: 2px solid #ffffff !important; 
+html.dark #activity li h4 { color: #cfcfd6 !important; }
+html.dark #activity li p { color: #9a9aa3 !important; }
+html.dark #activity li span { color: #6d6d77 !important; }
+html.dark #activity li > div:first-child {
+  background: #141419 !important;
+  border: 2px solid #8e8e96 !important;
 }
 html.dark .timeline-line {
-  background: #27272a !important;
+  background: #2b2b32 !important;
 }
 
 /* Scrollbar in Dark Mode */
 html.dark ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #3a3a43;
 }
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #52525c;
 }
 
 /* Theme Toggle Button Style */
@@ -298,9 +320,43 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   background-color: #f3f4f6;
 }
 html.dark .theme-toggle-btn {
-  color: #a1a1aa;
+  color: #9a9aa3;
 }
 html.dark .theme-toggle-btn:hover {
-  color: #f4f4f5;
-  background-color: #27272a;
+  color: #d6d6dc;
+  background-color: #232329;
+}
+
+/* ==========================================================================
+   Anti-silau tambahan — redupkan foto & elemen terang sisa
+   ========================================================================== */
+/* Foto mobil diredupkan sedikit agar tidak "nembak" di ruangan gelap */
+html.dark img {
+  filter: brightness(0.86) contrast(0.97);
+}
+/* Ikon sun (kuning cerah) di tombol tema ikut diredupkan */
+html.dark [data-theme-icon="sun"] {
+  color: #c9a86a !important;
+}
+
+/* Panel besar yang memakai dark:bg-white (banner & aktivitas) jangan jadi
+   putih menyala — paksa jadi abu gelap yang nyaman di mata */
+html.dark [data-widget="banner"],
+html.dark [data-widget="activity"] {
+  background-color: #17171c !important;
+  border-color: #2b2b32 !important;
+  color: #cfcfd6 !important;
+}
+html.dark [data-widget="banner"] .absolute.inset-0.bg-zinc-950\/80 {
+  background-color: rgba(16, 16, 20, 0.82) !important;
+}
+html.dark [data-widget="banner"] #greeting-name,
+html.dark [data-widget="banner"] #goal-pct,
+html.dark [data-widget="activity"] #hours-total {
+  color: #d6d6dc !important;
+}
+html.dark [data-widget="banner"] #banner-sub,
+html.dark [data-widget="banner"] #goal-note,
+html.dark [data-widget="activity"] #hours-stats {
+  color: #9a9aa3 !important;
 }
