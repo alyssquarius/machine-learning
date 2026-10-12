@@ -21,160 +21,6 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/output.css" />
-    <link rel="stylesheet" href="css/theme-custom.css" />
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        /* Custom Theme Styles - diselaraskan dengan website (monokrom minimalis) */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
-        
-        .shimmer { 
-            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); 
-            background-size: 200% 100%; 
-            animation: shimmer 1.5s infinite; 
-        }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        [data-icon] { fill: currentColor; }
-        
-        /* Overrides for JS injected elements to match Website Theme */
-        #kpis > div {
-            background: #ffffff !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 0.75rem !important;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: none !important;
-        }
-        #kpis > div::before {
-            content: '';
-            position: absolute;
-            top: 0; bottom: 0; left: 0; width: 4px;
-            background: #000000;
-        }
-        #kpis > div:nth-child(2)::before { background: #52525b; box-shadow: none; }
-        #kpis > div:nth-child(3)::before { background: #a1a1aa; box-shadow: none; }
-        #kpis > div:nth-child(4)::before { background: #e4e4e7; box-shadow: none; }
-        
-        #kpis h3, #kpis p.text-slate-500 { color: #6b7280 !important; }
-        #kpis h2, #kpis p.text-slate-900 { color: #111827 !important; font-weight: 600; }
-        
-        #line-chart, #donut {
-            background: transparent !important;
-            border: none !important;
-        }
-        
-        /* Table rows injected */
-        #table-body tr {
-            transition: all 0.2s ease;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        #table-body tr:hover {
-            background: #f9fafb !important;
-            box-shadow: none !important;
-        }
-        #table-body td {
-            color: #4b5563 !important;
-        }
-        #table-body td p.text-slate-900 { color: #111827 !important; font-weight: 500; }
-        #table-body td p.text-slate-500 { color: #6b7280 !important; }
-        
-        /* Courses injected */
-        #courses > div {
-            background: #ffffff !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 0.5rem !important;
-            transition: all 0.2s ease;
-        }
-        #courses > div:hover {
-            background: #f9fafb !important;
-            border-color: #d1d5db !important;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-        #courses h4, #courses p.text-slate-900 { color: #111827 !important; font-weight: 600; }
-        #courses p.text-slate-500 { color: #6b7280 !important; }
-        
-        /* Activity timeline injected */
-        #activity li h4 { color: #111827 !important; font-weight: 500; }
-        #activity li p { color: #4b5563 !important; }
-        #activity li span { color: #9ca3af !important; }
-        #activity li > div:first-child { 
-            background: #ffffff !important; 
-            border: 2px solid #000000 !important; 
-            box-shadow: none !important;
-        }
-        
-        .timeline-line {
-            background: #e5e7eb !important;
-        }
-        
-        /* Nav items - selaras website: hitam / putih */
-        .nav-item {
-            transition: all 0.2s ease;
-        }
-        .nav-active {
-            background-color: #f3f4f6;
-            border-left: 3px solid #000000;
-            color: #111827;
-        }
-
-        /* Dark Mode Overrides for Injected Components */
-        html.dark #kpis > div {
-            background: #18181b !important;
-            border: 1px solid #27272a !important;
-            box-shadow: none !important;
-        }
-        html.dark #kpis > div::before { background: #fafafa !important; }
-        html.dark #kpis > div:nth-child(2)::before { background: #a1a1aa !important; }
-        html.dark #kpis > div:nth-child(3)::before { background: #71717a !important; }
-        html.dark #kpis > div:nth-child(4)::before { background: #3f3f46 !important; }
-        html.dark #kpis h3, html.dark #kpis p.text-slate-500 { color: #a1a1aa !important; }
-        html.dark #kpis h2, html.dark #kpis p.text-slate-900 { color: #f4f4f5 !important; }
-
-        html.dark #table-body tr {
-            background: transparent !important;
-            border-bottom: 1px solid #27272a !important;
-        }
-        html.dark #table-body tr:hover {
-            background: #18181b !important;
-        }
-        html.dark #table-body td {
-            color: #d4d4d8 !important;
-        }
-        html.dark #table-body td p.text-slate-900 { color: #f4f4f5 !important; }
-        html.dark #table-body td p.text-slate-500 { color: #a1a1aa !important; }
-
-        html.dark #courses > div {
-            background: transparent !important;
-            border: 1px solid #27272a !important;
-        }
-        html.dark #courses > div:hover {
-            background: #18181b !important;
-            border-color: #3f3f46 !important;
-        }
-        html.dark #courses h4, html.dark #courses p.text-slate-900 { color: #f4f4f5 !important; }
-        html.dark #courses p.text-slate-500 { color: #a1a1aa !important; }
-
-        html.dark #activity li h4 { color: #f4f4f5 !important; }
-        html.dark #activity li p { color: #d4d4d8 !important; }
-        html.dark #activity li span { color: #71717a !important; }
-        html.dark #activity li > div:first-child { 
-            background: #09090b !important; 
-            border: 2px solid #ffffff !important; 
-        }
-        html.dark .timeline-line {
-            background: #27272a !important;
-        }
-        html.dark .nav-active {
-            background-color: #18181b !important;
-            border-left: 3px solid #ffffff !important;
-            color: #f4f4f5 !important;
-        }
-    </style>
 </head>
 <body class="bg-white dark:bg-zinc-950 font-sans text-gray-900 dark:text-zinc-100 antialiased selection:bg-gray-200 dark:selection:bg-zinc-800">
     <!-- App Container -->
@@ -245,7 +91,7 @@
 
                 <div class="flex items-center gap-2 sm:gap-4">
                     <!-- Theme Toggle -->
-                    <button type="button" data-theme-toggle class="theme-toggle-btn border border-gray-200 dark:border-zinc-800 rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 transition" aria-label="Ganti mode tema" title="Ganti mode tema">
+                    <button type="button" data-theme-toggle class="inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-zinc-800 p-2 text-gray-500 dark:text-zinc-400 transition hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-zinc-100 cursor-pointer" aria-label="Ganti mode tema" title="Ganti mode tema">
                         <svg data-theme-icon="sun" class="h-5 w-5 hidden text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
@@ -432,11 +278,11 @@
                         <!-- Aktivitas Minat -->
                         <div class="rounded-xl bg-black dark:bg-white p-6 border border-black dark:border-white text-white dark:text-zinc-950">
                             <h2 class="text-base font-medium text-gray-400 dark:text-zinc-500 mb-2">Aktivitas & Tawaran</h2>
-                            <div class="flex items-end gap-3 mb-6">
+                            <div class="flex items-end gap-3 mb-4">
                                 <span id="hours-total" class="text-4xl font-bold tracking-tight">0</span>
                                 <span class="text-gray-400 dark:text-zinc-500 text-sm mb-1.5 font-medium">skor minggu ini</span>
                             </div>
-                            <div id="bars" class="flex h-24 items-end gap-2">
+                            <div id="bars" class="h-44 overflow-hidden">
                                 <!-- Bars injected via JS -->
                             </div>
                             <div id="hours-stats" class="mt-4 text-xs font-medium text-gray-400 dark:text-zinc-500 flex justify-between">
@@ -449,7 +295,7 @@
                             <h2 class="text-base font-bold text-black dark:text-white mb-5">Aktivitas Terbaru</h2>
                             <div class="relative">
                                 <!-- Vertical Timeline Line -->
-                                <div class="timeline-line absolute inset-y-0 left-2.75 w-0.5 rounded-full bg-gray-200 dark:bg-zinc-800"></div>
+                                <div class="absolute inset-y-0 left-[11px] w-0.5 rounded-full bg-gray-200 dark:bg-zinc-800" aria-hidden="true"></div>
                                 <ul id="activity" class="space-y-6 relative">
                                     <!-- Timeline items injected via JS -->
                                 </ul>
