@@ -1,18 +1,44 @@
 const $ = (sel) => document.querySelector(sel);
 
-// ---------- Sidebar (mobile) ----------
+// ---------- Sidebar (mobile drawer + collapse desktop) ----------
 const sidebar = $('#sidebar');
 const overlay = $('#overlay');
+const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches;
 
-function setSidebar(open) {
+function setMobile(open) {
   if (!sidebar || !overlay) return;
   sidebar.classList.toggle('-translate-x-full', !open);
   overlay.classList.toggle('hidden', !open);
-  document.body.classList.toggle('overflow-hidden', open);
+  document.body.classList.toggle('overflow-hidden', open && !isDesktop());
 }
 
-if ($('#menu-btn')) $('#menu-btn').addEventListener('click', () => setSidebar(true));
-if (overlay) overlay.addEventListener('click', () => setSidebar(false));
+function setCollapsed(collapsed) {
+  if (!sidebar) return;
+  sidebar.classList.toggle('sidebar-collapsed', collapsed);
+  try { localStorage.setItem('sidebar-collapsed', collapsed ? '1' : '0'); } catch { /* abaikan */ }
+}
+
+// Pulihkan preferensi collapse desktop.
+try {
+  if (isDesktop() && localStorage.getItem('sidebar-collapsed') === '1') {
+    sidebar?.classList.add('sidebar-collapsed');
+  }
+} catch { /* abaikan */ }
+
+if ($('#menu-btn')) $('#menu-btn').addEventListener('click', () => {
+  if (isDesktop()) {
+    setCollapsed(!sidebar?.classList.contains('sidebar-collapsed'));
+  } else {
+    setMobile(sidebar?.classList.contains('-translate-x-full'));
+  }
+});
+if ($('#sidebar-collapse-btn')) $('#sidebar-collapse-btn').addEventListener('click', () => setCollapsed(true));
+if ($('#sidebar-expand-btn')) $('#sidebar-expand-btn').addEventListener('click', () => setCollapsed(false));
+if (overlay) overlay.addEventListener('click', () => setMobile(false));
+// Saat pindah ke desktop, pastikan overlay & scroll terkunci tidak nyangkut.
+window.addEventListener('resize', () => { if (isDesktop()) setMobile(false); });
+
+function setSidebar(open) { setMobile(open); }
 
 // Navigasi antar halaman (#/dashboard, #/jual, ...) ditangani marketplace.js.
 // Di sini hanya sediakan helper agar status aktif nav selalu sinkron.
