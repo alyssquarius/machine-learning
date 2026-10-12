@@ -505,7 +505,7 @@
         <li class="relative flex gap-3">
           ${i < list.length - 1 ? '<span class="absolute left-[5px] top-4 h-full w-px bg-gray-200 dark:bg-zinc-800"></span>' : ''}
           <span class="relative mt-1.5 h-3 w-3 shrink-0 rounded-full ring-4 ring-white dark:ring-zinc-900 ${HIST_TONE[h.type] || 'bg-zinc-400'}"></span>
-          <div class="flex-1"><p class="text-sm text-gray-700 dark:text-zinc-300">${h.text}</p><p class="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">${ago(h.ts)}</p></div>
+          <div class="flex-1"><p class="text-sm text-gray-700 dark:text-zinc-300">${h.text}</p><p class="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">${ago(h.ts)}${h.carId ? ` • <button data-detail="${h.carId}" class="font-semibold underline underline-offset-2 hover:opacity-70">Lihat mobil</button>` : ''}</p></div>
         </li>`).join('');
     }
     const empty = $('#hist-empty');
@@ -555,6 +555,14 @@
         </div>
         <p class="mt-3 text-2xl font-bold text-black dark:text-white">${rp(c.price)}</p>
         <p class="mt-3 text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">${c.description || 'Tidak ada deskripsi.'}</p>
+        ${c.purchase ? `<div class="mt-3 rounded-lg border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 p-3 text-xs text-gray-600 dark:text-zinc-300">
+          <p class="font-bold text-black dark:text-white mb-1">Info pembelian</p>
+          ${c.purchase.method === 'kredit'
+            ? `<p>DP ${rp(c.purchase.dp)} • ${c.purchase.tenor}× ${rp(c.purchase.installment)}/bln • bunga ${c.purchase.rate}%/thn${c.purchase.name ? ` • ${c.purchase.name}` : ''}</p>`
+            : c.purchase.method === 'tawar'
+              ? `<p>Dibeli via tawaran yang diterima${c.purchase.name ? ` • ${c.purchase.name}` : ''}</p>`
+              : `<p>Tunai${c.purchase.name ? ` • ${c.purchase.name} (${c.purchase.phone || '-'})` : ''}</p>`}
+        </div>` : ''}
         <div class="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-400">
           <span class="inline-flex items-center gap-1">❤ ${c.interest || 0}% diminati</span><span>•</span><span>Ditambahkan ${ago(c.createdAt)}</span>
         </div>
@@ -830,6 +838,21 @@
       if (!$('#modal-detail')?.classList.contains('hidden')) openDetail(cid);
       return;
     }
+    // Link "Lihat mobil →" dari aktivitas/notifikasi: buka detail mobil terkait.
+    const goto = e.target.closest('[data-goto-car]');
+    if (goto) {
+      e.preventDefault();
+      const id = goto.dataset.gotoCar;
+      if (store().get(id)) {
+        if (currentRoute() !== 'beli' && currentRoute() !== 'jual' && currentRoute() !== 'favorit') {
+          location.hash = '#/beli';
+        }
+        setTimeout(() => safe(openDetail, 'open-detail-goto')(id), 60);
+      } else {
+        toast('Mobil terkait sudah tidak tersedia.');
+      }
+      return;
+    }
     const det = e.target.closest('[data-detail]');
     if (det) {
       openDetail(det.dataset.detail);
@@ -860,7 +883,22 @@
     }
   });
 
+  // ---------- Panduan jual cepat (ganti tombol mati) ----------
+  function bindGuide() {
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('[data-guide]')) {
+        toast('Panduan: foto asli + deskripsi jujur + balas tawaran < 24 jam.');
+        if (window.CarStore) window.CarStore.log('verifikasi', 'Panduan <b>Tips Jual Cepat</b> dibaca');
+        return;
+      }
+      if (e.target.closest('[data-guide-contact]')) {
+        toast('Butuh bantuan? Hubungi tim via menu Pengaturan → Reset Data untuk demo.');
+        return;
+      }
+    });
+  }
   // ---------- Bind halaman ----------
+  // Catatan: semua aksi kartu/modal juga ditangani delegasi klik global di atas,
   // Catatan: semua aksi kartu/modal juga ditangani delegasi klik global di atas,
   // jadi bind() ini hanya untuk filter & form — boleh gagal sebagian tanpa mematikan navigasi.
   function bind() {
@@ -1023,6 +1061,7 @@
   }
 
   function bootMarketplace() {
+    try { bindGuide(); } catch (err) { console.error('[marketplace] bindGuide gagal:', err); }
     try { bind(); } catch (err) { console.error('[marketplace] bind() gagal:', err); }
     try { showPage(currentRoute()); } catch (err) { console.error('[marketplace] showPage awal gagal:', err); }
   }

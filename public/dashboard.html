@@ -221,7 +221,7 @@
                 <div class="rounded-xl bg-white dark:bg-zinc-950 p-4 border border-gray-200 dark:border-zinc-800">
                     <h4 class="font-semibold text-black dark:text-white mb-1">Tips Jual Cepat</h4>
                     <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4 leading-relaxed">Tingkatkan kualitas foto mobilmu untuk menarik lebih banyak pembeli!</p>
-                    <button class="w-full rounded-lg bg-black dark:bg-white py-2.5 text-sm font-medium text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Lihat Panduan</button>
+                    <button class="w-full rounded-lg bg-black dark:bg-white py-2.5 text-sm font-medium text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200" data-guide>Lihat Panduan</button>
                 </div>
             </div>
         </aside>
@@ -290,8 +290,8 @@
                                 <p id="user-name" class="font-medium text-black dark:text-white truncate">User Name</p>
                                 <p id="user-email" class="text-xs text-gray-500 dark:text-zinc-400 truncate mt-0.5">user@example.com</p>
                             </div>
-                            <a href="#" class="block rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition">Profil Saya</a>
-                            <a href="#" class="block rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition">Pengaturan Akun</a>
+                            <a href="#/pengaturan" class="block rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition">Profil Saya</a>
+                            <a href="#/pengaturan" class="block rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition">Pengaturan Akun</a>
                             <div class="my-1 border-t border-gray-200 dark:border-zinc-800"></div>
                             <button id="logout" class="block w-full text-left rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium transition">Keluar</button>
                         </div>
@@ -346,8 +346,8 @@
                     <div class="lg:col-span-2 rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                             <div>
-                                <h2 class="text-lg font-bold text-black dark:text-white">Statistik penjualan</h2>
-                                <p class="text-sm text-gray-500 dark:text-zinc-400 mt-0.5">Performa penjualan 90 hari terakhir</p>
+                                <h2 class="text-lg font-bold text-black dark:text-white">Tren penjualan</h2>
+                                <p class="text-sm text-gray-500 dark:text-zinc-400 mt-0.5">Unit terjual & minat pembeli</p>
                             </div>
                             <div id="range-tabs" class="flex rounded-lg bg-gray-100 dark:bg-zinc-800 p-1 border border-gray-200 dark:border-zinc-800 self-start sm:self-auto">
                                 <button data-range="7H" class="rounded-md px-4 py-1.5 text-xs font-medium text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition">7H</button>
@@ -429,12 +429,12 @@
                             </div>
                         </div>
 
-                        <!-- Visitor Stats -->
+                        <!-- Aktivitas Minat -->
                         <div class="rounded-xl bg-black dark:bg-white p-6 border border-black dark:border-white text-white dark:text-zinc-950">
-                            <h2 class="text-base font-medium text-gray-400 dark:text-zinc-500 mb-2">Pengunjung</h2>
+                            <h2 class="text-base font-medium text-gray-400 dark:text-zinc-500 mb-2">Aktivitas & Tawaran</h2>
                             <div class="flex items-end gap-3 mb-6">
                                 <span id="hours-total" class="text-4xl font-bold tracking-tight">0</span>
-                                <span class="text-gray-400 dark:text-zinc-500 text-sm mb-1.5 font-medium">minggu ini</span>
+                                <span class="text-gray-400 dark:text-zinc-500 text-sm mb-1.5 font-medium">skor minggu ini</span>
                             </div>
                             <div id="bars" class="flex h-24 items-end gap-2">
                                 <!-- Bars injected via JS -->
@@ -737,9 +737,8 @@
                 <footer class="mt-10 border-t border-gray-200 dark:border-zinc-800 pt-6 pb-2 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-4">
                     <p class="text-sm font-medium text-gray-500 dark:text-zinc-400">&copy; 2026 AutoBuyCars. All rights reserved.</p>
                     <div class="flex gap-4 text-sm text-gray-500 dark:text-zinc-400">
-                        <a href="#" class="hover:text-gray-900 dark:hover:text-white transition-colors">Privasi</a>
-                        <a href="#" class="hover:text-gray-900 dark:hover:text-white transition-colors">Syarat</a>
-                        <a href="#" class="hover:text-gray-900 dark:hover:text-white transition-colors">Bantuan</a>
+                        <button data-guide class="hover:text-gray-900 dark:hover:text-white transition-colors">Panduan</button>
+                        <button data-guide-contact class="hover:text-gray-900 dark:hover:text-white transition-colors">Bantuan</button>
                     </div>
                 </footer>
             </main>

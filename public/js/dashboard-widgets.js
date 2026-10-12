@@ -82,11 +82,13 @@
     const box = $('#kpis');
     if (!box || !store()) return;
     const s = store().stats();
+    const revenue = store().totalRevenue();
+    const pendingOffers = store().pendingOffersCount();
     const KPIS = [
       { label: 'Total Listing', value: s.total, delta: `${s.active} aktif`, icon: 'database', tone: 'ink', spark: sparkOf(s.total) },
       { label: 'Terjual', value: s.sold, delta: `${s.pending} menunggu`, icon: 'check', tone: 'stone', spark: sparkOf(s.sold) },
-      { label: 'Favorit', value: s.favCount, delta: 'disimpan', icon: 'heart', tone: 'gray', spark: sparkOf(s.favCount) },
-      { label: 'Nilai Aktif', value: s.activeValue, money: true, delta: 'estimasi', icon: 'tag', tone: 'line', spark: sparkOf(s.active) },
+      { label: 'Tawaran Masuk', value: pendingOffers, delta: 'menunggu putusan', icon: 'tag', tone: 'gray', spark: sparkOf(pendingOffers) },
+      { label: 'Omzet Terjual', value: revenue, money: true, delta: `${s.sold} unit`, icon: 'cart', tone: 'line', spark: sparkOf(s.sold) },
     ];
     box.innerHTML = KPIS.map((k, i) => {
       const t = TONES[k.tone];
@@ -133,19 +135,51 @@
       <path d="${line}" fill="none" stroke="${hex}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
 
-  // ---------- Grafik garis ----------
+  // ---------- Grafik garis: pakai data nyata CarStore ----------
+  // Sumbu kiri = unit terjual kumulatif, sumbu kanan = minat rata-rata (%).
+  // Bila belum ada penjualan, tampil data jujur (flat 0) + pesan kosong.
   const DAYS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-  function series(range) {
-    const n = { '7H': 7, '30H': 10, '90H': 12 }[range] || 7;
-    const acc = [], loss = [], labels = [];
-    for (let i = 0; i < n; i++) {
-      const k = i / (n - 1);
-      acc.push(+Math.min(97, 94.2 - 30 * Math.exp(-3.2 * k) + Math.sin(i * 1.7) * 1.1).toFixed(1));
-      loss.push(+(0.12 + 0.85 * Math.exp(-2.8 * k) + Math.cos(i * 1.3) * 0.02).toFixed(2));
-      labels.push(range === '7H' ? DAYS[i] : range === '30H' ? `H${Math.round(((i + 1) * 30) / n)}` : `M${i + 1}`);
+  function bucketize(events, n, spanMs, labels) {
+    const counts = new Array(n).fill(0);
+    const end = Date.now();
+    const start = end - spanMs;
+    events.forEach((ts) => {
+      if (ts < start || ts > end) return;
+      const i = Math.min(n - 1, Math.floor(((ts - start) / spanMs) * n));
+      counts[i] += 1;
+    });
+    const cum = [];
+    let acc = 0;
+    counts.forEach((c) => { acc += c; cum.push(acc); });
+    return { cum, labels };
+  }
+  function labelsFor(range, n) {
+    if (range === '7H') return DAYS.slice(-n);
+    if (range === '30H') {
+      const out = [];
+      for (let i = 0; i < n; i++) out.push(`H${Math.round(((i + 1) * 30) / n)}`);
+      return out;
     }
-    acc[n - 1] = 94.2;
-    return { acc, loss, labels, n };
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(`M${i + 1}`);
+    return out;
+  }
+  function avgInterest() {
+    if (!store()) return 0;
+    const all = store().all();
+    if (!all.length) return 0;
+    return all.reduce((a, c) => a + (Number(c.interest) || 0), 0) / all.length;
+  }
+  function series(range) {
+    const conf = { '7H': { n: 7, span: 7 * 864e5 }, '30H': { n: 10, span: 30 * 864e5 }, '90H': { n: 12, span: 90 * 864e5 } }[range] || { n: 7, span: 7 * 864e5 };
+    const sold = store() ? store().soldEvents() : [];
+    const { cum, labels } = bucketize(sold, conf.n, conf.span, labelsFor(range, conf.n));
+    const total = cum.length ? cum[cum.length - 1] : 0;
+    const scale = Math.max(1, total);
+    const acc = cum.map((v) => +(total === 0 ? 0 : (v / scale) * 100).toFixed(1));
+    const base = avgInterest();
+    const loss = labels.map((_, i) => +(base * (1 - (i / Math.max(1, labels.length - 1)) * 0.08)).toFixed(2));
+    return { acc, loss, labels, n: labels.length, soldTotal: total };
   }
 
   const W = 640, H = 280, PL = 44, PR = 44, PT = 16, PB = 32;
@@ -186,7 +220,16 @@
 
     const box = $('#line-chart');
     if (!box) return;
-    box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="h-auto w-full touch-pan-y" role="img" aria-label="Grafik akurasi dan loss">
+    // Data belum ada: tampil jujur, jangan grafik palsu.
+    if (!s.soldTotal) {
+      box.innerHTML = `<div class="flex h-72 flex-col items-center justify-center gap-2 text-center">
+        <p class="text-sm font-semibold text-gray-700 dark:text-zinc-200">Belum ada penjualan tercatat</p>
+        <p class="text-xs text-gray-500 dark:text-zinc-400 max-w-xs">Grafik terisi otomatis setelah ada mobil terjual (Beli / Terima tawaran / Tandai Terjual).</p>
+        <a href="#/beli" class="mt-2 rounded-lg bg-zinc-950 dark:bg-white px-4 py-2 text-xs font-semibold text-white dark:text-zinc-950">Lihat Mobil Dijual</a>
+      </div>`;
+      return;
+    }
+    box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="h-auto w-full touch-pan-y" role="img" aria-label="Grafik penjualan dan minat">
       <defs><linearGradient id="accFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ink}" stop-opacity=".14"/><stop offset="1" stop-color="${ink}" stop-opacity="0"/></linearGradient></defs>
       ${grid}${xl}
       <path id="acc-area" d="${area}" fill="url(#accFill)" style="opacity:0;transition:opacity .8s ease .3s"/>
@@ -217,8 +260,8 @@
       dl.setAttribute('cx', x(i)); dl.setAttribute('cy', yLoss(s.loss[i]));
       [xh, da, dl].forEach((el) => (el.style.display = ''));
       tip.innerHTML = `<p class="mb-1 font-semibold">${s.labels[i]}</p>
-        <p class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-current opacity-90"></span>Akurasi ${fmt(s.acc[i], 1)}%</p>
-        <p class="flex items-center gap-1.5 opacity-70"><span class="h-2 w-2 rounded-full bg-current opacity-60"></span>Loss ${fmt(s.loss[i], 2)}</p>`;
+        <p class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-current opacity-90"></span>Terjual ${s.acc[i]}% dari total (${s.soldTotal} unit)</p>
+        <p class="flex items-center gap-1.5 opacity-70"><span class="h-2 w-2 rounded-full bg-current opacity-60"></span>Minat ${fmt(s.loss[i], 1)}%</p>`;
       tip.classList.remove('hidden');
       const left = Math.max(60, Math.min(r.width - 60, (x(i) / W) * r.width));
       tip.style.left = `${left}px`;
@@ -292,20 +335,38 @@
     if (reduce) go(); else requestAnimationFrame(() => requestAnimationFrame(go));
   }
 
-  // ---------- Bar pengunjung ----------
-  const HOURS = [['Sen', 4.5], ['Sel', 6], ['Rab', 3], ['Kam', 7.5], ['Jum', 5], ['Sab', 8.5], ['Min', 2]];
+  // ---------- Bar pengunjung: dari minat + riwayat nyata ----------
+  function visitorWeek() {
+    // Skala 0–10 dari minat rata-rata + aktivitas 7 hari terakhir.
+    const cars = store() ? store().all() : [];
+    const avg = cars.length ? cars.reduce((a, c) => a + (Number(c.interest) || 0), 0) / cars.length : 0;
+    const weekAgo = Date.now() - 7 * 864e5;
+    const hist = store() ? store().history().filter((h) => h.ts >= weekAgo) : [];
+    const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    const out = days.map((d) => [d, 0]);
+    hist.forEach((h) => {
+      const i = new Date(h.ts).getDay();
+      out[i][1] += 1;
+    });
+    return out.map(([d, n]) => [d, +Math.min(10, (avg / 12) + n * 0.8 + 0.4).toFixed(1)]);
+  }
 
   function renderBars() {
-    const max = Math.max(...HOURS.map((h) => h[1]));
+    const HOURS = visitorWeek().map(([d, v]) => [d === 'Min' ? 'Min' : d, v]);
+    // Urut Sen..Min agar konsisten dengan label.
+    const order = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    HOURS.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+    const max = Math.max(...HOURS.map((h) => h[1]), 1);
     const totalEl = $('#hours-total');
+    const totalOffers = store() ? store().pendingOffersCount() : 0;
     if (totalEl) totalEl.textContent = fmt(HOURS.reduce((a, h) => a + h[1], 0), 1);
     const total = HOURS.reduce((a, h) => a + h[1], 0);
     const best = HOURS.reduce((a, h) => (h[1] > a[1] ? h : a));
     const statsEl = $('#hours-stats');
     if (statsEl) {
       statsEl.innerHTML = `
-        <div><p class="text-xs text-gray-400 dark:text-zinc-500">Rata-rata harian</p><p class="font-semibold text-white dark:text-zinc-950">${fmt(total / HOURS.length, 1)} jam</p></div>
-        <div class="text-right"><p class="text-xs text-gray-400 dark:text-zinc-500">Hari terbaik</p><p class="font-semibold text-white dark:text-zinc-950">${best[0]} &middot; ${fmt(best[1], 1)} jam</p></div>`;
+        <div><p class="text-xs text-gray-400 dark:text-zinc-500">Tawaran menunggu</p><p class="font-semibold text-white dark:text-zinc-950">${totalOffers} tawaran</p></div>
+        <div class="text-right"><p class="text-xs text-gray-400 dark:text-zinc-500">Hari teramai</p><p class="font-semibold text-white dark:text-zinc-950">${best[0]} &middot; ${fmt(best[1], 1)}</p></div>`;
     }
     const barsEl = $('#bars');
     if (!barsEl) return;
@@ -428,6 +489,7 @@
   function renderLists() {
     if (!store()) return;
     const hist = store().history();
+    const goCar = (h) => h.carId ? ` <a href="#/beli" data-goto-car="${h.carId}" class="font-semibold underline underline-offset-2 hover:opacity-70">Lihat mobil →</a>` : '';
     const actEl = $('#activity');
     if (actEl) {
       const items = hist.slice(0, 5);
@@ -435,14 +497,14 @@
         <li class="relative flex gap-3">
           ${i < items.length - 1 ? '<span class="absolute left-[5px] top-4 h-full w-px bg-gray-200 dark:bg-zinc-800"></span>' : ''}
           <span class="relative mt-1.5 h-3 w-3 shrink-0 rounded-full ring-4 ring-white dark:ring-zinc-900 ${TONE_BY_TYPE[a.type] || 'bg-zinc-400'}"></span>
-          <div><p class="text-sm text-gray-700 dark:text-zinc-300">${a.text}</p><p class="text-xs text-gray-400 dark:text-zinc-500">${ago(a.ts)}</p></div>
+          <div><p class="text-sm text-gray-700 dark:text-zinc-300">${a.text}${goCar(a)}</p><p class="text-xs text-gray-400 dark:text-zinc-500">${ago(a.ts)}</p></div>
         </li>`).join('') : '<li class="text-sm text-gray-500 dark:text-zinc-400">Belum ada aktivitas.</li>';
     }
     const notifEl = $('#notif-list');
     if (notifEl) {
       const items = hist.slice(0, 3);
       notifEl.innerHTML = items.length ? items.map((n) => `
-        <li class="px-4 py-3 rounded-lg transition hover:bg-gray-50 dark:hover:bg-zinc-800/60"><p class="text-sm font-medium text-gray-900 dark:text-zinc-100">${TITLE_BY_TYPE[n.type] || 'Info'}</p><p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">${n.text}</p><p class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">${ago(n.ts)}</p></li>`).join('')
+        <li class="px-4 py-3 rounded-lg transition hover:bg-gray-50 dark:hover:bg-zinc-800/60"><p class="text-sm font-medium text-gray-900 dark:text-zinc-100">${TITLE_BY_TYPE[n.type] || 'Info'}</p><p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">${n.text}</p><p class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">${ago(n.ts)}${goCar(n)}</p></li>`).join('')
         : '<li class="text-sm text-gray-500 dark:text-zinc-400 text-center py-4">Tidak ada notifikasi baru</li>';
       const dot = $('#notif-dot');
       if (dot) dot.classList.toggle('hidden', !(hist[0] && (Date.now() - hist[0].ts) < 24 * 3600 * 1000));

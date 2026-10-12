@@ -174,7 +174,7 @@
       const offer = { id: uid('o'), amount: val, note: (note || '').trim(), ts: Date.now(), status: 'pending' };
       car.offers.unshift(offer);
       car.interest = Math.max(0, Math.min(100, (car.interest || 50) + 1));
-      this.log('tawar', `Penawaran ${window.fmtRp(val)} untuk <b>${car.title}</b>`, true);
+      this.log('tawar', `Penawaran ${window.fmtRp(val)} untuk <b>${car.title}</b>`, true, car.id);
       persist();
       return offer;
     },
@@ -188,9 +188,14 @@
         car.price = offer.amount;
         car.status = 'done';
         car.badge = 'Terjual';
-        this.log('beli', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${car.title}</b> diterima`, true);
+        car.purchase = {
+          method: 'tawar', dp: 0, tenor: 0, rate: 0,
+          installment: 0, name: (offer.note || '').trim(),
+          phone: '', ts: Date.now(),
+        };
+        this.log('beli', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${car.title}</b> diterima`, true, car.id);
       } else {
-        this.log('batal', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${car.title}</b> ditolak`, true);
+        this.log('batal', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${car.title}</b> ditolak`, true, car.id);
       }
       persist();
       return offer;
@@ -295,16 +300,35 @@
         ts: Date.now(),
       };
       if (method === 'kredit') {
-        this.log('beli', `Mobil <b>${car.title}</b> dibeli kredit — DP ${window.fmtRp(car.purchase.dp)}, ${car.purchase.tenor}× ${window.fmtRp(car.purchase.installment)}/bln`, true);
+        this.log('beli', `Mobil <b>${car.title}</b> dibeli kredit — DP ${window.fmtRp(car.purchase.dp)}, ${car.purchase.tenor}× ${window.fmtRp(car.purchase.installment)}/bln`, true, car.id);
       } else {
-        this.log('beli', `Mobil <b>${car.title}</b> berhasil dibeli tunai (${window.fmtRp(car.price)})`, true);
+        this.log('beli', `Mobil <b>${car.title}</b> berhasil dibeli tunai (${window.fmtRp(car.price)})`, true, car.id);
       }
       persist();
       return true;
     },
 
-    log(type, text, silent) {
-      hist.unshift({ id: uid('h'), type, text, ts: Date.now() });
+    // ---------- Ringkasan terintegrasi (dipakai dashboard + marketplace) ----------
+    pendingOffersCount() {
+      return cars.reduce((a, c) => a + ((c.offers || []).filter((o) => o.status === 'pending').length), 0);
+    },
+    totalRevenue() {
+      return cars.filter((c) => c.status === 'done').reduce((a, c) => a + (Number(c.price) || 0), 0);
+    },
+    soldEvents() {
+      // Waktu terjual: pakai purchase.ts bila ada, sonst createdAt.
+      return cars
+        .filter((c) => c.status === 'done')
+        .map((c) => (c.purchase && c.purchase.ts) || c.createdAt)
+        .filter((ts) => ts > 0)
+        .sort((a, b) => a - b);
+    },
+    listedEvents() {
+      return cars.map((c) => c.createdAt).filter((ts) => ts > 0).sort((a, b) => a - b);
+    },
+
+    log(type, text, silent, carId) {
+      hist.unshift({ id: uid('h'), type, text, ts: Date.now(), carId: carId || null });
       hist = hist.slice(0, 60);
       if (!silent) persist();
       else {
