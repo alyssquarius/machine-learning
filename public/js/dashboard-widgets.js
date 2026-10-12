@@ -367,25 +367,41 @@
   }
 
   // ---------- Mobil Populer (dari CarStore) ----------
+  // Foto kecil sesuai kategori agar konsisten dengan kartu Jual/Beli.
+  const POP_IMAGES = {
+    SUV: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=200&q=60',
+    Sedan: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=200&q=60',
+    MPV: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=200&q=60',
+    Hatchback: 'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=200&q=60',
+    Listrik: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=200&q=60',
+    Lainnya: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=200&q=60',
+  };
   function renderCourses() {
     const coursesEl = $('#courses');
     if (!coursesEl || !store()) return;
     const list = store().popular(3);
-    coursesEl.innerHTML = list.map((c) => `
-      <div class="rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 transition hover:border-gray-300 dark:hover:border-zinc-700 cursor-pointer" data-detail="${c.id}">
-        <div class="flex items-start justify-between gap-2">
-          <p class="font-semibold text-black dark:text-white leading-snug text-sm">${c.title}</p>
-          <span class="shrink-0 rounded-full bg-zinc-950 dark:bg-white px-2 py-0.5 text-[11px] font-medium text-white dark:text-zinc-950">${c.badge || c.category}</span>
+    coursesEl.innerHTML = list.map((c) => {
+      const img = (c.image || '').trim() || POP_IMAGES[c.category] || POP_IMAGES.Lainnya;
+      return `
+      <div class="rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 transition hover:border-gray-300 dark:hover:border-zinc-700 cursor-pointer" data-detail="${c.id}">
+        <div class="flex gap-3">
+          <img src="${img}" alt="${c.title}" loading="lazy" class="h-16 w-20 shrink-0 rounded-md object-cover bg-gray-100 dark:bg-zinc-800" onerror="this.style.display='none'" />
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <p class="font-semibold text-black dark:text-white leading-snug text-sm truncate">${c.title}</p>
+              <span class="shrink-0 rounded-full bg-zinc-950 dark:bg-white px-2 py-0.5 text-[11px] font-medium text-white dark:text-zinc-950">${c.badge || c.category}</span>
+            </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-zinc-400">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p>
+            <div class="mt-1 text-sm font-bold text-black dark:text-white">${rp(c.price)}</div>
+          </div>
         </div>
-        <p class="mt-2 text-xs text-gray-500 dark:text-zinc-400">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p>
-        <div class="mt-1 text-sm font-bold text-black dark:text-white">${rp(c.price)}</div>
         <div class="mt-3 flex items-center justify-between">
           <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-zinc-800 mr-3">
             <div class="cbar h-full rounded-full bg-zinc-950 dark:bg-white" data-w="${c.interest || 0}" style="width:${reduce ? (c.interest || 0) : 0}%;transition:width 1s ease-out"></div>
           </div>
           <span class="text-xs font-bold text-gray-700 dark:text-zinc-300">${c.interest || 0}% minat</span>
         </div>
-      </div>`).join('');
+      </div>`; }).join('');
     if (reduce) return;
     requestAnimationFrame(() => requestAnimationFrame(() =>
       document.querySelectorAll('#courses .cbar').forEach((b) => (b.style.width = `${b.dataset.w}%`))));

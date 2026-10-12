@@ -89,14 +89,26 @@
     failed: 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400',
   };
 
+  // Foto bawaan per kategori — sama dengan store.js agar konsisten di semua halaman.
+  const CATEGORY_IMAGES = {
+    SUV: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=60',
+    Sedan: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=60',
+    MPV: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=60',
+    Hatchback: 'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=800&q=60',
+    Listrik: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=800&q=60',
+    Lainnya: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=60',
+  };
+  function carImage(c) {
+    const url = (c.image || '').trim();
+    if (url) return url;
+    return CATEGORY_IMAGES[c.category] || CATEGORY_IMAGES.Lainnya;
+  }
+
   function carArt(c, big) {
     const h = big ? 'h-44' : 'h-36';
-    if (c.image) {
-      return `<div class="${h} w-full overflow-hidden bg-gray-100 dark:bg-zinc-800"><img src="${c.image}" alt="${c.title}" loading="lazy" class="h-full w-full object-cover" onerror="this.remove()" /></div>`;
-    }
-    return `<div class="${h} w-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800">
-      <svg viewBox="0 0 24 24" fill="currentColor" class="h-12 w-12 text-gray-300 dark:text-zinc-600"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.28l1.08 3.11H5.77L6.85 7zM7.5 16c-.83 0-1.5-.67-1.5-1.5S6.67 13 7.5 13s1.5.67 1.5 1.5S8.33 16 7.5 16zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-    </div>`;
+    const src = carImage(c);
+    const fallback = CATEGORY_IMAGES[c.category] || CATEGORY_IMAGES.Lainnya;
+    return `<div class="${h} w-full overflow-hidden bg-gray-100 dark:bg-zinc-800"><img src="${src}" alt="${c.title}" loading="lazy" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='${fallback}'" /></div>`;
   }
 
   function favBtn(c) {
