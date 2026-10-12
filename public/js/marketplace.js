@@ -20,8 +20,17 @@
   };
 
   const sellState = { filter: 'all' };
-  const buyState = { q: '', cat: 'all', sort: 'new' };
+  const buyState = { q: '', cat: 'all', sort: 'new', min: '', max: '', loc: 'all', year: 'all' };
   const histState = { filter: 'all' };
+
+  // Pilihan filter harga cepat (rupiah).
+  const PRICE_PRESETS = [
+    { id: 'all', label: 'Semua harga', min: '', max: '' },
+    { id: 'u200', label: '< Rp 200 jt', min: '', max: 200000000 },
+    { id: '200-400', label: 'Rp 200–400 jt', min: 200000000, max: 400000000 },
+    { id: '400-600', label: 'Rp 400–600 jt', min: 400000000, max: 600000000 },
+    { id: 'a600', label: '> Rp 600 jt', min: 600000000, max: '' },
+  ];
 
   let toastTimer = null;
   function toast(msg) {
@@ -226,6 +235,8 @@
   }
 
   // ---------- BELI ----------
+  const FILTER_CLS = 'rounded-lg border border-gray-300 dark:border-zinc-700 py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-white bg-white dark:bg-zinc-900 focus:border-black dark:focus:border-white outline-none transition appearance-none';
+
   function fillBuyCats() {
     const sel = $('#buy-cat');
     if (!sel || !store()) return;
@@ -236,13 +247,105 @@
     buyState.cat = sel.value;
   }
 
+  function fillBuyLocs() {
+    const sel = $('#buy-loc');
+    if (!sel || !store()) return;
+    const locs = [...new Set(store().all().map((c) => (c.location || '-').trim()).filter(Boolean))].sort();
+    const cur = buyState.loc;
+    sel.innerHTML = '<option value="all">Semua lokasi</option>' + locs.map((c) => `<option value="${c}">${c}</option>`).join('');
+    sel.value = locs.includes(cur) ? cur : 'all';
+    buyState.loc = sel.value;
+  }
+
+  function fillBuyYears() {
+    const sel = $('#buy-year');
+    if (!sel || !store()) return;
+    const years = [...new Set(store().all().map((c) => Number(c.year)).filter((y) => y > 0))].sort((a, b) => b - a);
+    const cur = buyState.year;
+    sel.innerHTML = '<option value="all">Semua tahun</option>' + years.map((y) => `<option value="${y}">${y}</option>`).join('');
+    sel.value = years.map(String).includes(String(cur)) ? String(cur) : 'all';
+    buyState.year = sel.value;
+  }
+
+  function num(v) {
+    const n = Number(String(v ?? '').replace(/[^\d]/g, ''));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  function activePricePreset() {
+    const min = buyState.min === '' ? '' : Number(buyState.min);
+    const max = buyState.max === '' ? '' : Number(buyState.max);
+    const hit = PRICE_PRESETS.find((p) => p.min === min && p.max === max);
+    return hit ? hit.id : (min === '' && max === '' ? 'all' : 'custom');
+  }
+
+  function paintPriceChips() {
+    const box = $('#buy-price-chips');
+    if (!box) return;
+    const active = activePricePreset();
+    box.innerHTML = PRICE_PRESETS.map((p) =>
+      `<button data-price="${p.id}" class="rounded-full px-3 py-1.5 text-xs font-medium transition border ${active === p.id
+        ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white'
+        : 'border-gray-300 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:border-gray-400 dark:hover:border-zinc-500'}">${p.label}</button>`
+    ).join('');
+  }
+
+  function applyPricePreset(id) {
+    const p = PRICE_PRESETS.find((x) => x.id === id);
+    if (!p) return;
+    buyState.min = p.min;
+    buyState.max = p.max;
+    const mn = $('#buy-min'), mx = $('#buy-max');
+    if (mn) mn.value = p.min === '' ? '' : p.min;
+    if (mx) mx.value = p.max === '' ? '' : p.max;
+    safe(renderBuy, 'render-beli-harga')();
+  }
+
+  function resetBuyFilters() {
+    buyState.q = '';
+    buyState.cat = 'all';
+    buyState.sort = 'new';
+    buyState.min = '';
+    buyState.max = '';
+    buyState.loc = 'all';
+    buyState.year = 'all';
+    const set = (id, v) => { const el = $(id); if (el) el.value = v; };
+    set('#buy-search', '');
+    set('#search', '');
+    set('#buy-cat', 'all');
+    set('#buy-sort', 'new');
+    set('#buy-min', '');
+    set('#buy-max', '');
+    set('#buy-loc', 'all');
+    set('#buy-year', 'all');
+    safe(renderBuy, 'render-beli-reset')();
+    toast('Filter dikembalikan ke awal.');
+  }
+
+  function shortRp(n) {
+    const v = Number(n) || 0;
+    if (v >= 1e9) return (v / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' M';
+    if (v >= 1e6) return Math.round(v / 1e6) + ' jt';
+    if (v >= 1e3) return Math.round(v / 1e3) + ' rb';
+    return String(v);
+  }
+
   function renderBuy() {
     if (!store()) return;
     fillBuyCats();
+    fillBuyLocs();
+    fillBuyYears();
+    paintPriceChips();
     let list = store().all().filter((c) => c.status === 'running' || c.status === 'queued');
     const q = buyState.q.trim().toLowerCase();
     if (q) list = list.filter((c) => c.title.toLowerCase().includes(q) || (c.location || '').toLowerCase().includes(q) || (c.category || '').toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q));
     if (buyState.cat !== 'all') list = list.filter((c) => c.category === buyState.cat);
+    if (buyState.loc !== 'all') list = list.filter((c) => (c.location || '-') === buyState.loc);
+    if (buyState.year !== 'all') list = list.filter((c) => String(c.year) === String(buyState.year));
+    const min = buyState.min === '' ? null : Number(buyState.min);
+    const max = buyState.max === '' ? null : Number(buyState.max);
+    if (min != null) list = list.filter((c) => Number(c.price) >= min);
+    if (max != null) list = list.filter((c) => Number(c.price) <= max);
     if (buyState.sort === 'cheap') list.sort((a, b) => a.price - b.price);
     else if (buyState.sort === 'exp') list.sort((a, b) => b.price - a.price);
     else if (buyState.sort === 'love') list.sort((a, b) => (b.interest || 0) - (a.interest || 0));
@@ -254,6 +357,30 @@
     if (empty) empty.classList.toggle('hidden', list.length > 0);
     const count = $('#buy-count');
     if (count) count.textContent = list.length;
+
+    // Ringkasan filter aktif
+    const sum = $('#buy-active');
+    if (sum) {
+      const parts = [];
+      if (buyState.cat !== 'all') parts.push(buyState.cat);
+      if (buyState.loc !== 'all') parts.push(buyState.loc);
+      if (buyState.year !== 'all') parts.push(String(buyState.year));
+      if (min != null || max != null) {
+        if (min != null && max != null) parts.push(`Rp ${shortRp(min)}–${shortRp(max)}`);
+        else if (min != null) parts.push(`≥ Rp ${shortRp(min)}`);
+        else parts.push(`≤ Rp ${shortRp(max)}`);
+      }
+      if (q) parts.push(`"${buyState.q.trim()}"`);
+      sum.textContent = parts.length ? 'Filter: ' + parts.join(' • ') : '';
+      sum.classList.toggle('hidden', parts.length === 0);
+    }
+    const resetBtn = $('#buy-reset');
+    if (resetBtn) {
+      const dirty = buyState.cat !== 'all' || buyState.loc !== 'all' || buyState.year !== 'all' ||
+        buyState.min !== '' || buyState.max !== '' || buyState.q.trim() !== '' || buyState.sort !== 'new';
+      resetBtn.classList.toggle('hidden', !dirty);
+    }
+
     paint();
   }
 
@@ -434,6 +561,12 @@
       safe(openSellModal, 'open-sell-modal')();
       return;
     }
+    // Chip preset harga di halaman Beli (dirender ulang tiap renderBuy).
+    const chip = e.target.closest('[data-price]');
+    if (chip) {
+      safe(() => applyPricePreset(chip.dataset.price), 'apply-harga')();
+      return;
+    }
   });
 
   // ---------- Bind halaman ----------
@@ -457,6 +590,29 @@
     try {
       $('#buy-sort')?.addEventListener('change', (e) => { buyState.sort = e.target.value; safe(renderBuy, 'render-beli-sort')(); });
     } catch (err) { console.error('[marketplace] bind buy-sort gagal:', err); }
+    try {
+      // Harga min/maks manual (debounce agar tidak render tiap ketikan).
+      let priceT = null;
+      const onPrice = () => {
+        clearTimeout(priceT);
+        priceT = setTimeout(() => {
+          buyState.min = $('#buy-min')?.value ? Number($('#buy-min').value) : '';
+          buyState.max = $('#buy-max')?.value ? Number($('#buy-max').value) : '';
+          safe(renderBuy, 'render-beli-harga-manual')();
+        }, 350);
+      };
+      $('#buy-min')?.addEventListener('input', onPrice);
+      $('#buy-max')?.addEventListener('input', onPrice);
+    } catch (err) { console.error('[marketplace] bind buy-price gagal:', err); }
+    try {
+      $('#buy-loc')?.addEventListener('change', (e) => { buyState.loc = e.target.value; safe(renderBuy, 'render-beli-loc')(); });
+    } catch (err) { console.error('[marketplace] bind buy-loc gagal:', err); }
+    try {
+      $('#buy-year')?.addEventListener('change', (e) => { buyState.year = e.target.value; safe(renderBuy, 'render-beli-year')(); });
+    } catch (err) { console.error('[marketplace] bind buy-year gagal:', err); }
+    try {
+      $('#buy-reset')?.addEventListener('click', resetBuyFilters);
+    } catch (err) { console.error('[marketplace] bind buy-reset gagal:', err); }
 
     try {
       $('#hist-filter')?.addEventListener('change', (e) => { histState.filter = e.target.value; safe(renderHist, 'render-riwayat-filter')(); });
@@ -495,6 +651,7 @@
         if (!store()) { toast('Data belum siap. Muat ulang halaman.'); return; }
         if (!confirm('Kembalikan semua data ke awal?')) return;
         store().reset();
+        window.dispatchEvent(new CustomEvent('marketplace:resetbuy'));
         // Sinkronkan pencarian global dashboard ke halaman beli
         const s = $('#search');
         if (s) { s.value = ''; buyState.q = ''; }
@@ -527,6 +684,13 @@
         if (s) s.value = e.target.value;
       });
     } catch (err) { console.error('[marketplace] bind buy-sync gagal:', err); }
+    // Reset filter Beli saat data di-reset dari Pengaturan.
+    window.addEventListener('marketplace:resetbuy', () => {
+      try {
+        buyState.q = ''; buyState.cat = 'all'; buyState.sort = 'new';
+        buyState.min = ''; buyState.max = ''; buyState.loc = 'all'; buyState.year = 'all';
+      } catch { /* abaikan */ }
+    });
 
     window.addEventListener('storechange', () => {
       try {
