@@ -387,6 +387,22 @@
     getTarget() { try { return Number(settings.target) || 10; } catch { return 10; } },
     setTarget(n) { settings.target = Math.max(1, Number(n) || 10); persist(); },
 
+    // ---------- Visibilitas widget dashboard (bisa di-hide) ----------
+    getHiddenWidgets() { try { return Array.isArray(settings.hiddenWidgets) ? [...settings.hiddenWidgets] : []; } catch { return []; } },
+    isWidgetHidden(id) { try { return (settings.hiddenWidgets || []).includes(id); } catch { return false; } },
+    setWidgetHidden(id, hidden) {
+      const list = new Set(Array.isArray(settings.hiddenWidgets) ? settings.hiddenWidgets : []);
+      if (hidden) list.add(id); else list.delete(id);
+      settings.hiddenWidgets = [...list];
+      persist();
+    },
+    toggleWidget(id) {
+      const hidden = !(settings.hiddenWidgets || []).includes(id);
+      this.setWidgetHidden(id, hidden);
+      return hidden;
+    },
+    showAllWidgets() { settings.hiddenWidgets = []; persist(); },
+
     // ---------- Profil lokal + notifikasi (terintegrasi dashboard) ----------
     getDisplayName() { try { return (settings.displayName || '').trim(); } catch { return ''; } },
     setDisplayName(n) {

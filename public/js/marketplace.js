@@ -48,6 +48,46 @@
     if (window.Dashboard) window.Dashboard.paintIcons();
   }
 
+  // ---------- Visibilitas widget dashboard (bisa di-hide) ----------
+  const WIDGETS = [
+    { id: 'banner', label: 'Banner Sapaan' },
+    { id: 'kpis', label: 'Ringkasan (KPI)' },
+    { id: 'trend', label: 'Tren Penjualan' },
+    { id: 'donut', label: 'Jenis Mobil' },
+    { id: 'table', label: 'Daftar Inventaris' },
+    { id: 'popular', label: 'Mobil Populer' },
+    { id: 'activity', label: 'Aktivitas & Tawaran' },
+    { id: 'recent', label: 'Aktivitas Terbaru' },
+  ];
+  function applyWidgetVisibility() {
+    if (!store() || typeof store().isWidgetHidden !== 'function') return;
+    const hidden = [];
+    WIDGETS.forEach((w) => {
+      const el = document.querySelector(`[data-widget="${w.id}"]`);
+      const isHidden = store().isWidgetHidden(w.id);
+      if (el) el.classList.toggle('hidden', isHidden);
+      if (isHidden) hidden.push(w);
+    });
+    // Bar "Disembunyikan": chip per widget + tombol tampilkan lagi.
+    const bar = $('#hidden-bar');
+    const chips = $('#hidden-chips');
+    if (bar) {
+      bar.classList.toggle('hidden', hidden.length === 0);
+      bar.classList.toggle('flex', hidden.length > 0);
+    }
+    if (chips) chips.innerHTML = hidden.map((w) =>
+      `<button data-show-widget="${w.id}" class="rounded-full border border-gray-300 dark:border-zinc-700 px-3 py-1 text-xs font-medium text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">👁 ${w.label} ✕</button>`).join('');
+    // Panel Pengaturan: daftar centang tampil/sembunyi.
+    const box = $('#widget-toggles');
+    if (box) box.innerHTML = WIDGETS.map((w) => {
+      const on = !store().isWidgetHidden(w.id);
+      return `<label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-gray-200 dark:border-zinc-800 px-3 py-2 text-sm transition hover:bg-gray-50 dark:hover:bg-zinc-800/60">
+        <span class="font-medium text-gray-700 dark:text-zinc-200">${w.label}</span>
+        <input type="checkbox" data-widget-toggle="${w.id}" ${on ? 'checked' : ''} class="h-4 w-4 accent-black dark:accent-white" />
+      </label>`;
+    }).join('');
+  }
+
   // ---------- Dashboard aman-error ----------
   // Semua render halaman Jual/Beli/dll bungkus dengan safe() agar satu
   // error kecil tidak mematikan router & tombol Tambah Listing.
@@ -78,6 +118,7 @@
     if (scroller) scroller.scrollTop = 0;
 
     if (name === 'dashboard' && window.Dashboard) safe(() => window.Dashboard.refresh(), 'refresh-dashboard')();
+    if (name === 'dashboard') safe(applyWidgetVisibility, 'widget-visibility')();
     if (name === 'jual') safe(renderSell, 'render-jual')();
     if (name === 'beli') safe(renderBuy, 'render-beli')();
     if (name === 'favorit') safe(renderFav, 'render-favorit')();
@@ -592,6 +633,7 @@
       dn.value = store().getDisplayName();
     }
     paintThemeButtons();
+    safe(applyWidgetVisibility, 'widget-visibility-pengaturan')();
   }
 
   function paintThemeButtons() {
@@ -978,10 +1020,48 @@
     if (e.target.closest('[data-close-offer]')) { closeOfferModal(); return; }
     if (e.target.closest('[data-close-checkout]')) { closeCheckoutModal(); return; }
     if (e.target.closest('[data-close-sell]')) { closeSellModal(); return; }
+    // Sembunyikan widget dashboard per kartu.
+    const hideBtn = e.target.closest('[data-hide-widget]');
+    if (hideBtn) {
+      const id = hideBtn.dataset.hideWidget;
+      const label = (WIDGETS.find((w) => w.id === id) || {}).label || 'Widget';
+      store().setWidgetHidden(id, true);
+      safe(applyWidgetVisibility, 'widget-visibility')();
+      toast(`"${label}" disembunyikan.`);
+      return;
+    }
+    // Tampilkan lagi satu widget dari bar "Disembunyikan".
+    const showBtn = e.target.closest('[data-show-widget]');
+    if (showBtn) {
+      const id = showBtn.dataset.showWidget;
+      const label = (WIDGETS.find((w) => w.id === id) || {}).label || 'Widget';
+      store().setWidgetHidden(id, false);
+      safe(applyWidgetVisibility, 'widget-visibility')();
+      toast(`"${label}" ditampilkan lagi.`);
+      return;
+    }
+    // Tampilkan semua widget (bar dashboard + panel Pengaturan).
+    if (e.target.closest('#widgets-show-all') || e.target.closest('#widgets-show-all-2')) {
+      store().showAllWidgets();
+      safe(applyWidgetVisibility, 'widget-visibility')();
+      toast('Semua widget ditampilkan.');
+      return;
+    }
   });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { closeDetail(); closeSellModal(); closeOfferModal(); closeCheckoutModal(); }
+  });
+
+  // Centang tampil/sembunyi di Pengaturan (delegasi change, karena daftar dirender ulang).
+  document.addEventListener('change', (e) => {
+    const t = e.target.closest('[data-widget-toggle]');
+    if (!t) return;
+    const id = t.dataset.widgetToggle;
+    const label = (WIDGETS.find((w) => w.id === id) || {}).label || 'Widget';
+    store().setWidgetHidden(id, !t.checked);
+    safe(applyWidgetVisibility, 'widget-visibility-toggle')();
+    toast(t.checked ? `"${label}" ditampilkan.` : `"${label}" disembunyikan.`);
   });
 
   // Listener tombol jual dipasang via delegasi klik global juga,

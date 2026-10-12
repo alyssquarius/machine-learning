@@ -148,15 +148,24 @@
             <main id="main-scroll" class="flex-1 p-4 sm:p-6 lg:p-8">
               <!-- PAGE: DASHBOARD -->
               <section data-page="dashboard">
+                <!-- Widget tersembunyi: tombol tampilkan lagi -->
+                <div id="hidden-bar" class="hidden mb-6 flex-wrap items-center gap-2 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 p-4">
+                  <span class="text-xs font-medium text-gray-500 dark:text-zinc-400 mr-1">Disembunyikan:</span>
+                  <span id="hidden-chips" class="flex flex-wrap gap-2"></span>
+                  <button id="widgets-show-all" class="ml-auto text-xs font-semibold text-black dark:text-white hover:underline">Tampilkan semua</button>
+                </div>
                 <!-- Banner Section -->
-                <div class="relative overflow-hidden rounded-xl bg-zinc-950 dark:bg-white p-6 sm:p-8 text-white dark:text-zinc-950 mb-8 border border-zinc-950 dark:border-white">
+                <div data-widget="banner" class="relative overflow-hidden rounded-xl bg-zinc-950 dark:bg-white p-6 sm:p-8 text-white dark:text-zinc-950 mb-8 border border-zinc-950 dark:border-white">
                     <!-- Subtle background with image -->
                     <div class="absolute inset-0 opacity-10 bg-[url('images/car-hero.jpg')] bg-cover bg-center"></div>
                     <div class="absolute inset-0 bg-zinc-950/80 dark:bg-white/80"></div>
                     
                     <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                        <div>
-                            <p id="date" class="text-zinc-400 dark:text-zinc-500 text-sm font-medium mb-1">Kamis, 5 Oktober 2026</p>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                              <p id="date" class="text-zinc-400 dark:text-zinc-500 text-sm font-medium">Kamis, 5 Oktober 2026</p>
+                              <button data-hide-widget="banner" title="Sembunyikan banner" class="rounded-md p-1 text-zinc-400 hover:text-white dark:hover:text-zinc-950 hover:bg-white/10 dark:hover:bg-zinc-950/10 transition">🙈</button>
+                            </div>
                             <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
                                 <span id="greeting">Selamat Datang</span>, <span id="greeting-name" class="text-white dark:text-zinc-950">User</span>! 👋
                             </h1>
@@ -182,15 +191,19 @@
                 </div>
 
                 <!-- KPIs -->
-                <div id="kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div id="kpis-wrap" data-widget="kpis" class="relative mb-8">
+                    <button data-hide-widget="kpis" title="Sembunyikan ringkasan" class="absolute -top-2 right-2 z-10 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 py-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white transition">🙈 Sembunyikan</button>
+                <div id="kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- KPI Cards injected by JS -->
+                </div>
                 </div>
 
                 <!-- Charts Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <!-- Line Chart -->
-                    <div class="lg:col-span-2 rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div data-widget="trend" class="relative lg:col-span-2 rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800">
+                        <button data-hide-widget="trend" title="Sembunyikan tren" class="absolute right-4 top-4 rounded-lg border border-gray-200 dark:border-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white transition">🙈</button>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pr-12">
                             <div>
                                 <h2 class="text-lg font-bold text-black dark:text-white">Tren penjualan</h2>
                                 <p class="text-sm text-gray-500 dark:text-zinc-400 mt-0.5">Unit terjual & minat pembeli</p>
@@ -207,8 +220,9 @@
                     </div>
 
                     <!-- Donut Chart -->
-                    <div class="rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800 flex flex-col">
-                        <h2 class="text-lg font-bold text-black dark:text-white">Jenis mobil</h2>
+                    <div data-widget="donut" class="relative rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800 flex flex-col">
+                        <button data-hide-widget="donut" title="Sembunyikan jenis mobil" class="absolute right-4 top-4 rounded-lg border border-gray-200 dark:border-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white transition">🙈</button>
+                        <h2 class="text-lg font-bold text-black dark:text-white pr-12">Jenis mobil</h2>
                         <p class="text-sm text-gray-500 dark:text-zinc-400 mt-0.5 mb-6">Distribusi berdasarkan kategori</p>
                         <div id="donut" class="relative min-h-48 w-full rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2">
                             <!-- Donut chart injected here -->
@@ -219,12 +233,13 @@
                 <!-- Table & Side Panels Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Table Section -->
-                    <div class="lg:col-span-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 overflow-hidden flex flex-col">
+                    <div data-widget="table" class="relative lg:col-span-2 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 overflow-hidden flex flex-col">
                         <div class="p-6 border-b border-gray-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div>
+                            <div class="pr-12">
                                 <h2 class="text-lg font-bold text-black dark:text-white">Daftar Inventaris</h2>
                                 <p class="text-sm text-gray-500 dark:text-zinc-400 mt-0.5">Kelola mobil yang sedang didaftarkan</p>
                             </div>
+                            <button data-hide-widget="table" title="Sembunyikan inventaris" class="absolute right-4 top-4 rounded-lg border border-gray-200 dark:border-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white transition">🙈</button>
                             <div class="flex flex-col sm:flex-row gap-3">
                                 <div class="relative group">
                                     <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" viewBox="0 0 20 20" fill="currentColor">
@@ -265,19 +280,21 @@
                     <!-- Right Column -->
                     <div class="space-y-6">
                         <!-- Mobil Populer -->
-                        <div class="rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800">
-                            <div class="flex items-center justify-between mb-5">
+                        <div data-widget="popular" class="relative rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800">
+                            <div class="flex items-center justify-between gap-2 mb-5 pr-12">
                                 <h2 class="text-base font-bold text-black dark:text-white">Mobil Populer</h2>
                                 <a href="#/beli" class="text-xs font-semibold text-black dark:text-white hover:underline transition-all">Lihat Semua</a>
                             </div>
+                            <button data-hide-widget="popular" title="Sembunyikan populer" class="absolute right-4 top-4 rounded-lg border border-gray-200 dark:border-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white transition">🙈</button>
                             <div id="courses" class="space-y-4">
                                 <!-- Items injected via JS -->
                             </div>
                         </div>
 
                         <!-- Aktivitas Minat -->
-                        <div class="rounded-xl bg-black dark:bg-white p-6 border border-black dark:border-white text-white dark:text-zinc-950">
-                            <h2 class="text-base font-medium text-gray-400 dark:text-zinc-500 mb-2">Aktivitas & Tawaran</h2>
+                        <div data-widget="activity" class="relative rounded-xl bg-black dark:bg-white p-6 border border-black dark:border-white text-white dark:text-zinc-950">
+                            <button data-hide-widget="activity" title="Sembunyikan aktivitas" class="absolute right-4 top-4 rounded-lg border border-white/20 dark:border-zinc-950/20 px-2 py-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 hover:text-white dark:hover:text-zinc-950 transition">🙈</button>
+                            <h2 class="text-base font-medium text-gray-400 dark:text-zinc-500 mb-2 pr-12">Aktivitas & Tawaran</h2>
                             <div class="flex items-end gap-3 mb-4">
                                 <span id="hours-total" class="text-4xl font-bold tracking-tight">0</span>
                                 <span class="text-gray-400 dark:text-zinc-500 text-sm mb-1.5 font-medium">skor minggu ini</span>
@@ -291,8 +308,9 @@
                         </div>
 
                         <!-- Recent Activity -->
-                        <div class="rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800">
-                            <h2 class="text-base font-bold text-black dark:text-white mb-5">Aktivitas Terbaru</h2>
+                        <div data-widget="recent" class="relative rounded-xl bg-white dark:bg-zinc-900 p-6 border border-gray-200 dark:border-zinc-800">
+                            <button data-hide-widget="recent" title="Sembunyikan aktivitas terbaru" class="absolute right-4 top-4 rounded-lg border border-gray-200 dark:border-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white transition">🙈</button>
+                            <h2 class="text-base font-bold text-black dark:text-white mb-5 pr-12">Aktivitas Terbaru</h2>
                             <ul id="activity" class="relative space-y-6">
                                 <!-- Timeline items injected via JS -->
                             </ul>
@@ -461,6 +479,12 @@
                       <button data-set-theme="dark" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium transition">Gelap</button>
                       <button data-set-theme="system" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium transition">Otomatis</button>
                     </div>
+                  </div>
+                  <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+                    <h2 class="font-bold text-black dark:text-white mb-1">Tampilan Widget</h2>
+                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Sembunyikan / tampilkan blok dashboard. Tersimpan di perangkat.</p>
+                    <div id="widget-toggles" class="space-y-2"></div>
+                    <button id="widgets-show-all-2" class="mt-4 text-xs font-semibold text-black dark:text-white hover:underline">Tampilkan semua widget</button>
                   </div>
                   <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
                     <h2 class="font-bold text-black dark:text-white mb-1">Data Demo</h2>
