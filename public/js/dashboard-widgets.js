@@ -510,9 +510,8 @@
     }
   }
 
-  // ---------- Badge notifikasi (dari CarStore) ----------
-  // Selalu dot kecil di sudut tombol (1.25rem). Angka 9+ tetap muat via padding,
-  // tapi ukuran tombol tidak ikut melebar karena badge absolute.
+  // ---------- Badge notifikasi: dot kecil saja (tanpa angka) ----------
+  // Seperti semula: dot merah h-2.5 w-2.5 di sudut tombol, tidak melebar.
   function paintNotifDot() {
     const dot = $('#notif-dot');
     if (!dot || !store()) return;
@@ -520,11 +519,7 @@
       ? store().unreadCount()
       : (store().history()[0] && (Date.now() - store().history()[0].ts) < 24 * 3600 * 1000 ? 1 : 0);
     dot.classList.toggle('hidden', unread === 0);
-    dot.classList.toggle('flex', unread > 0);
-    dot.textContent = unread === 0 ? '' : unread > 9 ? '9+' : String(unread);
-    // Samakan ukuran bila jumlah digit berubah (1 -> 9+).
-    dot.classList.toggle('min-w-5', unread <= 9);
-    dot.classList.toggle('min-w-6', unread > 9);
+    dot.textContent = '';
   }
 
   // ---------- Banner & target (dari CarStore) ----------
