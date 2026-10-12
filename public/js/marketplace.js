@@ -22,6 +22,8 @@
   const sellState = { filter: 'all' };
   const buyState = { q: '', cat: 'all', sort: 'new', min: '', max: '', loc: 'all', year: 'all' };
   const histState = { filter: 'all' };
+  // ID listing yang sedang diedit (null = mode tambah baru).
+  let editingId = null;
 
   // Pilihan filter harga cepat (rupiah).
   const PRICE_PRESETS = [
@@ -122,6 +124,31 @@
     return `<div class="${h} w-full overflow-hidden bg-gray-100 dark:bg-zinc-800"><img src="${src}" alt="${c.title}" loading="lazy" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='${fallback}'" /></div>`;
   }
 
+  // Badge + daftar penawaran ringkas pada kartu.
+  function offerBadge(c) {
+    const best = store() ? store().bestOffer(c.id) : null;
+    if (!best || best.status !== 'pending') return '';
+    return `<span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-[11px] font-semibold text-gray-700 dark:text-zinc-200">Tawaran tertinggi ${rp(best.amount)}</span>`;
+  }
+
+  function offerList(c, compact) {
+    if (!store()) return '';
+    const list = store().offersFor(c.id);
+    if (!list.length) return '';
+    const rows = (compact ? list.slice(0, 2) : list).map((o) => `
+      <div class="flex items-center justify-between gap-2 rounded-lg border border-gray-200 dark:border-zinc-800 px-3 py-2 text-xs">
+        <div class="min-w-0">
+          <p class="font-bold text-black dark:text-white">${rp(o.amount)}</p>
+          <p class="text-gray-500 dark:text-zinc-400 truncate">${o.note ? o.note + ' • ' : ''}${ago(o.ts)} • ${o.status === 'pending' ? 'menunggu' : o.status === 'accepted' ? 'diterima' : 'ditolak'}</p>
+        </div>
+        ${o.status === 'pending' ? `<div class="flex shrink-0 gap-1">
+          <button data-accept="${c.id}:${o.id}" class="rounded-md bg-zinc-950 dark:bg-white px-2.5 py-1 text-[11px] font-semibold text-white dark:text-zinc-950">Terima</button>
+          <button data-reject="${c.id}:${o.id}" class="rounded-md border border-gray-300 dark:border-zinc-700 px-2.5 py-1 text-[11px] font-semibold">Tolak</button>
+        </div>` : ''}
+      </div>`).join('');
+    return `<div class="mt-3 space-y-2">${rows}${compact && list.length > 2 ? `<button data-detail="${c.id}" class="text-[11px] font-semibold text-gray-500 dark:text-zinc-400 hover:underline">Lihat ${list.length - 2} tawaran lain</button>` : ''}</div>`;
+  }
+
   function favBtn(c) {
     const on = store().isFav(c.id);
     return `<button data-fav="${c.id}" aria-label="Favorit" title="Favorit" class="absolute right-3 top-3 rounded-lg border p-2 backdrop-blur transition ${on ? 'bg-zinc-950 dark:bg-white border-zinc-950 dark:border-white text-white dark:text-zinc-950' : 'bg-white/90 dark:bg-zinc-950/80 border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}">
@@ -144,8 +171,12 @@
         </div>
         <div class="mt-3 flex gap-2">
           ${c.status === 'running' && !opts.sell
-            ? `<button data-buy="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Beli Sekarang</button>`
-            : ''}
+            ? `<button data-buy="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Beli Sekarang</button>
+               <button data-offer="${c.id}" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tawar</button>`
+            : c.status === 'queued' && !opts.sell
+              ? `<button data-offer="${c.id}" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tawar</button>`
+              : ''}
+          ${offerBadge(c)}
           ${opts.sell
             ? (c.status === 'queued'
               ? `<button data-publish="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tayangkan</button>`
@@ -153,9 +184,11 @@
                 ? `<button data-sold="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2 text-xs font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tandai Terjual</button>`
                 : `<button data-relist="${c.id}" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Jual Lagi</button>`)
             : ''}
+          ${opts.sell ? `<button data-edit="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800" title="Edit"><svg data-icon="edit" class="h-4 w-4 pointer-events-none"></svg></button>` : ''}
           ${opts.sell ? `<button data-del="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-gray-500 dark:text-zinc-400 transition hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900" title="Hapus"><svg data-icon="trash" class="h-4 w-4 pointer-events-none"></svg></button>` : ''}
           <button data-detail="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Detail</button>
         </div>
+        ${opts.sell ? offerList(c, true) : ''}
       </div>
     </article>`;
   }
@@ -192,6 +225,14 @@
       toast('Form jual tidak ditemukan. Muat ulang halaman.');
       return;
     }
+    editingId = null;
+    $('#form-sell')?.reset();
+    const title = $('#sell-modal-title');
+    if (title) title.textContent = 'Tambah Listing';
+    const sub = $('#sell-modal-sub');
+    if (sub) sub.textContent = 'Listing baru masuk sebagai "Menunggu" verifikasi.';
+    const btn = $('#sell-submit-btn');
+    if (btn) btn.textContent = 'Pasang Listing';
     const msg = $('#sell-msg');
     if (msg) msg.className = 'hidden';
     m.classList.remove('hidden');
@@ -199,6 +240,35 @@
   }
   function closeSellModal() {
     $('#modal-sell')?.classList.add('hidden');
+    editingId = null;
+  }
+
+  // Mode edit: buka modal yang sama dengan data terisi.
+  function openEditModal(id) {
+    const c = store().get(id);
+    if (!c) { toast('Listing tidak ditemukan.'); return; }
+    const m = $('#modal-sell');
+    if (!m) { toast('Form jual tidak ditemukan.'); return; }
+    editingId = id;
+    const set = (sel, v) => { const el = $(sel); if (el) el.value = v ?? ''; };
+    set('#sell-title', c.title);
+    set('#sell-price', c.price);
+    set('#sell-year', c.year);
+    set('#sell-km', c.km);
+    set('#sell-location', c.location === '-' ? '' : c.location);
+    set('#sell-category', c.category);
+    set('#sell-image', (c.image || '').startsWith('http') && !c.image.includes('wikimedia.org') && !c.image.includes('unsplash.com') ? c.image : '');
+    set('#sell-desc', c.description);
+    const title = $('#sell-modal-title');
+    if (title) title.textContent = 'Edit Listing';
+    const sub = $('#sell-modal-sub');
+    if (sub) sub.textContent = `Perbarui data "${c.title}".`;
+    const btn = $('#sell-submit-btn');
+    if (btn) btn.textContent = 'Simpan Perubahan';
+    const msg = $('#sell-msg');
+    if (msg) msg.className = 'hidden';
+    m.classList.remove('hidden');
+    setTimeout(() => $('#sell-title')?.focus(), 50);
   }
 
   function submitSell(e) {
@@ -217,6 +287,27 @@
     if (title.length < 4) return show('Judul mobil minimal 4 karakter.');
     if (!price || price < 1000000) return show('Harga minimal Rp 1.000.000.');
     if (!year || year < 1990 || year > 2026) return show('Tahun harus antara 1990–2026.');
+    // Mode edit: perbarui listing yang ada.
+    if (editingId) {
+      const ok = store().edit(editingId, {
+        title,
+        price,
+        year,
+        km: $('#sell-km').value,
+        location: $('#sell-location').value.trim() || '-',
+        category: $('#sell-category').value,
+        image: $('#sell-image').value,
+        description: $('#sell-desc').value,
+      });
+      if (!ok) return show('Gagal menyimpan. Periksa kembali data mobil.');
+      editingId = null;
+      $('#form-sell').reset();
+      closeSellModal();
+      if (currentRoute() === 'jual') renderSell();
+      if (currentRoute() === 'beli') renderBuy();
+      toast('Listing diperbarui.');
+      return;
+    }
     const car = store().add({
       title,
       price,
@@ -471,13 +562,65 @@
           ${c.status === 'running' ? `<button data-buy="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Beli Sekarang</button>` : ''}
           <button data-fav="${c.id}" class="flex-1 rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${on ? 'bg-zinc-950 dark:bg-white border-zinc-950 dark:border-white text-white dark:text-zinc-950' : 'border-gray-300 dark:border-zinc-700 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800'}">${on ? '★ Favorit' : '☆ Simpan Favorit'}</button>
         </div>
+        ${c.status !== 'done' ? `<button data-offer="${c.id}" class="mt-2 w-full rounded-lg border border-gray-300 dark:border-zinc-700 py-2.5 text-sm font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Ajukan Tawaran</button>` : ''}
         ${c.status === 'queued' ? `<button data-publish="${c.id}" class="mt-2 w-full rounded-lg border border-gray-300 dark:border-zinc-700 py-2.5 text-sm font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tayangkan Listing</button>` : ''}
+        <div class="mt-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Penawaran (${store().offersFor(c.id).length})</h4>
+          ${offerList(c) || '<p class="text-xs text-gray-500 dark:text-zinc-400">Belum ada tawaran. Jadilah yang pertama!</p>'}
+        </div>
       </div>`;
     $('#modal-detail').classList.remove('hidden');
     paint();
   }
   function closeDetail() {
     $('#modal-detail')?.classList.add('hidden');
+  }
+
+  // ---------- MODAL TAWAR ----------
+  function openOfferModal(id) {
+    const c = store().get(id);
+    if (!c) { toast('Mobil tidak ditemukan.'); return; }
+    if (c.status === 'done') { toast('Mobil ini sudah terjual.'); return; }
+    const m = $('#modal-offer');
+    if (!m) { toast('Form tawar tidak ditemukan.'); return; }
+    $('#offer-car-id').value = id;
+    const name = $('#offer-car-name');
+    if (name) name.textContent = `${c.title} • ${rp(c.price)}`;
+    const amt = $('#offer-amount');
+    if (amt) { amt.value = ''; amt.placeholder = `cth: ${Math.round(c.price * 0.95)}`; }
+    const note = $('#offer-note');
+    if (note) note.value = '';
+    const msg = $('#offer-msg');
+    if (msg) msg.className = 'hidden';
+    closeDetail();
+    m.classList.remove('hidden');
+    setTimeout(() => amt?.focus(), 50);
+  }
+  function closeOfferModal() {
+    $('#modal-offer')?.classList.add('hidden');
+  }
+  function submitOffer(e) {
+    e.preventDefault();
+    const id = $('#offer-car-id')?.value;
+    const amount = Number($('#offer-amount')?.value);
+    const note = $('#offer-note')?.value || '';
+    const msg = $('#offer-msg');
+    const show = (t) => {
+      if (!msg) return;
+      msg.textContent = t;
+      msg.className = 'rounded-lg p-3 text-sm font-medium border mb-4 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50';
+    };
+    if (!id) return show('Mobil tidak valid.');
+    if (!amount || amount < 1000000) return show('Tawaran minimal Rp 1.000.000.');
+    const ok = store().makeOffer(id, amount, note);
+    if (!ok) return show('Gagal mengirim tawaran.');
+    $('#form-offer')?.reset();
+    closeOfferModal();
+    const r = currentRoute();
+    if (r === 'beli') renderBuy();
+    if (r === 'jual') renderSell();
+    if (r === 'favorit') renderFav();
+    toast(`Tawaran ${rp(amount)} terkirim.`);
   }
 
   // ---------- Global click delegation ----------
@@ -541,17 +684,59 @@
       }
       return;
     }
+    // Tombol Tawar di kartu & modal detail.
+    const offer = e.target.closest('[data-offer]');
+    if (offer) {
+      e.stopPropagation();
+      safe(() => openOfferModal(offer.dataset.offer), 'open-offer')();
+      return;
+    }
+    // Tombol Edit di halaman Jual.
+    const editBtn = e.target.closest('[data-edit]');
+    if (editBtn) {
+      e.stopPropagation();
+      safe(() => openEditModal(editBtn.dataset.edit), 'open-edit')();
+      return;
+    }
+    // Terima / tolak tawaran.
+    const acc = e.target.closest('[data-accept]');
+    if (acc) {
+      e.stopPropagation();
+      const [cid, oid] = (acc.dataset.accept || '').split(':');
+      const done = store().decideOffer(cid, oid, true);
+      if (done) toast('Tawaran diterima — mobil ditandai terjual.');
+      else toast('Gagal memproses tawaran.');
+      const r = currentRoute();
+      if (r === 'jual') renderSell();
+      if (r === 'beli') renderBuy();
+      if (!$('#modal-detail')?.classList.contains('hidden')) openDetail(cid);
+      return;
+    }
+    const rej = e.target.closest('[data-reject]');
+    if (rej) {
+      e.stopPropagation();
+      const [cid, oid] = (rej.dataset.reject || '').split(':');
+      const done = store().decideOffer(cid, oid, false);
+      if (done) toast('Tawaran ditolak.');
+      else toast('Gagal memproses tawaran.');
+      const r = currentRoute();
+      if (r === 'jual') renderSell();
+      if (r === 'beli') renderBuy();
+      if (!$('#modal-detail')?.classList.contains('hidden')) openDetail(cid);
+      return;
+    }
     const det = e.target.closest('[data-detail]');
     if (det) {
       openDetail(det.dataset.detail);
       return;
     }
     if (e.target.closest('[data-close-detail]')) { closeDetail(); return; }
+    if (e.target.closest('[data-close-offer]')) { closeOfferModal(); return; }
     if (e.target.closest('[data-close-sell]')) { closeSellModal(); return; }
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeDetail(); closeSellModal(); }
+    if (e.key === 'Escape') { closeDetail(); closeSellModal(); closeOfferModal(); }
   });
 
   // Listener tombol jual dipasang via delegasi klik global juga,
@@ -580,6 +765,9 @@
     try {
       $('#form-sell')?.addEventListener('submit', submitSell);
     } catch (err) { console.error('[marketplace] bind form-sell gagal:', err); }
+    try {
+      $('#form-offer')?.addEventListener('submit', submitOffer);
+    } catch (err) { console.error('[marketplace] bind form-offer gagal:', err); }
 
     try {
       $('#buy-search')?.addEventListener('input', (e) => { buyState.q = e.target.value; safe(renderBuy, 'render-beli-q')(); });

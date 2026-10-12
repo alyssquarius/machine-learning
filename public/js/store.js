@@ -154,6 +154,48 @@
     isFav(id) { return favs.includes(id); },
     favorites() { return favs.map((id) => cars.find((c) => c.id === id)).filter(Boolean); },
 
+    // ---------- Penawaran (tawar harga) ----------
+    offersFor(id) {
+      const car = cars.find((c) => c.id === id);
+      const list = ((car && car.offers) || []).slice().sort((a, b) => b.ts - a.ts);
+      return list;
+    },
+    bestOffer(id) {
+      const list = this.offersFor(id);
+      if (!list.length) return null;
+      return list.reduce((a, b) => (b.amount > a.amount ? b : a));
+    },
+    makeOffer(id, amount, note) {
+      const car = cars.find((c) => c.id === id);
+      if (!car || car.status === 'done') return null;
+      const val = Number(amount) || 0;
+      if (val < 1000000) return null;
+      car.offers = car.offers || [];
+      const offer = { id: uid('o'), amount: val, note: (note || '').trim(), ts: Date.now(), status: 'pending' };
+      car.offers.unshift(offer);
+      car.interest = Math.max(0, Math.min(100, (car.interest || 50) + 1));
+      this.log('tawar', `Penawaran ${window.fmtRp(val)} untuk <b>${car.title}</b>`, true);
+      persist();
+      return offer;
+    },
+    decideOffer(id, offerId, accept) {
+      const car = cars.find((c) => c.id === id);
+      if (!car || !car.offers) return null;
+      const offer = car.offers.find((o) => o.id === offerId);
+      if (!offer) return null;
+      offer.status = accept ? 'accepted' : 'rejected';
+      if (accept) {
+        car.price = offer.amount;
+        car.status = 'done';
+        car.badge = 'Terjual';
+        this.log('beli', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${car.title}</b> diterima`, true);
+      } else {
+        this.log('batal', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${car.title}</b> ditolak`, true);
+      }
+      persist();
+      return offer;
+    },
+
     toggleFav(id) {
       const car = cars.find((c) => c.id === id);
       if (!car) return false;
@@ -206,11 +248,34 @@
 
     setStatus(id, status) {
       const car = cars.find((c) => c.id === id);
-      if (!car) return;
+      if (!car) return null;
       car.status = status;
       const label = { done: 'terjual', running: 'ditayangkan', queued: 'menunggu verifikasi', failed: 'ditolak' }[status] || status;
       this.log('status', `Mobil <b>${car.title}</b> ${label}`, true);
       persist();
+      return car;
+    },
+
+    // ---------- Edit listing ----------
+    edit(id, data) {
+      const car = cars.find((c) => c.id === id);
+      if (!car) return null;
+      const title = (data.title || '').trim();
+      const price = Number(data.price) || 0;
+      const year = Number(data.year) || car.year;
+      if (title.length < 4 || !price || price < 1000000 || !year || year < 1990 || year > 2026) return null;
+      car.title = title;
+      car.price = price;
+      car.year = year;
+      car.km = Number(data.km) || 0;
+      car.location = (data.location || '').trim() || '-';
+      car.category = data.category || car.category;
+      const img = (data.image || '').trim();
+      if (Object.prototype.hasOwnProperty.call(data, 'image')) car.image = img;
+      car.description = (data.description || '').trim();
+      this.log('jual', `Listing <b>${car.title}</b> diperbarui`, true);
+      persist();
+      return car;
     },
 
     buy(id) {
