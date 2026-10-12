@@ -89,14 +89,16 @@
     failed: 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400',
   };
 
-  // Foto bawaan per kategori — sama dengan store.js agar konsisten di semua halaman.
+  // Foto bawaan per kategori — samakan dengan store.js agar konsisten di semua halaman.
+  // (Fallback saja; tiap mobil seed sudah punya foto mereknya sendiri.)
+  const W = (n) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(n)}?width=800`;
   const CATEGORY_IMAGES = {
-    SUV: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=60',
-    Sedan: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=60',
-    MPV: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=60',
-    Hatchback: 'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=800&q=60',
-    Listrik: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=800&q=60',
-    Lainnya: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=60',
+    SUV: W('2015 Toyota Fortuner (New Zealand).jpg'),
+    Sedan: W('Honda Civic e-HEV Sport (XI) – f 30062024.jpg'),
+    MPV: W('2022 Toyota Avanza 1.5 G Toyota Safety Sense W101RE (20220403).jpg'),
+    Hatchback: W('2014 Daihatsu Ayla 1.0 X B100RS (20190615).jpg'),
+    Listrik: W('Hyundai Ioniq 5 AWD Techniq-Paket – f 31122024.jpg'),
+    Lainnya: W('Honda CR-V e-HEV Elegance AWD (VI) – f 14072024.jpg'),
   };
   function carImage(c) {
     const url = (c.image || '').trim();

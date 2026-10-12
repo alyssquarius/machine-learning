@@ -367,14 +367,15 @@
   }
 
   // ---------- Mobil Populer (dari CarStore) ----------
-  // Foto kecil sesuai kategori agar konsisten dengan kartu Jual/Beli.
+  // Foto kecil sesuai merek — URL dari store, fallback ke kategori bila kosong.
+  const W200 = (n) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(n)}?width=200`;
   const POP_IMAGES = {
-    SUV: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=200&q=60',
-    Sedan: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=200&q=60',
-    MPV: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=200&q=60',
-    Hatchback: 'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=200&q=60',
-    Listrik: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=200&q=60',
-    Lainnya: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=200&q=60',
+    SUV: W200('2015 Toyota Fortuner (New Zealand).jpg'),
+    Sedan: W200('Honda Civic e-HEV Sport (XI) – f 30062024.jpg'),
+    MPV: W200('2022 Toyota Avanza 1.5 G Toyota Safety Sense W101RE (20220403).jpg'),
+    Hatchback: W200('2014 Daihatsu Ayla 1.0 X B100RS (20190615).jpg'),
+    Listrik: W200('Hyundai Ioniq 5 AWD Techniq-Paket – f 31122024.jpg'),
+    Lainnya: W200('Honda CR-V e-HEV Elegance AWD (VI) – f 14072024.jpg'),
   };
   function renderCourses() {
     const coursesEl = $('#courses');

@@ -4,7 +4,7 @@
 (() => {
   'use strict';
 
-  const LS_CARS = 'abc_cars_v1';
+  const LS_CARS = 'abc_cars_v2';
   const LS_FAVS = 'abc_favs_v1';
   const LS_HIST = 'abc_hist_v1';
   const LS_SET = 'abc_settings_v1';
@@ -12,14 +12,27 @@
   const now = Date.now();
   const H = 3600 * 1000;
 
-  // Foto bawaan per kategori (Unsplash). Dipakai bila listing tanpa URL foto.
+  // Foto asli per merek (Wikimedia Commons, diverifikasi 200).
+  const W = (n) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(n)}?width=800`;
+  const BRAND_IMAGES = {
+    fortuner: W('2015 Toyota Fortuner (New Zealand).jpg'),
+    crv: W('Honda CR-V e-HEV Elegance AWD (VI) – f 14072024.jpg'),
+    ioniq5: W('Hyundai Ioniq 5 AWD Techniq-Paket – f 31122024.jpg'),
+    civic: W('Honda Civic e-HEV Sport (XI) – f 30062024.jpg'),
+    pajero: W('Mitsubishi Pajero Sport (3rd generation) 1X7A0409.jpg'),
+    bmw: W('2019 BMW 318d SE Automatic 2.0 Front.jpg'),
+    avanza: W('2022 Toyota Avanza 1.5 G Toyota Safety Sense W101RE (20220403).jpg'),
+    ayla: W('2014 Daihatsu Ayla 1.0 X B100RS (20190615).jpg'),
+  };
+
+  // Foto bawaan per kategori (Unsplash) — hanya fallback untuk listing baru tanpa URL foto.
   const CATEGORY_IMAGES = {
-    SUV: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=60',
-    Sedan: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=60',
-    MPV: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=60',
-    Hatchback: 'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=800&q=60',
-    Listrik: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=800&q=60',
-    Lainnya: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=60',
+    SUV: BRAND_IMAGES.fortuner,
+    Sedan: BRAND_IMAGES.civic,
+    MPV: BRAND_IMAGES.avanza,
+    Hatchback: BRAND_IMAGES.ayla,
+    Listrik: BRAND_IMAGES.ioniq5,
+    Lainnya: BRAND_IMAGES.crv,
   };
 
   function imageFor(category, explicit) {
@@ -29,14 +42,14 @@
   }
 
   const SEED_CARS = [
-    { id: 'c-fortuner', title: 'Toyota Fortuner 2.8 GR Sport', price: 485000000, year: 2024, km: 12000, location: 'Jakarta', category: 'SUV', status: 'running', interest: 98, badge: 'Populer', image: CATEGORY_IMAGES.SUV, description: 'Kondisi mulus, servis rutin Toyota, pajak panjang.', createdAt: now - 2 * H },
-    { id: 'c-crv', title: 'Honda CR-V 2.0 RS e:HEV', price: 519000000, year: 2023, km: 8500, location: 'Surabaya', category: 'SUV', status: 'running', interest: 85, badge: 'Hot Deal', image: CATEGORY_IMAGES.SUV, description: 'Hybrid irit, interior orisinal, kunci cadangan lengkap.', createdAt: now - 5 * H },
-    { id: 'c-ioniq5', title: 'Hyundai Ioniq 5 Signature', price: 695000000, year: 2023, km: 15000, location: 'Bandung', category: 'Listrik', status: 'queued', interest: 60, badge: 'Diskon', image: CATEGORY_IMAGES.Listrik, description: 'Mobil listrik, baterai sehat, garansi resmi berjalan.', createdAt: now - 26 * H },
-    { id: 'c-civic', title: 'Honda Civic RS 1.5 Turbo', price: 465000000, year: 2022, km: 20000, location: 'Jakarta', category: 'Sedan', status: 'done', interest: 92, badge: 'Terjual', image: CATEGORY_IMAGES.Sedan, description: 'Terjual dengan verifikasi dan pembayaran penuh.', createdAt: now - 30 * H },
-    { id: 'c-pajero', title: 'Mitsubishi Pajero Sport Dakar', price: 445000000, year: 2021, km: 35000, location: 'Semarang', category: 'SUV', status: 'queued', interest: 54, badge: 'Baru', image: CATEGORY_IMAGES.SUV, description: 'Menunggu verifikasi dokumen oleh tim AutoBuyCars.', createdAt: now - 50 * H },
-    { id: 'c-bmw', title: 'BMW 320i Sport', price: 495000000, year: 2020, km: 40000, location: 'Jakarta', category: 'Sedan', status: 'failed', interest: 30, badge: 'Ditolak', image: CATEGORY_IMAGES.Sedan, description: 'Ditolak: dokumen BPKB tidak sesuai data pengajuan.', createdAt: now - 72 * H },
-    { id: 'c-avanza', title: 'Toyota Avanza 1.5 G CVT', price: 225000000, year: 2022, km: 25000, location: 'Bekasi', category: 'MPV', status: 'done', interest: 78, badge: 'Terjual', image: CATEGORY_IMAGES.MPV, description: 'Terjual ke pembeli dari Bekasi, serah terima selesai.', createdAt: now - 96 * H },
-    { id: 'c-ayla', title: 'Daihatsu Ayla 1.2 R', price: 145000000, year: 2023, km: 10000, location: 'Depok', category: 'Hatchback', status: 'running', interest: 66, badge: 'Irit', image: CATEGORY_IMAGES.Hatchback, description: 'Cocok untuk harian, KM rendah, ban baru.', createdAt: now - 120 * H },
+    { id: 'c-fortuner', title: 'Toyota Fortuner 2.8 GR Sport', price: 485000000, year: 2024, km: 12000, location: 'Jakarta', category: 'SUV', status: 'running', interest: 98, badge: 'Populer', image: BRAND_IMAGES.fortuner, description: 'Kondisi mulus, servis rutin Toyota, pajak panjang.', createdAt: now - 2 * H },
+    { id: 'c-crv', title: 'Honda CR-V 2.0 RS e:HEV', price: 519000000, year: 2023, km: 8500, location: 'Surabaya', category: 'SUV', status: 'running', interest: 85, badge: 'Hot Deal', image: BRAND_IMAGES.crv, description: 'Hybrid irit, interior orisinal, kunci cadangan lengkap.', createdAt: now - 5 * H },
+    { id: 'c-ioniq5', title: 'Hyundai Ioniq 5 Signature', price: 695000000, year: 2023, km: 15000, location: 'Bandung', category: 'Listrik', status: 'queued', interest: 60, badge: 'Diskon', image: BRAND_IMAGES.ioniq5, description: 'Mobil listrik, baterai sehat, garansi resmi berjalan.', createdAt: now - 26 * H },
+    { id: 'c-civic', title: 'Honda Civic RS 1.5 Turbo', price: 465000000, year: 2022, km: 20000, location: 'Jakarta', category: 'Sedan', status: 'done', interest: 92, badge: 'Terjual', image: BRAND_IMAGES.civic, description: 'Terjual dengan verifikasi dan pembayaran penuh.', createdAt: now - 30 * H },
+    { id: 'c-pajero', title: 'Mitsubishi Pajero Sport Dakar', price: 445000000, year: 2021, km: 35000, location: 'Semarang', category: 'SUV', status: 'queued', interest: 54, badge: 'Baru', image: BRAND_IMAGES.pajero, description: 'Menunggu verifikasi dokumen oleh tim AutoBuyCars.', createdAt: now - 50 * H },
+    { id: 'c-bmw', title: 'BMW 320i Sport', price: 495000000, year: 2020, km: 40000, location: 'Jakarta', category: 'Sedan', status: 'failed', interest: 30, badge: 'Ditolak', image: BRAND_IMAGES.bmw, description: 'Ditolak: dokumen BPKB tidak sesuai data pengajuan.', createdAt: now - 72 * H },
+    { id: 'c-avanza', title: 'Toyota Avanza 1.5 G CVT', price: 225000000, year: 2022, km: 25000, location: 'Bekasi', category: 'MPV', status: 'done', interest: 78, badge: 'Terjual', image: BRAND_IMAGES.avanza, description: 'Terjual ke pembeli dari Bekasi, serah terima selesai.', createdAt: now - 96 * H },
+    { id: 'c-ayla', title: 'Daihatsu Ayla 1.2 R', price: 145000000, year: 2023, km: 10000, location: 'Depok', category: 'Hatchback', status: 'running', interest: 66, badge: 'Irit', image: BRAND_IMAGES.ayla, description: 'Cocok untuk harian, KM rendah, ban baru.', createdAt: now - 120 * H },
   ];
 
   const SEED_FAVS = ['c-fortuner', 'c-ioniq5', 'c-crv', 'c-avanza', 'c-ayla'];
