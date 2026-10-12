@@ -228,6 +228,7 @@
     }
     editingId = null;
     $('#form-sell')?.reset();
+    resetSellLocSearch();
     fillSellLocs('');
     const title = $('#sell-modal-title');
     if (title) title.textContent = 'Tambah Listing';
@@ -257,6 +258,7 @@
     set('#sell-price', c.price);
     set('#sell-year', c.year);
     set('#sell-km', c.km);
+    resetSellLocSearch();
     fillSellLocs(c.location && c.location !== '-' ? c.location : '');
     set('#sell-category', c.category);
     set('#sell-image', (c.image || '').startsWith('http') && !c.image.includes('wikimedia.org') && !c.image.includes('unsplash.com') ? c.image : '');
@@ -342,34 +344,72 @@
     buyState.cat = sel.value;
   }
 
-  function fillBuyLocs() {
-    const sel = $('#buy-loc');
-    if (!sel) return;
+  function allCityOptions() {
     // Master kota se-Indonesia (dari store.js), plus kota lama dari data agar tak hilang.
     const master = window.INDONESIA_CITIES || [];
     const used = store() ? [...new Set(store().all().map((c) => (c.location || '').trim()).filter((x) => x && x !== '-'))] : [];
-    const locs = [...new Set([...master, ...used])].sort((a, b) => a.localeCompare(b, 'id'));
+    return [...new Set([...master, ...used])].sort((a, b) => a.localeCompare(b, 'id'));
+  }
+
+  function matchCity(c, q) {
+    return c.toLocaleLowerCase('id').includes(q);
+  }
+
+  function fillBuyLocs() {
+    const sel = $('#buy-loc');
+    if (!sel) return;
+    const q = ($('#buy-loc-search')?.value || '').trim().toLocaleLowerCase('id');
+    const locs = allCityOptions().filter((c) => !q || matchCity(c, q));
     const cur = buyState.loc;
-    sel.innerHTML = '<option value="all">Semua lokasi</option>' + locs.map((c) => `<option value="${c}">${c}</option>`).join('');
+    sel.innerHTML = '<option value="all">Semua lokasi</option>' + locs.map((c) => `<option value="${c}">${c}</option>`).join('')
+      + (q ? `<option value="__empty" disabled>${locs.length ? locs.length + ' kota cocok' : 'Tidak ada kota yang cocok'}</option>` : '');
     sel.value = locs.includes(cur) ? cur : 'all';
     buyState.loc = sel.value;
   }
 
   // Isi dropdown kota di form Jual (optgroup per provinsi, seperti kategori).
-  function fillSellLocs(keep) {
+  // Param q = kata kunci search; keep = nilai yang harus dipertahankan.
+  function fillSellLocs(keep, q) {
     const sel = $('#sell-location');
     if (!sel) return;
     const groups = window.CITY_GROUPS || {};
+    const keyword = (q ?? ($('#sell-location-search')?.value || '')).trim().toLocaleLowerCase('id');
     const used = store() ? [...new Set(store().all().map((c) => (c.location || '').trim()).filter((x) => x && x !== '-'))] : [];
     const inMaster = new Set(Object.values(groups).flat());
     const extra = used.filter((x) => !inMaster.has(x)).sort((a, b) => a.localeCompare(b, 'id'));
     let html = '<option value="">Pilih kota...</option>';
+    let shown = 0;
     Object.keys(groups).sort((a, b) => a.localeCompare(b, 'id')).forEach((prov) => {
-      html += `<optgroup label="${prov}">` + groups[prov].map((c) => `<option value="${c}">${c}</option>`).join('') + '</optgroup>';
+      const list = groups[prov].filter((c) => !keyword || matchCity(c, keyword));
+      if (!list.length) return;
+      shown += list.length;
+      html += `<optgroup label="${prov}">` + list.map((c) => `<option value="${c}">${c}</option>`).join('') + '</optgroup>';
     });
-    if (extra.length) html += `<optgroup label="Lainnya">` + extra.map((c) => `<option value="${c}">${c}</option>`).join('') + '</optgroup>';
+    const extraShown = extra.filter((c) => !keyword || matchCity(c, keyword));
+    if (extraShown.length) {
+      shown += extraShown.length;
+      html += `<optgroup label="Lainnya">` + extraShown.map((c) => `<option value="${c}">${c}</option>`).join('') + '</optgroup>';
+    }
+    // Pertahankan nilai lama (mis. mode edit) walau tersaring search.
+    if (keep && keep !== '' && !html.includes(`value="${keep}"`)) {
+      html += `<optgroup label="Dipilih"><option value="${keep}">${keep}</option></optgroup>`;
+    }
     sel.innerHTML = html;
     if (keep) sel.value = keep;
+    const count = $('#sell-location-count');
+    if (count) {
+      if (keyword) {
+        count.textContent = shown ? `${shown} kota cocok dengan "${keyword}"` : `Tidak ada kota yang cocok dengan "${keyword}"`;
+        count.classList.remove('hidden');
+      } else {
+        count.classList.add('hidden');
+      }
+    }
+  }
+
+  function resetSellLocSearch() {
+    const s = $('#sell-location-search');
+    if (s) s.value = '';
   }
 
   function fillBuyYears() {
@@ -432,6 +472,7 @@
     set('#buy-min', '');
     set('#buy-max', '');
     set('#buy-loc', 'all');
+    set('#buy-loc-search', '');
     set('#buy-year', 'all');
     safe(renderBuy, 'render-beli-reset')();
     toast('Filter dikembalikan ke awal.');
@@ -1038,6 +1079,25 @@
     try {
       $('#buy-loc')?.addEventListener('change', (e) => { buyState.loc = e.target.value; safe(renderBuy, 'render-beli-loc')(); });
     } catch (err) { console.error('[marketplace] bind buy-loc gagal:', err); }
+    try {
+      // Search di dalam dropdown lokasi (debounce, tidak me-reset pilihan aktif).
+      let locT = null;
+      $('#buy-loc-search')?.addEventListener('input', () => {
+        clearTimeout(locT);
+        locT = setTimeout(() => safe(fillBuyLocs, 'isi-search-lokasi')(), 200);
+      });
+    } catch (err) { console.error('[marketplace] bind buy-loc-search gagal:', err); }
+    try {
+      // Search di dalam dropdown kota form Jual (debounce, pertahankan pilihan).
+      let sellLocT = null;
+      $('#sell-location-search')?.addEventListener('input', (e) => {
+        clearTimeout(sellLocT);
+        sellLocT = setTimeout(() => {
+          const keep = $('#sell-location')?.value || '';
+          safe(() => fillSellLocs(keep, e.target.value || ''), 'isi-search-kota-jual')();
+        }, 200);
+      });
+    } catch (err) { console.error('[marketplace] bind sell-location-search gagal:', err); }
     try {
       $('#buy-year')?.addEventListener('change', (e) => { buyState.year = e.target.value; safe(renderBuy, 'render-beli-year')(); });
     } catch (err) { console.error('[marketplace] bind buy-year gagal:', err); }
