@@ -407,48 +407,23 @@
     buyState.loc = sel.value;
   }
 
-  // Isi dropdown kota di form Jual (optgroup per provinsi, seperti kategori).
-  // Param q = kata kunci search; keep = nilai yang harus dipertahankan.
+  // Isi datalist kota di form Jual (satu kontrol: ketik + pilih).
+  // Param q opsional tidak dipakai lagi (datalist memfilter otomatis).
   function fillSellLocs(keep, q) {
-    const sel = $('#sell-location');
-    if (!sel) return;
+    const input = $('#sell-location');
+    const list = $('#sell-location-list');
+    if (!input || !list) return;
     const groups = window.CITY_GROUPS || {};
-    const keyword = (q ?? ($('#sell-location-search')?.value || '')).trim().toLocaleLowerCase('id');
     const used = store() ? [...new Set(store().all().map((c) => (c.location || '').trim()).filter((x) => x && x !== '-'))] : [];
     const inMaster = new Set(Object.values(groups).flat());
     const extra = used.filter((x) => !inMaster.has(x)).sort((a, b) => a.localeCompare(b, 'id'));
-    let html = '<option value="">Pilih kota...</option>';
-    let shown = 0;
-    Object.keys(groups).sort((a, b) => a.localeCompare(b, 'id')).forEach((prov) => {
-      const list = groups[prov].filter((c) => !keyword || matchCity(c, keyword));
-      if (!list.length) return;
-      shown += list.length;
-      html += `<optgroup label="${prov}">` + list.map((c) => `<option value="${c}">${c}</option>`).join('') + '</optgroup>';
-    });
-    const extraShown = extra.filter((c) => !keyword || matchCity(c, keyword));
-    if (extraShown.length) {
-      shown += extraShown.length;
-      html += `<optgroup label="Lainnya">` + extraShown.map((c) => `<option value="${c}">${c}</option>`).join('') + '</optgroup>';
-    }
-    // Pertahankan nilai lama (mis. mode edit) walau tersaring search.
-    if (keep && keep !== '' && !html.includes(`value="${keep}"`)) {
-      html += `<optgroup label="Dipilih"><option value="${keep}">${keep}</option></optgroup>`;
-    }
-    sel.innerHTML = html;
-    if (keep) sel.value = keep;
-    const count = $('#sell-location-count');
-    if (count) {
-      if (keyword) {
-        count.textContent = shown ? `${shown} kota cocok dengan "${keyword}"` : `Tidak ada kota yang cocok dengan "${keyword}"`;
-        count.classList.remove('hidden');
-      } else {
-        count.classList.add('hidden');
-      }
-    }
+    const all = [...Object.keys(groups).sort((a, b) => a.localeCompare(b, 'id')).flatMap((prov) => groups[prov]), ...extra];
+    list.innerHTML = all.map((c) => `<option value="${c}"></option>`).join('');
+    if (keep) input.value = keep;
   }
 
   function resetSellLocSearch() {
-    const s = $('#sell-location-search');
+    const s = $('#sell-location');
     if (s) s.value = '';
   }
 
@@ -1168,16 +1143,12 @@
       });
     } catch (err) { console.error('[marketplace] bind buy-loc-search gagal:', err); }
     try {
-      // Search di dalam dropdown kota form Jual (debounce, pertahankan pilihan).
-      let sellLocT = null;
-      $('#sell-location-search')?.addEventListener('input', (e) => {
-        clearTimeout(sellLocT);
-        sellLocT = setTimeout(() => {
-          const keep = $('#sell-location')?.value || '';
-          safe(() => fillSellLocs(keep, e.target.value || ''), 'isi-search-kota-jual')();
-        }, 200);
+      // Kontrol kota form Jual sudah satu input + datalist (filter otomatis browser).
+      // Validasi ringan: kosongkan pesan hitung bila ada.
+      $('#sell-location')?.addEventListener('input', () => {
+        $('#sell-location-count')?.classList.add('hidden');
       });
-    } catch (err) { console.error('[marketplace] bind sell-location-search gagal:', err); }
+    } catch (err) { console.error('[marketplace] bind sell-location gagal:', err); }
     try {
       $('#buy-year')?.addEventListener('change', (e) => { buyState.year = e.target.value; safe(renderBuy, 'render-beli-year')(); });
     } catch (err) { console.error('[marketplace] bind buy-year gagal:', err); }
