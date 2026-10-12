@@ -32,8 +32,6 @@ if ($('#menu-btn')) $('#menu-btn').addEventListener('click', () => {
     setMobile(sidebar?.classList.contains('-translate-x-full'));
   }
 });
-if ($('#sidebar-collapse-btn')) $('#sidebar-collapse-btn').addEventListener('click', () => setCollapsed(true));
-if ($('#sidebar-expand-btn')) $('#sidebar-expand-btn').addEventListener('click', () => setCollapsed(false));
 if (overlay) overlay.addEventListener('click', () => setMobile(false));
 // Saat pindah ke desktop, pastikan overlay & scroll terkunci tidak nyangkut.
 window.addEventListener('resize', () => { if (isDesktop()) setMobile(false); });

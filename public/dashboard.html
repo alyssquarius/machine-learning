@@ -24,18 +24,15 @@
     <style>
         /* Sidebar collapse (desktop) */
         #sidebar { transition: width .3s ease, transform .3s ease; }
-        #sidebar-expand-wrap { display: none; }
         @media (min-width: 1024px) {
             #sidebar.sidebar-collapsed { width: 5.25rem; }
             #sidebar.sidebar-collapsed .brand-text,
             #sidebar.sidebar-collapsed nav a span.truncate,
             #sidebar.sidebar-collapsed #nav-fav-count,
-            #sidebar.sidebar-collapsed #sidebar-tip,
-            #sidebar.sidebar-collapsed #sidebar-collapse-btn { display: none; }
+            #sidebar.sidebar-collapsed #sidebar-tip { display: none; }
             #sidebar.sidebar-collapsed .brand-wrap { justify-content: center; padding-left: 1rem; padding-right: 1rem; }
             #sidebar.sidebar-collapsed nav { padding-left: .75rem; padding-right: .75rem; }
             #sidebar.sidebar-collapsed nav a { justify-content: center; padding-left: .75rem; padding-right: .75rem; }
-            #sidebar.sidebar-collapsed #sidebar-expand-wrap { display: block; }
         }
     </style>
 </head>
@@ -55,9 +52,6 @@
                     </svg>
                 </div>
                 <span class="brand-text text-xl font-bold tracking-tight text-gray-900 dark:text-white truncate">AutoBuyCars</span>
-                <button id="sidebar-collapse-btn" title="Sembunyikan sidebar" aria-label="Sembunyikan sidebar" class="ml-auto hidden lg:inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 transition">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                </button>
             </div>
 
             <!-- Navigation -->
@@ -89,12 +83,6 @@
                     <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4 leading-relaxed">Tingkatkan kualitas foto mobilmu untuk menarik lebih banyak pembeli!</p>
                     <button class="w-full rounded-lg bg-black dark:bg-white py-2.5 text-sm font-medium text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200" data-guide>Lihat Panduan</button>
                 </div>
-            </div>
-            <!-- Expand button (muncul saat sidebar di-collapse di desktop) -->
-            <div id="sidebar-expand-wrap" class="p-3">
-                <button id="sidebar-expand-btn" title="Buka sidebar" aria-label="Buka sidebar" class="flex w-full h-10 items-center justify-center rounded-lg text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 transition">
-                    <svg class="h-4 w-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
-                </button>
             </div>
         </aside>
 
