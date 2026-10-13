@@ -458,13 +458,34 @@
   }
 
   function fillBuyYears() {
-    const sel = $('#buy-year');
-    if (!sel || !store()) return;
-    const years = [...new Set(store().all().map((c) => Number(c.year)).filter((y) => y > 0))].sort((a, b) => b - a);
-    const cur = buyState.year;
-    sel.innerHTML = '<option value="all">Semua tahun</option>' + years.map((y) => `<option value="${y}">${y}</option>`).join('');
-    sel.value = years.map(String).includes(String(cur)) ? String(cur) : 'all';
-    buyState.year = sel.value;
+    // Satu kontrol ketik + pilih — saran dari tahun yang ada di data (bisa diketik manual).
+    const list = $('#buy-year-list');
+    if (list && store()) {
+      const years = [...new Set(store().all().map((c) => Number(c.year)).filter((y) => y > 0))].sort((a, b) => b - a);
+      list.innerHTML = years.map((y) => `<option value="${y}"></option>`).join('');
+    }
+    syncBuyYearInput();
+  }
+  // Ubah ketikan tahun menjadi state: 'all' | '2022'.
+  function resolveBuyYearValue(raw) {
+    const digits = String(raw ?? '').replace(/[^\d]/g, '').slice(0, 4);
+    if (!digits) return 'all';
+    const y = Number(digits);
+    const maxYear = new Date().getFullYear();
+    if (y < 1990 || y > maxYear) return 'q:' + digits;
+    return String(y);
+  }
+  function buyYearDisplay() {
+    const y = buyState.year;
+    if (!y || y === 'all') return '';
+    if (typeof y === 'string' && y.startsWith('q:')) return y.slice(2);
+    return String(y);
+  }
+  // Tampilkan nilai aktif di input (jangan ganggu saat mengetik).
+  function syncBuyYearInput() {
+    const input = $('#buy-year');
+    if (!input || document.activeElement === input) return;
+    input.value = buyYearDisplay();
   }
 
   function num(v) {
@@ -550,7 +571,15 @@
         list = list.filter((c) => (c.location || '-') === buyState.loc);
       }
     }
-    if (buyState.year !== 'all') list = list.filter((c) => String(c.year) === String(buyState.year));
+    if (buyState.year !== 'all') {
+      const yf = String(buyState.year).startsWith('q:') ? String(buyState.year).slice(2) : String(buyState.year);
+      // q: = ketikan di luar rentang valid → cocokkan sebagian (cth: "20" cocok 2020-2026).
+      if (String(buyState.year).startsWith('q:')) {
+        if (yf) list = list.filter((c) => String(c.year || '').includes(yf));
+      } else {
+        list = list.filter((c) => String(c.year) === yf);
+      }
+    }
     const min = buyState.min === '' ? null : Number(buyState.min);
     const max = buyState.max === '' ? null : Number(buyState.max);
     if (min != null) list = list.filter((c) => Number(c.price) >= min);
@@ -1354,7 +1383,19 @@
       });
     } catch (err) { console.error('[marketplace] bind sell-location gagal:', err); }
     try {
-      $('#buy-year')?.addEventListener('change', (e) => { buyState.year = e.target.value; safe(renderBuy, 'render-beli-year')(); });
+      // Tahun satu kontrol ketik + pilih (datalist), sama seperti Kota.
+      // change = pilih dari saran, input (debounce) = ketik manual.
+      let yearT = null;
+      const applyYear = (raw) => {
+        buyState.year = resolveBuyYearValue(raw);
+        safe(renderBuy, 'render-beli-year')();
+      };
+      $('#buy-year')?.addEventListener('change', (e) => { clearTimeout(yearT); applyYear(e.target.value); });
+      $('#buy-year')?.addEventListener('input', (e) => {
+        clearTimeout(yearT);
+        const raw = e.target.value;
+        yearT = setTimeout(() => applyYear(raw), 300);
+      });
     } catch (err) { console.error('[marketplace] bind buy-year gagal:', err); }
     try {
       $('#buy-reset')?.addEventListener('click', resetBuyFilters);
