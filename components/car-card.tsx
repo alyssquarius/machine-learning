@@ -16,9 +16,9 @@ export const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_CLS: Record<string, string> = {
   done: "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950",
-  running: "bg-emerald-600 text-white",
-  queued: "bg-amber-500 text-white",
-  failed: "bg-red-600 text-white",
+  running: "bg-zinc-600 text-white",
+  queued: "bg-zinc-200 text-zinc-950 dark:bg-zinc-800 dark:text-white",
+  failed: "border border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400",
 };
 
 function CarImage({ car, big = false }: { car: Car; big?: boolean }) {
@@ -97,7 +97,7 @@ export function CarCard({
         </p>
         <p className="mt-2 text-lg font-bold text-black dark:text-white">{fmtRp(car.price)}</p>
         {best ? (
-          <p className="mt-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+          <p className="mt-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
             Tawaran tertinggi {fmtRp(best.amount)}
           </p>
         ) : null}
