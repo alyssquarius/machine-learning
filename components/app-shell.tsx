@@ -102,8 +102,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   async function logout() {
     try {
       await createClient().auth.signOut();
-    } catch (err) {
-      console.error("[app] logout gagal:", err);
+    } catch {
+      /* abaikan - tetap arahkan ke login */
     } finally {
       router.replace("/login");
     }
