@@ -587,10 +587,61 @@
     favorit: 'bg-zinc-400', status: 'bg-zinc-500', verifikasi: 'bg-zinc-300 dark:bg-zinc-600',
     batal: 'bg-red-500', hapus: 'bg-zinc-300 dark:bg-zinc-600',
   };
+  // Opsi filter Riwayat — satu kontrol ketik + pilih (datalist),
+  // sama seperti Kota di form Jual (filter otomatis browser).
+  const HIST_OPTIONS = [
+    { id: 'all', label: 'Semua aktivitas' },
+    { id: 'beli', label: 'Pembelian' },
+    { id: 'jual', label: 'Penjualan' },
+    { id: 'tawar', label: 'Penawaran' },
+    { id: 'favorit', label: 'Favorit' },
+    { id: 'status', label: 'Status' },
+    { id: 'verifikasi', label: 'Verifikasi' },
+    { id: 'batal', label: 'Pembatalan' },
+    { id: 'hapus', label: 'Penghapusan' },
+  ];
+  function histLabel(id) {
+    const hit = HIST_OPTIONS.find((o) => o.id === id);
+    return hit ? hit.label : 'Semua aktivitas';
+  }
+  // Isi datalist filter Riwayat (sekali per render, murah).
+  function fillHistFilterList() {
+    const list = $('#hist-filter-list');
+    if (!list) return;
+    list.innerHTML = HIST_OPTIONS.map((o) => `<option value="${escAttr(o.label)}"></option>`).join('');
+  }
+  // Ubah ketikan menjadi state filter: 'all' | id tipe | 'q:teks bebas'.
+  function resolveHistFilterValue(raw) {
+    const v = String(raw ?? '').trim();
+    if (!v) return 'all';
+    const low = v.toLocaleLowerCase('id');
+    if (low === 'all' || low === 'semua' || low === 'semua aktivitas') return 'all';
+    const hit = HIST_OPTIONS.find((o) => o.label.toLocaleLowerCase('id') === low || o.id === low);
+    if (hit) return hit.id;
+    return 'q:' + v;
+  }
+  // Tampilkan label aktif di input (jangan ganggu saat mengetik).
+  function syncHistFilterInput() {
+    const input = $('#hist-filter');
+    if (!input || document.activeElement === input) return;
+    const f = histState.filter;
+    if (f === 'all') input.value = 'Semua aktivitas';
+    else if (typeof f === 'string' && f.startsWith('q:')) input.value = f.slice(2);
+    else input.value = histLabel(f);
+  }
   function renderHist() {
     if (!store()) return;
+    fillHistFilterList();
+    syncHistFilterInput();
     let list = store().history();
-    if (histState.filter !== 'all') list = list.filter((h) => h.type === histState.filter);
+    const f = histState.filter;
+    if (f === 'all') { /* semua */ }
+    else if (typeof f === 'string' && f.startsWith('q:')) {
+      const q = f.slice(2).toLocaleLowerCase('id');
+      if (q) list = list.filter((h) => String(h.text || '').toLocaleLowerCase('id').includes(q));
+    } else if (f) {
+      list = list.filter((h) => h.type === f);
+    }
     const ul = $('#hist-list');
     if (ul) {
       ul.innerHTML = list.map((h, i) => `
@@ -1278,7 +1329,19 @@
     } catch (err) { console.error('[marketplace] bind buy-reset gagal:', err); }
 
     try {
-      $('#hist-filter')?.addEventListener('change', (e) => { histState.filter = e.target.value; safe(renderHist, 'render-riwayat-filter')(); });
+      // Filter Riwayat satu kontrol ketik + pilih (datalist), sama seperti Kota di form Jual.
+      // change = pilih dari saran, input (debounce) = ketik bebas memfilter isi riwayat.
+      let histT = null;
+      const applyHist = (raw) => {
+        histState.filter = resolveHistFilterValue(raw);
+        safe(renderHist, 'render-riwayat-filter')();
+      };
+      $('#hist-filter')?.addEventListener('change', (e) => { clearTimeout(histT); applyHist(e.target.value); });
+      $('#hist-filter')?.addEventListener('input', (e) => {
+        clearTimeout(histT);
+        const raw = e.target.value;
+        histT = setTimeout(() => applyHist(raw), 250);
+      });
     } catch (err) { console.error('[marketplace] bind hist-filter gagal:', err); }
 
     try {

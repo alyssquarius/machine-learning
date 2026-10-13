@@ -443,16 +443,7 @@
                   <div class="flex flex-wrap gap-2">
                     <button id="hist-export" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Unduh CSV</button>
                     <button id="hist-clear" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-gray-500 dark:text-zinc-400 transition hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900">Hapus</button>
-                    <select id="hist-filter" class="rounded-lg border border-gray-300 dark:border-zinc-700 py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-white bg-white dark:bg-zinc-900 focus:border-black dark:focus:border-white outline-none transition appearance-none">
-                      <option value="all">Semua aktivitas</option>
-                      <option value="beli">Pembelian</option>
-                      <option value="jual">Penjualan</option>
-                      <option value="tawar">Penawaran</option>
-                      <option value="favorit">Favorit</option>
-                      <option value="status">Status</option>
-                      <option value="verifikasi">Verifikasi</option>
-                      <option value="batal">Pembatalan</option>
-                    </select>
+                    <input id="hist-filter" list="hist-filter-list" type="text" placeholder="Ketik & pilih aktivitas..." autocomplete="off" class="rounded-lg border border-gray-300 dark:border-zinc-700 py-2 px-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-zinc-900 placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition appearance-none" /><datalist id="hist-filter-list"></datalist>
                   </div>
                 </div>
                 <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
