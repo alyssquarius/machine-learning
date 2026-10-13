@@ -34,14 +34,14 @@ export default function FavoritPage() {
                 const n = store.clearFavs();
                 toast(`${n} favorit dihapus.`);
               }}
-              className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-500 transition hover:border-red-300 hover:text-red-600 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-400"
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-500 transition hover:border-red-300 hover:text-red-600 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-400"
             >
               Hapus Semua
             </button>
           ) : null}
           <Link
             href="/beli"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+            className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
           >
             Cari Mobil
           </Link>

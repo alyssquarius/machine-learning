@@ -142,7 +142,7 @@ export default function PengaturanPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-black sm:text-3xl dark:text-white">
             Pengaturan
@@ -151,7 +151,9 @@ export default function PengaturanPage() {
             Semua tersimpan otomatis. Tanpa tombol simpan.
           </p>
         </div>
-        <SavedBadge show={saved} />
+        <div className="flex flex-wrap gap-2">
+          <SavedBadge show={saved} />
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">

@@ -31,15 +31,17 @@ export function SellToolbar({
             Pasang listing baru dan kelola status penjualanmu.
           </p>
         </div>
-        <button
-          onClick={onAdd}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 sm:self-start dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Tambah Listing
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={onAdd}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Tambah Listing
+          </button>
+        </div>
       </div>
       <div className="mb-6 flex flex-wrap gap-2">
         {SELL_FILTERS.map((f) => {
@@ -48,10 +50,10 @@ export function SellToolbar({
             <button
               key={f.id}
               onClick={() => onFilter(f.id)}
-              className={`rounded-lg px-4 py-1.5 text-xs font-medium transition ${
+              className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
                 on
-                  ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
-                  : "border border-gray-200 text-gray-500 hover:text-black dark:border-zinc-800 dark:text-zinc-400 dark:hover:text-white"
+                  ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                  : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
               }`}
             >
               {f.label}

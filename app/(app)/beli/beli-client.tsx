@@ -156,12 +156,14 @@ export default function BeliClient() {
             {list.length} mobil tersedia untuk dibeli.
           </p>
         </div>
-        <Link
-          href="/jual"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 sm:self-start dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
-        >
-          Jual Mobilmu
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/jual"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+          >
+            Jual Mobilmu
+          </Link>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
