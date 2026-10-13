@@ -45,10 +45,13 @@
   function toast(msg) {
     const el = $('#toast');
     if (!el) return;
-    el.textContent = msg;
+    const txt = $('#toast-text');
+    if (txt) txt.textContent = msg;
+    else el.textContent = msg;
     el.classList.remove('hidden');
+    el.classList.add('flex');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.add('hidden'), 2200);
+    toastTimer = setTimeout(() => { el.classList.add('hidden'); el.classList.remove('flex'); }, 2200);
   }
 
   function paint() {
@@ -232,7 +235,7 @@
                 : `<button data-relist="${c.id}" class="min-w-[7rem] flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Jual Lagi</button>`)
             : ''}
           ${opts.sell ? `<button data-edit="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800" title="Edit"><svg data-icon="edit" class="h-4 w-4 pointer-events-none"></svg></button>` : ''}
-          ${opts.sell ? `<button data-duplicate="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800" title="Duplikat">⧉</button>` : ''}
+          ${opts.sell ? `<button data-duplicate="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800" title="Duplikat"><svg class="h-4 w-4 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 8h10v12H8zM6 16V4h10"/></svg></button>` : ''}
           ${opts.sell ? `<button data-del="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-gray-500 dark:text-zinc-400 transition hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900" title="Hapus"><svg data-icon="trash" class="h-4 w-4 pointer-events-none"></svg></button>` : ''}
           <button data-detail="${c.id}" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Detail</button>
         </div>
@@ -772,7 +775,7 @@
       const soldMonth = typeof store().soldThisMonth === 'function' ? store().soldThisMonth() : s.sold;
       const sisa = Math.max(0, target - soldMonth);
       el.textContent = sisa === 0
-        ? `Target ${target} tercapai bulan ini. 🎉`
+        ? `Target ${target} tercapai bulan ini.`
         : `${soldMonth}/${target} terjual bulan ini — ${sisa} lagi menuju target.`;
     } catch { /* abaikan */ }
   }
@@ -812,9 +815,10 @@
     const mode = saved === 'dark' || saved === 'light' ? saved : 'system';
     $$('#set-theme-group [data-set-theme]').forEach((b) => {
       const on = b.dataset.setTheme === mode;
-      b.className = 'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition border ' + (on
+      b.className = 'inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium transition border ' + (on
         ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white'
         : 'border-gray-300 dark:border-zinc-700 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800');
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
     });
   }
 
@@ -848,11 +852,11 @@
               : `<p>Tunai${c.purchase.name ? ` • ${esc(c.purchase.name)} (${esc(c.purchase.phone) || '-'})` : ''}</p>`}
         </div>` : ''}
         <div class="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-400">
-          <span class="inline-flex items-center gap-1">❤ ${c.interest || 0}% diminati</span><span>•</span><span>Ditambahkan ${ago(c.createdAt)}</span>
+          <span class="inline-flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-gray-400 dark:text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>${c.interest || 0}% diminati</span><span>•</span><span>Ditambahkan ${ago(c.createdAt)}</span>
         </div>
         <div class="mt-5 flex gap-2">
           ${c.status === 'running' ? `<button data-buy="${c.id}" class="flex-1 rounded-lg bg-black dark:bg-white py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Beli Sekarang</button>` : ''}
-          <button data-fav="${c.id}" class="flex-1 rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${on ? 'bg-zinc-950 dark:bg-white border-zinc-950 dark:border-white text-white dark:text-zinc-950' : 'border-gray-300 dark:border-zinc-700 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800'}">${on ? '★ Favorit' : '☆ Simpan Favorit'}</button>
+          <button data-fav="${c.id}" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${on ? 'bg-zinc-950 dark:bg-white border-zinc-950 dark:border-white text-white dark:text-zinc-950' : 'border-gray-300 dark:border-zinc-700 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800'}"><svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="${on ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>${on ? 'Favorit' : 'Simpan Favorit'}</button>
         </div>
         ${c.status !== 'done' ? `<button data-offer="${c.id}" class="mt-2 w-full rounded-lg border border-gray-300 dark:border-zinc-700 py-2.5 text-sm font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Ajukan Tawaran</button>` : ''}
         ${c.status === 'queued' && currentRoute() === 'jual' ? `<button data-publish="${c.id}" class="mt-2 w-full rounded-lg bg-black dark:bg-white py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Tayangkan Listing</button>` : ''}
