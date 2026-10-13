@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { CheckoutModal, DetailModal, OfferModal, SellModal } from "@/components/modals";
+import { WhatsAppContact } from "@/components/whatsapp-contact";
+import { config } from "@/lib/config";
 
 const SELL_FILTERS = [
   { id: "all", label: "Semua" },
@@ -41,6 +43,13 @@ export function SellToolbar({
             </svg>
             Tambah Listing
           </button>
+          <WhatsAppContact
+            phoneNumber={config.whatsapp.phoneNumber}
+            message="Halo, saya ingin menambahkan listing mobil untuk dijual. Mohon bantuannya untuk proses verifikasi."
+            className="bg-gray-100 text-black hover:bg-gray-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
+          >
+            Hubungi untuk Listing
+          </WhatsAppContact>
         </div>
       </div>
       <div className="mb-6 flex flex-wrap gap-2">

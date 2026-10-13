@@ -33,9 +33,21 @@ bukan kode aplikasi. Build webpack lolos penuh (13 route static).
 
 - `app/` — App Router: `(app)/dashboard|jual|beli|favorit|riwayat|pengaturan|profil`, `(auth)/login|register|forgot-password|reset-password`, `loading/error/not-found`
 - `components/` — `app-shell`, `auth-shell`, `car-card`, `dashboard-widgets`, `hist-text`, `modals`, `sell-shared`, `store-provider`, `theme-*`, `toast`, `icons`, `whatsapp-contact`
-- `lib/` — `cities` (kota se-Indonesia), `market` (widget/checkout/filter), `format`, `config`, `supabase/client|server|middleware`
+- `lib/` — `cities` (kota se-Indonesia), `market` (widget/checkout/filter), `format`, `config`, `roles` (RBAC system), `supabase/client|server|middleware`
 - `middleware.ts` — session Supabase (Next.js 16)
-- `app/globals.css` — satu-satunya global CSS (Tailwind murni)
+- `app/globals.css` — satu-satunya global CSS (Tailwind v4)
+
+## Fitur
+
+- 🔐 **Auth**: Supabase Auth (login, register, forgot password)
+- 🚗 **Listing**: CRUD mobil dengan status (queued, running, done, failed)
+- 💰 **Transaction**: Beli tunai/kredit, ajukan penawaran, terima/tolak offer
+- ⭐ **Favorit**: Simpan mobil favorit
+- 📊 **Dashboard**: Analytics penjualan, widget performa
+- 📱 **WhatsApp**: Kontak seller, customer support, request verification
+- 👥 **Role System**: Admin, Dealer, Buyer, Guest dengan 25+ permissions
+- 🌙 **Dark Mode**: Theme toggle dengan persistensi
+- 📱 **Responsive**: Mobile-first design
 
 ## Konvensi UI
 

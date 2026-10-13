@@ -6,7 +6,20 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "commons.wikimedia.org" },
       { protocol: "https", hostname: "upload.wikimedia.org" },
+      { protocol: "https", hostname: "*.unsplash.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "*.pexels.com" },
+      { protocol: "https", hostname: "images.pexels.com" },
+      { protocol: "https", hostname: "*.cloudinary.com" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "*.imgur.com" },
+      { protocol: "https", hostname: "i.imgur.com" },
     ],
+    // Allow all domains (untuk development/demo)
+    // Di production, sebaiknya whitelist domain spesifik
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 
