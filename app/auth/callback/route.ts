@@ -10,9 +10,9 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     await supabase.auth.exchangeCodeForSession(code);
 
-    // Cek apakah user sudah punya role
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      // Cek apakah user sudah punya profile/role
       try {
         const { data: profile } = await supabase
           .from("profiles")
@@ -21,11 +21,11 @@ export async function GET(request: Request) {
           .single();
 
         if (!profile?.role) {
-          // User baru, pilih role dulu
           return NextResponse.redirect(`${origin}/choose-role`);
         }
       } catch {
-        // Table belum ada, langsung dashboard
+        // Jika tabel profiles belum ada atau error, arahkan ke choose-role untuk amannya
+        return NextResponse.redirect(`${origin}/choose-role`);
       }
     }
   }

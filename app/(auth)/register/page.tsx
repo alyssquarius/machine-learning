@@ -89,7 +89,6 @@ export default function RegisterPage() {
         password: pw,
         options: {
           data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) {
@@ -101,14 +100,14 @@ export default function RegisterPage() {
         return;
       }
 
-      // Jika Supabase langsung kasih session (email confirm disabled)
+      // Jika session langsung ada (email confirmation disabled)
       if (data.session) {
-        router.replace("/dashboard");
+        router.replace("/choose-role");
         return;
       }
 
-      // Tampilkan pesan cek email
-      setEmailSent(email);
+      // Arahkan ke halaman input kode verifikasi OTP
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } finally {
       setLoading(false);
     }
