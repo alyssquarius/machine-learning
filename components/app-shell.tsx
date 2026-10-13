@@ -93,8 +93,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Tutup dropdown saat klik di luar / Esc
   React.useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest("#notif-menu,#user-menu")) {
+      const target = e.target as HTMLElement;
+      // Cek apakah klik di dalam dropdown atau tombolnya
+      if (!target.closest("#notif-menu") && !target.closest("#notif-button")) {
         setNotifOpen(false);
+      }
+      if (!target.closest("#user-menu") && !target.closest("#user-button")) {
         setUserOpen(false);
       }
     };
@@ -258,6 +262,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
             <div className="relative shrink-0">
               <button
+                id="notif-button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setUserOpen(false);
@@ -306,6 +311,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="hidden h-8 w-px bg-gray-200 sm:block dark:bg-zinc-800" />
             <div className="relative">
               <button
+                id="user-button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setNotifOpen(false);
