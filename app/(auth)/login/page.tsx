@@ -31,11 +31,31 @@ export default function LoginPage() {
   const [checking, setChecking] = React.useState(true);
 
   React.useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.replace("/dashboard");
-      else setChecking(false);
-    });
+    let cancelled = false;
+    const fallback = setTimeout(() => {
+      if (!cancelled) setChecking(false);
+    }, 2000);
+    
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        clearTimeout(fallback);
+        if (data.session) router.replace("/dashboard");
+        else setChecking(false);
+      } catch {
+        if (!cancelled) {
+          clearTimeout(fallback);
+          setChecking(false);
+        }
+      }
+    })();
+    
+    return () => {
+      cancelled = true;
+      clearTimeout(fallback);
+    };
   }, [router]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

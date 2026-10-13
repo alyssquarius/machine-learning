@@ -35,29 +35,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Auth guard + setOwner + isi profil
   React.useEffect(() => {
     let cancelled = false;
-    const supabase = createClient();
-    const timer = setTimeout(() => {
-      if (!cancelled) router.replace("/login");
-    }, 6000);
-    supabase.auth.getSession().then(({ data }) => {
-      if (cancelled) return;
-      clearTimeout(timer);
-      const session = data?.session;
-      if (!session?.user) {
+    const fallback = setTimeout(() => {
+      if (!cancelled) {
+        setAuthChecked(true);
         router.replace("/login");
-        return;
       }
-      setUser(session.user);
-      store.setOwner(session.user.id);
-      setAuthChecked(true);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") router.replace("/login");
-    });
+    }, 5000);
+
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        clearTimeout(fallback);
+        const session = data?.session;
+        if (!session?.user) {
+          router.replace("/login");
+          return;
+        }
+        setUser(session.user);
+        store.setOwner(session.user.id);
+        setAuthChecked(true);
+
+        const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+          if (event === "SIGNED_OUT") router.replace("/login");
+        });
+        return () => sub.subscription.unsubscribe();
+      } catch {
+        if (!cancelled) {
+          clearTimeout(fallback);
+          router.replace("/login");
+        }
+      }
+    })();
+
     return () => {
       cancelled = true;
-      clearTimeout(timer);
-      sub.subscription.unsubscribe();
+      clearTimeout(fallback);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
