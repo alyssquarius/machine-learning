@@ -1384,17 +1384,37 @@
     } catch (err) { console.error('[marketplace] bind sell-location gagal:', err); }
     try {
       // Tahun satu kontrol ketik + pilih (datalist), sama seperti Kota.
+      // Hanya angka: huruf/symbol langsung dibuang saat diketik & paste.
       // change = pilih dari saran, input (debounce) = ketik manual.
       let yearT = null;
+      const sanitizeYear = (el) => {
+        if (!el) return '';
+        const clean = String(el.value ?? '').replace(/[^\d]/g, '').slice(0, 4);
+        if (el.value !== clean) el.value = clean;
+        return clean;
+      };
       const applyYear = (raw) => {
         buyState.year = resolveBuyYearValue(raw);
         safe(renderBuy, 'render-beli-year')();
       };
-      $('#buy-year')?.addEventListener('change', (e) => { clearTimeout(yearT); applyYear(e.target.value); });
+      $('#buy-year')?.addEventListener('beforeinput', (e) => {
+        // Tolak huruf/symbol sebelum masuk (tetap izinkan hapus & navigasi).
+        if (e.inputType && e.inputType.startsWith('delete')) return;
+        if (typeof e.data === 'string' && e.data && /[^\d]/.test(e.data)) e.preventDefault();
+      });
+      $('#buy-year')?.addEventListener('change', (e) => { clearTimeout(yearT); applyYear(sanitizeYear(e.target)); });
       $('#buy-year')?.addEventListener('input', (e) => {
         clearTimeout(yearT);
-        const raw = e.target.value;
-        yearT = setTimeout(() => applyYear(raw), 300);
+        const el = e.target;
+        yearT = setTimeout(() => applyYear(sanitizeYear(el)), 300);
+      });
+      $('#buy-year')?.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const t = String((e.clipboardData?.getData('text') || '')).replace(/[^\d]/g, '').slice(0, 4);
+        const el = e.target;
+        el.value = t;
+        clearTimeout(yearT);
+        yearT = setTimeout(() => applyYear(t), 300);
       });
     } catch (err) { console.error('[marketplace] bind buy-year gagal:', err); }
     try {
