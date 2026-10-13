@@ -13,7 +13,10 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "AutoBuyCars",
+  title: {
+    default: "AutoBuyCars",
+    template: "%s | AutoBuyCars",
+  },
   description: "Platform jual beli mobil terpercaya",
   icons: {
     icon: "/favicon.ico",
