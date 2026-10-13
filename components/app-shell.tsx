@@ -8,9 +8,11 @@ import { CarLogo } from "@/components/auth-shell";
 import { HistText } from "@/components/hist-text";
 import { Icon } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { RoleBadge } from "@/components/role-badge";
 import { useStore } from "@/components/store-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import type { Role } from "@/lib/roles";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
@@ -26,13 +28,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const store = useStore();
   const [user, setUser] = React.useState<User | null>(null);
+  const [role, setRole] = React.useState<Role>("guest");
   const [authChecked, setAuthChecked] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [userOpen, setUserOpen] = React.useState(false);
 
-  // Auth check – izinkan guest (user null)
+  // Auth check & fetch role
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -45,21 +48,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           setUser(session.user);
           store.setOwner(session.user.id);
 
+          // Cek email khusus admin
+          if (session.user.email === "admin@autobuycars.com") {
+            setRole("admin");
+          } else {
+            // Ambil role dari profiles table
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("role")
+              .eq("id", session.user.id)
+              .single();
+            
+            if (profile?.role && ["admin", "dealer", "buyer"].includes(profile.role)) {
+              setRole(profile.role as Role);
+            } else {
+              setRole("buyer");
+            }
+          }
+
           const { data: sub } = supabase.auth.onAuthStateChange((event) => {
             if (event === "SIGNED_OUT") {
               setUser(null);
+              setRole("guest");
               router.replace("/login");
             }
           });
-          // cleanup
-          const unsub = sub.subscription;
-          const cleanup = () => unsub.unsubscribe();
-          // store cleanup ref (unused but keeps lint happy)
-          void cleanup;
+          void sub;
+        } else {
+          setRole("guest");
         }
         setAuthChecked(true);
       } catch {
-        if (!cancelled) setAuthChecked(true);
+        if (!cancelled) {
+          setRole("guest");
+          setAuthChecked(true);
+        }
       }
     })();
 
@@ -87,7 +110,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const onClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Cek apakah klik di dalam dropdown atau tombolnya
       if (!target.closest("#notif-menu") && !target.closest("#notif-button")) {
         setNotifOpen(false);
       }
@@ -114,7 +136,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     try {
       await createClient().auth.signOut();
     } catch {
-      /* abaikan - tetap arahkan ke login */
+      /* abaikan */
     } finally {
       router.replace("/login");
     }
@@ -167,14 +189,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           mobileOpen ? "" : "-translate-x-full"
         } lg:translate-x-0 ${collapsed ? "sidebar-collapsed" : ""}`}
       >
-        <div className="brand-wrap flex items-center gap-3 p-6">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
-            <CarLogo className="h-5 w-5" />
+        <div className="brand-wrap flex items-center justify-between p-6 pb-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
+              <CarLogo className="h-5 w-5" />
+            </div>
+            <span className="brand-text truncate text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+              AutoBuyCars
+            </span>
           </div>
-          <span className="brand-text truncate text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-            AutoBuyCars
-          </span>
         </div>
+        
+        {/* Role Badge di Sidebar */}
+        <div className="brand-text px-6 py-2">
+          <RoleBadge role={role} />
+        </div>
+
         <nav className="mt-2 flex-1 space-y-1 overflow-y-auto px-4">
           {NAV.map((n) => {
             const on = activeHref === n.href;
@@ -204,16 +234,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div id="sidebar-tip" className="mt-auto p-4">
           <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-            <h4 className="mb-1 font-semibold text-black dark:text-white">Tips Jual Cepat</h4>
+            <h4 className="mb-1 font-semibold text-black dark:text-white">
+              {role === "admin" ? "Panel Admin" : role === "dealer" ? "Mode Penjual" : role === "buyer" ? "Mode Pembeli" : "Mode Pengunjung"}
+            </h4>
             <p className="mb-4 text-sm leading-relaxed text-gray-500 dark:text-zinc-400">
-              Tingkatkan kualitas foto mobilmu untuk menarik lebih banyak pembeli!
+              {role === "admin"
+                ? "Kelola seluruh platform dan verifikasi user."
+                : role === "dealer"
+                ? "Upload dan kelola listing mobil jualanmu."
+                : role === "buyer"
+                ? "Cari, tawar, dan beli mobil impianmu."
+                : "Masuk untuk menikmati fitur lengkap."}
             </p>
-            <Link
-              href="/pengaturan"
-              className="block w-full rounded-lg bg-black py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
-            >
-              Lihat Panduan
-            </Link>
+            {isGuest ? (
+              <Link
+                href="/login"
+                className="block w-full rounded-lg bg-black py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+              >
+                Masuk / Daftar
+              </Link>
+            ) : (
+              <Link
+                href="/pengaturan"
+                className="block w-full rounded-lg border border-gray-300 py-2.5 text-center text-sm font-medium text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+              >
+                Pengaturan Akun
+              </Link>
+            )}
           </div>
         </div>
       </aside>
@@ -254,6 +301,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+            <div className="hidden sm:block">
+              <RoleBadge role={role} />
+            </div>
             <ThemeToggle />
             <div className="relative shrink-0">
               <button
