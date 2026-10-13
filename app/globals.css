@@ -1,33 +1,33 @@
 @import "tailwindcss";
 
-@variant dark (&:where(.dark, .dark *));
-
 /* Utilitas Tailwind kustom */
-@utility nav-item {
-  border-left: 3px solid transparent;
-  color: var(--color-gray-600);
-  transition: all 0.2s ease;
-  &:hover {
-    background-color: var(--color-gray-100);
-    color: var(--color-gray-900);
+@layer utilities {
+  .nav-item {
+    border-left: 3px solid transparent;
+    color: rgb(75 85 99);
+    transition: all 0.2s ease;
   }
-  &:where(.dark, .dark *) {
-    color: var(--color-zinc-400);
+  .nav-item:hover {
+    background-color: rgb(243 244 246);
+    color: rgb(17 24 39);
   }
-  &:where(.dark, .dark *):hover {
-    background-color: var(--color-zinc-800);
-    color: var(--color-white);
+  .dark .nav-item {
+    color: rgb(161 161 170);
   }
-}
+  .dark .nav-item:hover {
+    background-color: rgb(39 39 42);
+    color: rgb(255 255 255);
+  }
 
-@utility nav-active {
-  background-color: var(--color-gray-100);
-  border-left: 3px solid var(--color-black);
-  color: var(--color-gray-900);
-  &:where(.dark, .dark *) {
-    background-color: var(--color-zinc-800);
-    border-left-color: var(--color-white);
-    color: var(--color-white);
+  .nav-active {
+    background-color: rgb(243 244 246);
+    border-left: 3px solid rgb(0 0 0);
+    color: rgb(17 24 39);
+  }
+  .dark .nav-active {
+    background-color: rgb(39 39 42);
+    border-left-color: rgb(255 255 255);
+    color: rgb(255 255 255);
   }
 }
 
@@ -62,16 +62,40 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 }
 
 /* Sidebar collapse (desktop) */
-#sidebar { transition: width .3s ease, transform .3s ease; }
+#sidebar { 
+  transition: width .3s ease, transform .3s ease; 
+}
+
 @media (min-width: 1024px) {
-  #sidebar.sidebar-collapsed { width: 5.25rem; }
+  #sidebar.sidebar-collapsed { 
+    width: 5.25rem; 
+  }
   #sidebar.sidebar-collapsed .brand-text,
   #sidebar.sidebar-collapsed nav a span.truncate,
   #sidebar.sidebar-collapsed #nav-fav-count,
-  #sidebar.sidebar-collapsed #sidebar-tip { display: none; }
-  #sidebar.sidebar-collapsed .brand-wrap { justify-content: center; padding-left: 1rem; padding-right: 1rem; }
-  #sidebar.sidebar-collapsed nav { padding-left: .75rem; padding-right: .75rem; }
-  #sidebar.sidebar-collapsed nav a { justify-content: center; padding-left: .75rem; padding-right: .75rem; border-left-color: transparent; }
-  #sidebar.sidebar-collapsed nav a.nav-active { border-left-color: transparent; background-color: var(--color-gray-100); }
-  .dark #sidebar.sidebar-collapsed nav a.nav-active { background-color: var(--color-zinc-800); }
+  #sidebar.sidebar-collapsed #sidebar-tip { 
+    display: none; 
+  }
+  #sidebar.sidebar-collapsed .brand-wrap { 
+    justify-content: center; 
+    padding-left: 1rem; 
+    padding-right: 1rem; 
+  }
+  #sidebar.sidebar-collapsed nav { 
+    padding-left: .75rem; 
+    padding-right: .75rem; 
+  }
+  #sidebar.sidebar-collapsed nav a { 
+    justify-content: center; 
+    padding-left: .75rem; 
+    padding-right: .75rem; 
+    border-left-color: transparent; 
+  }
+  #sidebar.sidebar-collapsed nav a.nav-active { 
+    border-left-color: transparent; 
+    background-color: rgb(243 244 246); 
+  }
+  .dark #sidebar.sidebar-collapsed nav a.nav-active { 
+    background-color: rgb(39 39 42); 
+  }
 }
