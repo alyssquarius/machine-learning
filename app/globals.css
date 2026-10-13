@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+/* Utilitas Tailwind kustom */
+@utility nav-item {
+  border-left: 3px solid transparent;
+  color: var(--color-gray-600);
+  transition: all 0.2s ease;
+  &:hover {
+    background-color: var(--color-gray-100);
+    color: var(--color-gray-900);
+  }
+  &:where(.dark, .dark *) {
+    color: var(--color-zinc-400);
+  }
+  &:where(.dark, .dark *):hover {
+    background-color: var(--color-zinc-800);
+    color: var(--color-white);
+  }
+}
+
+@utility nav-active {
+  background-color: var(--color-gray-100);
+  border-left: 3px solid var(--color-black);
+  color: var(--color-gray-900);
+  &:where(.dark, .dark *) {
+    background-color: var(--color-zinc-800);
+    border-left-color: var(--color-white);
+    color: var(--color-white);
+  }
+}
+
+/* Dark mode: hindari hitam pekat + putih murni yang menyilaukan. */
+html.dark {
+  --color-zinc-950: #1c1c22;
+  --color-zinc-900: #222229;
+  --color-zinc-800: #2e2e36;
+  --color-white: #b9b9c1;
+  color-scheme: dark;
+}
+
+/* Foto diredupkan sedikit di dark mode agar tidak "nembak". */
+html.dark img {
+  filter: brightness(0.86) contrast(0.97);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3a3a43;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #52525c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Sidebar collapse (desktop) */
+#sidebar { transition: width .3s ease, transform .3s ease; }
+@media (min-width: 1024px) {
+  #sidebar.sidebar-collapsed { width: 5.25rem; }
+  #sidebar.sidebar-collapsed .brand-text,
+  #sidebar.sidebar-collapsed nav a span.truncate,
+  #sidebar.sidebar-collapsed #nav-fav-count,
+  #sidebar.sidebar-collapsed #sidebar-tip { display: none; }
+  #sidebar.sidebar-collapsed .brand-wrap { justify-content: center; padding-left: 1rem; padding-right: 1rem; }
+  #sidebar.sidebar-collapsed nav { padding-left: .75rem; padding-right: .75rem; }
+  #sidebar.sidebar-collapsed nav a { justify-content: center; padding-left: .75rem; padding-right: .75rem; border-left-color: transparent; }
+  #sidebar.sidebar-collapsed nav a.nav-active { border-left-color: transparent; background-color: var(--color-gray-100); }
+  .dark #sidebar.sidebar-collapsed nav a.nav-active { background-color: var(--color-zinc-800); }
+}
