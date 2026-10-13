@@ -65,15 +65,26 @@ export function SellModal({
   const { toast } = useToast();
   const editing = editingId ? store.get(editingId) : undefined;
   const [err, setErr] = React.useState("");
+  const [priceDisplay, setPriceDisplay] = React.useState(editing?.price?.toLocaleString("id-ID") || "");
+  const [kmDisplay, setKmDisplay] = React.useState(editing?.km?.toLocaleString("id-ID") || "");
   const maxYear = new Date().getFullYear();
+
+  function formatNumber(val: string): string {
+    const num = val.replace(/\D/g, "");
+    return num ? parseInt(num, 10).toLocaleString("id-ID") : "";
+  }
+
+  function parseNumber(val: string): number {
+    return parseInt(val.replace(/\D/g, "") || "0", 10);
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const title = String(fd.get("title") || "").trim();
-    const price = Number(fd.get("price") || 0);
+    const price = parseNumber(priceDisplay);
     const year = Number(fd.get("year") || 0);
-    const km = Number(fd.get("km") || 0);
+    const km = parseNumber(kmDisplay);
     const location = String(fd.get("location") || "").trim();
     const category = String(fd.get("category") || "SUV");
     const image = String(fd.get("image") || "").trim();
@@ -120,7 +131,13 @@ export function SellModal({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>Harga (Rp) *</label>
-            <input name="price" type="number" min={1000000} defaultValue={editing?.price || ""} placeholder="250000000" className={inputCls} />
+            <input
+              type="text"
+              value={priceDisplay}
+              onChange={(e) => setPriceDisplay(formatNumber(e.target.value))}
+              placeholder="250.000.000"
+              className={inputCls}
+            />
           </div>
           <div>
             <label className={labelCls}>Tahun *</label>
@@ -130,7 +147,13 @@ export function SellModal({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>KM</label>
-            <input name="km" type="number" min={0} defaultValue={editing?.km || ""} placeholder="25000" className={inputCls} />
+            <input
+              type="text"
+              value={kmDisplay}
+              onChange={(e) => setKmDisplay(formatNumber(e.target.value))}
+              placeholder="25.000"
+              className={inputCls}
+            />
           </div>
           <div>
             <label className={labelCls}>Kota *</label>

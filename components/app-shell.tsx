@@ -349,7 +349,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-zinc-400">{email}</p>
                 </div>
                 <Link
-                  href="/pengaturan"
+                  href="/profil"
                   onClick={() => setUserOpen(false)}
                   className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
                 >
