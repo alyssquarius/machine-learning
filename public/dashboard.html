@@ -463,49 +463,70 @@
 
               <!-- PAGE: PENGATURAN -->
               <section data-page="pengaturan" class="hidden">
-                <div class="mb-6">
-                  <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-black dark:text-white">Pengaturan</h1>
-                  <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">Kelola target, tampilan, dan data dashboardmu.</p>
+                <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-black dark:text-white">Pengaturan</h1>
+                    <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">Semua tersimpan otomatis. Tanpa tombol simpan.</p>
+                  </div>
+                  <p id="settings-saved" class="hidden items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400" role="status"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Tersimpan</p>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
                     <h2 class="font-bold text-black dark:text-white mb-1">Profil</h2>
-                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Nama tampilan lokal untuk sapaan & banner (tersimpan di perangkat).</p>
+                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Nama sapaan di banner. Tersimpan otomatis saat diketik.</p>
                     <div class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-zinc-800 p-4 mb-4">
                       <div class="h-11 w-11 rounded-full bg-black dark:bg-white flex items-center justify-center text-white dark:text-zinc-950 font-bold text-lg" id="set-avatar">U</div>
                       <div class="min-w-0"><p id="set-name" class="font-semibold text-black dark:text-white truncate">User</p><p id="set-email" class="text-xs text-gray-500 dark:text-zinc-400 truncate">user@example.com</p></div>
+                      <button id="displayname-use-account" class="ml-auto shrink-0 rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-1.5 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Pakai nama akun</button>
                     </div>
+                    <label for="displayname-input" class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Nama tampilan</label>
                     <div class="flex gap-3">
-                      <input id="displayname-input" type="text" maxlength="40" placeholder="cth: Budi" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2.5 px-4 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
+                      <input id="displayname-input" type="text" maxlength="40" placeholder="cth: Budi" autocomplete="nickname" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2.5 px-4 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
                       <button id="displayname-save" class="shrink-0 rounded-lg bg-black dark:bg-white px-5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Simpan</button>
                     </div>
+                    <p id="displayname-hint" class="mt-2 text-xs text-gray-500 dark:text-zinc-400">Kosongkan untuk kembali memakai nama akun.</p>
                   </div>
                   <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
                     <h2 class="font-bold text-black dark:text-white mb-1">Target Penjualan</h2>
-                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Target bulanan yang tampil di banner dashboard.</p>
+                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Target bulanan di banner. Pilih cepat atau ketik sendiri.</p>
+                    <div class="flex flex-wrap gap-2 mb-3" id="target-presets">
+                      <button data-target-preset="5" class="rounded-full border border-gray-300 dark:border-zinc-700 px-4 py-1.5 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">5 mobil</button>
+                      <button data-target-preset="10" class="rounded-full border border-gray-300 dark:border-zinc-700 px-4 py-1.5 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">10 mobil</button>
+                      <button data-target-preset="20" class="rounded-full border border-gray-300 dark:border-zinc-700 px-4 py-1.5 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">20 mobil</button>
+                      <button data-target-preset="50" class="rounded-full border border-gray-300 dark:border-zinc-700 px-4 py-1.5 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">50 mobil</button>
+                    </div>
+                    <label for="target-input" class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Target per bulan (unit)</label>
                     <div class="flex gap-3">
-                      <input id="target-input" type="number" min="1" max="100" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2.5 px-4 text-sm text-gray-900 dark:text-white focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
+                      <input id="target-input" type="number" min="1" max="100" inputmode="numeric" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2.5 px-4 text-sm text-gray-900 dark:text-white focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
                       <button id="target-save" class="shrink-0 rounded-lg bg-black dark:bg-white px-5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 transition hover:bg-gray-800 dark:hover:bg-zinc-200">Simpan</button>
                     </div>
+                    <p id="target-progress-note" class="mt-2 text-xs text-gray-500 dark:text-zinc-400"></p>
                   </div>
                   <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
                     <h2 class="font-bold text-black dark:text-white mb-1">Tampilan</h2>
-                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Pilih tema yang sama dengan website.</p>
-                    <div class="flex gap-2" id="set-theme-group">
-                      <button data-set-theme="light" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium transition">Terang</button>
-                      <button data-set-theme="dark" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium transition">Gelap</button>
-                      <button data-set-theme="system" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium transition">Otomatis</button>
+                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Langsung diterapkan saat dipilih.</p>
+                    <div class="flex gap-2" id="set-theme-group" role="radiogroup" aria-label="Pilih tema">
+                      <button data-set-theme="light" role="radio" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium transition">☀️ Terang</button>
+                      <button data-set-theme="dark" role="radio" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium transition">🌙 Gelap</button>
+                      <button data-set-theme="system" role="radio" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium transition">💻 Otomatis</button>
                     </div>
                   </div>
                   <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
-                    <h2 class="font-bold text-black dark:text-white mb-1">Tampilan Widget</h2>
-                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Sembunyikan / tampilkan blok dashboard. Tersimpan di perangkat.</p>
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                      <h2 class="font-bold text-black dark:text-white">Tampilan Widget</h2>
+                      <span id="widget-visible-count" class="shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-[11px] font-semibold text-gray-600 dark:text-zinc-300"></span>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Centang = tampil. Perubahan langsung terlihat di dashboard.</p>
                     <div id="widget-toggles" class="space-y-2"></div>
-                    <button id="widgets-show-all-2" class="mt-4 text-xs font-semibold text-black dark:text-white hover:underline">Tampilkan semua widget</button>
+                    <div class="mt-4 flex gap-2">
+                      <button id="widgets-show-all-2" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2 text-xs font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Tampilkan semua</button>
+                      <button id="widgets-hide-all" class="flex-1 rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2 text-xs font-semibold text-gray-500 dark:text-zinc-400 transition hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800">Sembunyikan semua</button>
+                    </div>
                   </div>
                   <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
                     <h2 class="font-bold text-black dark:text-white mb-1">Data Akun</h2>
-                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">Hapus inventaris, favorit, dan riwayat milik akun ini di perangkat ini.</p>
+                    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-1">Hapus inventaris, favorit, dan riwayat milik akun ini di perangkat ini.</p>
+                    <p id="data-summary" class="text-xs text-gray-500 dark:text-zinc-400 mb-4"></p>
                     <div class="flex flex-wrap gap-3">
                       <button id="btn-reset-data" class="rounded-lg border border-gray-300 dark:border-zinc-700 px-5 py-2.5 text-sm font-semibold text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">Hapus Data</button>
                       <button id="logout-2" class="rounded-lg border border-red-200 dark:border-red-900/50 px-5 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400 transition hover:bg-red-50 dark:hover:bg-red-950/30">Keluar Akun</button>

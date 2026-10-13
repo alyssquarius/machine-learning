@@ -88,11 +88,13 @@
     const box = $('#widget-toggles');
     if (box) box.innerHTML = WIDGETS.map((w) => {
       const on = !store().isWidgetHidden(w.id);
+      const desc = { banner: 'Sapaan + target', kpis: '4 kartu angka', trend: 'Grafik garis', donut: 'Grafik lingkaran', table: 'Tabel mobil', popular: 'Top listing', activity: 'Grafik tawaran', recent: 'Timeline' }[w.id] || '';
       return `<label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-gray-200 dark:border-zinc-800 px-3 py-2 text-sm transition hover:bg-gray-50 dark:hover:bg-zinc-800/60">
-        <span class="font-medium text-gray-700 dark:text-zinc-200">${w.label}</span>
-        <input type="checkbox" data-widget-toggle="${w.id}" ${on ? 'checked' : ''} class="h-4 w-4 accent-black dark:accent-white" />
+        <span class="min-w-0"><span class="block font-medium text-gray-700 dark:text-zinc-200">${w.label}</span><span class="block text-xs text-gray-500 dark:text-zinc-400">${desc}</span></span>
+        <input type="checkbox" data-widget-toggle="${w.id}" ${on ? 'checked' : ''} class="h-4 w-4 shrink-0 accent-black dark:accent-white" aria-label="Tampilkan ${w.label}" />
       </label>`;
     }).join('');
+    paintWidgetCount();
   }
 
   // ---------- Dashboard aman-error ----------
@@ -606,6 +608,81 @@
   }
 
   // ---------- PENGATURAN ----------
+  let settingsSavedTimer = null;
+  function flashSettingsSaved() {
+    const el = $('#settings-saved');
+    if (!el) return;
+    el.classList.remove('hidden');
+    el.classList.add('inline-flex');
+    clearTimeout(settingsSavedTimer);
+    settingsSavedTimer = setTimeout(() => {
+      el.classList.add('hidden');
+      el.classList.remove('inline-flex');
+    }, 1800);
+  }
+  function saveTargetValue(v, silent) {
+    if (!store()) { if (!silent) toast('Data belum siap. Muat ulang halaman.'); return null; }
+    const n = Math.max(1, Math.min(100, Math.round(Number(v) || 0)));
+    if (!n) { if (!silent) toast('Target minimal 1.'); return null; }
+    const out = store().setTarget(n);
+    const input = $('#target-input');
+    if (input && document.activeElement !== input) input.value = out;
+    paintTargetPresets(out);
+    paintTargetProgress();
+    if (!silent) { toast('Target penjualan disimpan.'); flashSettingsSaved(); }
+    return out;
+  }
+  function saveDisplayNameValue(v, silent) {
+    if (!store() || typeof store().setDisplayName !== 'function') { if (!silent) toast('Data belum siap. Muat ulang halaman.'); return null; }
+    const name = String(v ?? '').trim().slice(0, 40);
+    // Kosong = kembali memakai nama akun (hapus override lokal).
+    if (!name) {
+      store().setDisplayName('');
+      if (!silent) { toast('Nama tampilan dikembalikan ke nama akun.'); flashSettingsSaved(); }
+      return '';
+    }
+    if (name.length < 2) { if (!silent) toast('Nama tampilan minimal 2 karakter.'); return null; }
+    const out = store().setDisplayName(name);
+    if (!silent) { toast(`Nama tampilan disimpan: ${out}.`); flashSettingsSaved(); }
+    return out;
+  }
+  function paintTargetPresets(current) {
+    const cur = current ?? store()?.getTarget?.() ?? 10;
+    $$('#target-presets [data-target-preset]').forEach((b) => {
+      const on = Number(b.dataset.targetPreset) === Number(cur);
+      b.className = 'rounded-full px-4 py-1.5 text-xs font-semibold transition border ' + (on
+        ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white'
+        : 'border-gray-300 dark:border-zinc-700 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800');
+    });
+  }
+  function paintTargetProgress() {
+    const el = $('#target-progress-note');
+    if (!el || !store()) return;
+    try {
+      const s = store().stats();
+      const target = store().getTarget();
+      const soldMonth = typeof store().soldThisMonth === 'function' ? store().soldThisMonth() : s.sold;
+      const sisa = Math.max(0, target - soldMonth);
+      el.textContent = sisa === 0
+        ? `Target ${target} tercapai bulan ini. 🎉`
+        : `${soldMonth}/${target} terjual bulan ini — ${sisa} lagi menuju target.`;
+    } catch { /* abaikan */ }
+  }
+  function paintDataSummary() {
+    const el = $('#data-summary');
+    if (!el || !store()) return;
+    try {
+      const s = store().stats();
+      const h = store().history().length;
+      el.textContent = `${s.total} listing • ${s.favCount} favorit • ${h} riwayat di perangkat ini.`;
+    } catch { /* abaikan */ }
+  }
+  function paintWidgetCount() {
+    const el = $('#widget-visible-count');
+    if (!el || !store() || typeof store().isWidgetHidden !== 'function') return;
+    const visible = WIDGETS.filter((w) => !store().isWidgetHidden(w.id)).length;
+    el.textContent = `${visible}/${WIDGETS.length} tampil`;
+  }
   function renderSettings() {
     if (!store()) return;
     const input = $('#target-input');
@@ -615,6 +692,10 @@
       dn.value = store().getDisplayName();
     }
     paintThemeButtons();
+    paintTargetPresets();
+    paintTargetProgress();
+    paintDataSummary();
+    paintWidgetCount();
     safe(applyWidgetVisibility, 'widget-visibility-pengaturan')();
   }
 
@@ -1026,7 +1107,38 @@
     if (e.target.closest('#widgets-show-all') || e.target.closest('#widgets-show-all-2')) {
       store().showAllWidgets();
       safe(applyWidgetVisibility, 'widget-visibility')();
+      safe(paintWidgetCount, 'widget-count')();
+      safe(paintTargetProgress, 'target-progress')();
       toast('Semua widget ditampilkan.');
+      flashSettingsSaved();
+      return;
+    }
+    // Sembunyikan semua widget dari Pengaturan.
+    if (e.target.closest('#widgets-hide-all')) {
+      try {
+        WIDGETS.forEach((w) => store().setWidgetHidden(w.id, true));
+      } catch { /* abaikan */ }
+      safe(applyWidgetVisibility, 'widget-visibility')();
+      safe(paintWidgetCount, 'widget-count')();
+      toast('Semua widget disembunyikan.');
+      return;
+    }
+    // Preset target cepat di Pengaturan (tersimpan otomatis).
+    const preset = e.target.closest('[data-target-preset]');
+    if (preset) {
+      const input = $('#target-input');
+      if (input) input.value = preset.dataset.targetPreset;
+      safe(() => saveTargetValue(preset.dataset.targetPreset), 'target-preset')();
+      return;
+    }
+    // Kembali memakai nama akun (hapus override lokal).
+    if (e.target.closest('#displayname-use-account')) {
+      const dn = $('#displayname-input');
+      if (dn) dn.value = '';
+      safe(() => saveDisplayNameValue('', true), 'nama-akun')();
+      try { if (window.Dashboard?.render) window.Dashboard.render(); } catch { /* abaikan */ }
+      toast('Nama tampilan dikembalikan ke nama akun.');
+      flashSettingsSaved();
       return;
     }
   });
@@ -1043,7 +1155,9 @@
     const label = (WIDGETS.find((w) => w.id === id) || {}).label || 'Widget';
     store().setWidgetHidden(id, !t.checked);
     safe(applyWidgetVisibility, 'widget-visibility-toggle')();
+    safe(paintWidgetCount, 'widget-count')();
     toast(t.checked ? `"${label}" ditampilkan.` : `"${label}" disembunyikan.`);
+    flashSettingsSaved();
   });
 
   // Listener tombol jual dipasang via delegasi klik global juga,
@@ -1168,25 +1282,38 @@
     } catch (err) { console.error('[marketplace] bind hist-filter gagal:', err); }
 
     try {
+      let targetT = null;
+      $('#target-input')?.addEventListener('input', (ev) => {
+        clearTimeout(targetT);
+        targetT = setTimeout(() => safe(() => saveTargetValue(ev.target.value, true), 'target-otomatis')(), 600);
+      });
+      $('#target-input')?.addEventListener('change', (ev) => {
+        clearTimeout(targetT);
+        safe(() => saveTargetValue(ev.target.value), 'target-change')();
+      });
       $('#target-save')?.addEventListener('click', () => {
-        if (!store()) { toast('Data belum siap. Muat ulang halaman.'); return; }
-        const v = Number($('#target-input').value);
-        if (!v || v < 1) { toast('Target minimal 1.'); return; }
-        store().setTarget(v);
-        toast('Target penjualan disimpan.');
+        clearTimeout(targetT);
+        safe(() => saveTargetValue($('#target-input').value), 'target-simpan')();
       });
     } catch (err) { console.error('[marketplace] bind target gagal:', err); }
 
     try {
+      let nameT = null;
+      const commitName = (silent) => safe(() => saveDisplayNameValue($('#displayname-input')?.value, silent), 'nama-otomatis')();
+      $('#displayname-input')?.addEventListener('input', () => {
+        clearTimeout(nameT);
+        nameT = setTimeout(() => commitName(true), 700);
+      });
+      $('#displayname-input')?.addEventListener('change', () => {
+        clearTimeout(nameT);
+        commitName(false);
+      });
       $('#displayname-save')?.addEventListener('click', () => {
-        if (!store() || typeof store().setDisplayName !== 'function') { toast('Data belum siap. Muat ulang halaman.'); return; }
-        const v = ($('#displayname-input')?.value || '').trim();
-        if (v.length < 2) { toast('Nama tampilan minimal 2 karakter.'); return; }
-        store().setDisplayName(v);
-        toast(`Nama tampilan disimpan: ${v}.`);
+        clearTimeout(nameT);
+        commitName(false);
       });
       $('#displayname-input')?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); $('#displayname-save')?.click(); }
+        if (e.key === 'Enter') { e.preventDefault(); clearTimeout(nameT); commitName(false); }
       });
     } catch (err) { console.error('[marketplace] bind displayname gagal:', err); }
 
@@ -1205,19 +1332,28 @@
             window.Theme.set(mode);
           }
           safe(paintThemeButtons, 'paint-theme')();
+          flashSettingsSaved();
+          toast(mode === 'light' ? 'Tema terang dipakai.' : mode === 'dark' ? 'Tema gelap dipakai.' : 'Tema mengikuti perangkat.');
         }));
     } catch (err) { console.error('[marketplace] bind theme gagal:', err); }
 
     try {
       $('#btn-reset-data')?.addEventListener('click', () => {
         if (!store()) { toast('Data belum siap. Muat ulang halaman.'); return; }
-        if (!confirm('Hapus semua data milik akun ini di perangkat ini?')) return;
+        try {
+          const s = store().stats();
+          const h = store().history().length;
+          if (!confirm(`Hapus ${s.total} listing, ${s.favCount} favorit, dan ${h} riwayat milik akun ini di perangkat ini?`)) return;
+        } catch {
+          if (!confirm('Hapus semua data milik akun ini di perangkat ini?')) return;
+        }
         store().reset();
         window.dispatchEvent(new CustomEvent('marketplace:resetbuy'));
         // Sinkronkan pencarian global dashboard ke halaman beli
         const s = $('#search');
         if (s) { s.value = ''; buyState.q = ''; }
         showPage(currentRoute());
+        safe(paintDataSummary, 'ringkasan-data')();
         toast('Data akun dihapus.');
       });
     } catch (err) { console.error('[marketplace] bind reset gagal:', err); }
