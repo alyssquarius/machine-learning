@@ -8,24 +8,32 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (!sessionError) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Cek apakah email adalah admin khusus
+        if (user.email === "admin@autobuycars.com") {
+          return NextResponse.redirect(`${origin}/dashboard`);
+        }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // Cek apakah user sudah punya profile/role
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
+        try {
+          // Cek tabel profiles
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
 
-        if (!profile?.role) {
+          // Jika profile belum ada atau role belum diset, wajib ke choose-role
+          if (profileError || !profile?.role) {
+            return NextResponse.redirect(`${origin}/choose-role`);
+          }
+        } catch {
+          // Jika tabel profiles belum ada di database, arahkan ke choose-role
           return NextResponse.redirect(`${origin}/choose-role`);
         }
-      } catch {
-        // Jika tabel profiles belum ada atau error, arahkan ke choose-role untuk amannya
-        return NextResponse.redirect(`${origin}/choose-role`);
       }
     }
   }

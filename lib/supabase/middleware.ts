@@ -37,15 +37,38 @@ export async function updateSession(request: NextRequest) {
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
 
-  // Guest bisa akses: /dashboard, /beli, /favorit, /riwayat
-  // Protected (harus login): /jual, /pengaturan, /profil
-
   if (!user && isProtected) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";
     return NextResponse.redirect(login);
   }
-  if (user && isAuthPage) {
+
+  // Jika user login mengakses /login atau /register, redirect ke dashboard
+  if (user && isAuthPage && pathname !== "/choose-role") {
+    // Cek apakah user sudah punya role (kecuali admin)
+    if (user.email !== "admin@autobuycars.com") {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile?.role && pathname !== "/choose-role") {
+          const chooseRoleUrl = request.nextUrl.clone();
+          chooseRoleUrl.pathname = "/choose-role";
+          return NextResponse.redirect(chooseRoleUrl);
+        }
+      } catch {
+        // Jika tabel profiles belum ada, biarkan ke choose-role jika bukan di choose-role
+        if (pathname !== "/choose-role") {
+          const chooseRoleUrl = request.nextUrl.clone();
+          chooseRoleUrl.pathname = "/choose-role";
+          return NextResponse.redirect(chooseRoleUrl);
+        }
+      }
+    }
+
     const dash = request.nextUrl.clone();
     dash.pathname = "/dashboard";
     return NextResponse.redirect(dash);
