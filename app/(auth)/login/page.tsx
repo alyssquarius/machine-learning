@@ -74,16 +74,25 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { 
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) setError(friendlyError(error));
+      if (error) {
+        console.error("OAuth error:", error);
+        setError(friendlyError(error));
+        setGoogleLoading(false);
+        return;
+      }
+      // Sukses akan redirect otomatis, jangan set loading false
+      if (data?.url) {
+        window.location.href = data.url;
+      }
     } catch (err) {
-      setError("Terjadi kesalahan saat login dengan Google.");
-    } finally {
+      console.error("Google login error:", err);
+      setError(`Error: ${err instanceof Error ? err.message : "Terjadi kesalahan saat login dengan Google."}`);
       setGoogleLoading(false);
     }
   }
