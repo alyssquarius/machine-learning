@@ -32,46 +32,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [userOpen, setUserOpen] = React.useState(false);
 
-  // Auth guard + setOwner + isi profil
+  // Auth check – izinkan guest (user null)
   React.useEffect(() => {
     let cancelled = false;
-    const fallback = setTimeout(() => {
-      if (!cancelled) {
-        setAuthChecked(true);
-        router.replace("/login");
-      }
-    }, 5000);
-
     (async () => {
       try {
         const supabase = createClient();
         const { data } = await supabase.auth.getSession();
         if (cancelled) return;
-        clearTimeout(fallback);
         const session = data?.session;
-        if (!session?.user) {
-          router.replace("/login");
-          return;
-        }
-        setUser(session.user);
-        store.setOwner(session.user.id);
-        setAuthChecked(true);
+        if (session?.user) {
+          setUser(session.user);
+          store.setOwner(session.user.id);
 
-        const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-          if (event === "SIGNED_OUT") router.replace("/login");
-        });
-        return () => sub.subscription.unsubscribe();
-      } catch {
-        if (!cancelled) {
-          clearTimeout(fallback);
-          router.replace("/login");
+          const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+            if (event === "SIGNED_OUT") {
+              setUser(null);
+              router.replace("/login");
+            }
+          });
+          // cleanup
+          const unsub = sub.subscription;
+          const cleanup = () => unsub.unsubscribe();
+          // store cleanup ref (unused but keeps lint happy)
+          void cleanup;
         }
+        setAuthChecked(true);
+      } catch {
+        if (!cancelled) setAuthChecked(true);
       }
     })();
 
     return () => {
       cancelled = true;
-      clearTimeout(fallback);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -127,12 +120,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const displayName =
-    store.getDisplayName() ||
-    String(user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User");
+  const isGuest = !user;
+  const displayName = isGuest
+    ? "Pengunjung"
+    : store.getDisplayName() ||
+      String(user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User");
   const email = user?.email || "";
   const avatarUrl = String(user?.user_metadata?.avatar_url || "");
-  const initial = (displayName || "U").trim().charAt(0).toUpperCase() || "U";
+  const initial = isGuest ? "G" : (displayName || "U").trim().charAt(0).toUpperCase() || "U";
   const favCount = store.stats().favCount;
   const unread = store.unreadCount();
   const notifs = store.history().slice(0, 3);
@@ -344,31 +339,48 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   userOpen ? "" : "hidden"
                 }`}
               >
-                <div className="mb-1 rounded-t-lg border-b border-gray-200 px-3 py-3 dark:border-zinc-800">
-                  <p className="truncate font-medium text-black dark:text-white">{displayName}</p>
-                  <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-zinc-400">{email}</p>
-                </div>
-                <Link
-                  href="/profil"
-                  onClick={() => setUserOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  Profil Saya
-                </Link>
-                <Link
-                  href="/pengaturan"
-                  onClick={() => setUserOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  Pengaturan Akun
-                </Link>
-                <div className="my-1 border-t border-gray-200 dark:border-zinc-800" />
-                <button
-                  onClick={logout}
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                >
-                  Keluar
-                </button>
+                {isGuest ? (
+                  <>
+                    <p className="px-3 py-2 text-xs text-gray-500 dark:text-zinc-400">
+                      Anda belum masuk
+                    </p>
+                    <Link
+                      href="/login"
+                      onClick={() => setUserOpen(false)}
+                      className="block rounded-lg bg-black px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+                    >
+                      Masuk / Daftar
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-1 rounded-t-lg border-b border-gray-200 px-3 py-3 dark:border-zinc-800">
+                      <p className="truncate font-medium text-black dark:text-white">{displayName}</p>
+                      <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-zinc-400">{email}</p>
+                    </div>
+                    <Link
+                      href="/profil"
+                      onClick={() => setUserOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      Profil Saya
+                    </Link>
+                    <Link
+                      href="/pengaturan"
+                      onClick={() => setUserOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      Pengaturan Akun
+                    </Link>
+                    <div className="my-1 border-t border-gray-200 dark:border-zinc-800" />
+                    <button
+                      onClick={logout}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    >
+                      Keluar
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

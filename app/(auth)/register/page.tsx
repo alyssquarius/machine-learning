@@ -29,7 +29,7 @@ export default function RegisterPage() {
   const [showPw, setShowPw] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
-  const [success, setSuccess] = React.useState("");
+  const [emailSent, setEmailSent] = React.useState("");
   const [password, setPassword] = React.useState("");
   React.useEffect(() => {
     let cancelled = false;
@@ -80,7 +80,7 @@ export default function RegisterPage() {
       return;
     }
     setError("");
-    setSuccess("");
+    setEmailSent("");
     setLoading(true);
     try {
       const supabase = createClient();
@@ -100,12 +100,54 @@ export default function RegisterPage() {
         setError("Email sudah terdaftar. Silakan login.");
         return;
       }
-      
-      // Redirect ke halaman verifikasi email dengan OTP
-      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+
+      // Jika Supabase langsung kasih session (email confirm disabled)
+      if (data.session) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      // Tampilkan pesan cek email
+      setEmailSent(email);
     } finally {
       setLoading(false);
     }
+  }
+
+  // Tampilan setelah email verifikasi terkirim
+  if (emailSent) {
+    return (
+      <AuthShell title="Cek Email Anda" subtitle="Verifikasi diperlukan untuk mengaktifkan akun">
+        <div className="text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800">
+            <svg className="h-8 w-8 text-black dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <p className="mb-2 text-sm text-gray-700 dark:text-zinc-300">
+            Kami mengirim link verifikasi ke:
+          </p>
+          <p className="mb-6 text-sm font-bold text-black dark:text-white">{emailSent}</p>
+          <p className="mb-8 text-sm text-gray-500 dark:text-zinc-400">
+            Buka email tersebut dan klik link verifikasi untuk mengaktifkan akun Anda.
+          </p>
+          <div className="space-y-3">
+            <Link
+              href="/login"
+              className="block w-full rounded-lg bg-black py-3 text-center font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+            >
+              Kembali ke Login
+            </Link>
+            <button
+              onClick={() => setEmailSent("")}
+              className="w-full text-sm text-gray-500 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+            >
+              Daftar dengan email lain
+            </button>
+          </div>
+        </div>
+      </AuthShell>
+    );
   }
 
   return (
@@ -113,11 +155,6 @@ export default function RegisterPage() {
       {error ? (
         <p role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
           {error}
-        </p>
-      ) : null}
-      {success ? (
-        <p role="alert" className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-400">
-          {success}
         </p>
       ) : null}
       <form onSubmit={onSubmit} className="space-y-5">

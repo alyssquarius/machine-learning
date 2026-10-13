@@ -63,23 +63,6 @@ export default function LoginPage() {
         setError(friendlyError(error));
         return;
       }
-      
-      // Cek apakah user sudah punya role
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        
-        if (!profile || !profile.role) {
-          // User baru, redirect ke choose-role
-          router.replace("/choose-role");
-          return;
-        }
-      }
-      
       router.replace("/dashboard");
     } finally {
       setLoading(false);

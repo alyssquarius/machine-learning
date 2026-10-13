@@ -30,12 +30,15 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isAuthPage = ["/login", "/register", "/forgot-password", "/reset-password"].some(
+  const isAuthPage = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/choose-role"].some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
-  const isProtected = ["/dashboard", "/jual", "/beli", "/favorit", "/riwayat", "/pengaturan"].some(
+  const isProtected = ["/jual", "/pengaturan", "/profil"].some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
+
+  // Guest bisa akses: /dashboard, /beli, /favorit, /riwayat
+  // Protected (harus login): /jual, /pengaturan, /profil
 
   if (!user && isProtected) {
     const login = request.nextUrl.clone();
