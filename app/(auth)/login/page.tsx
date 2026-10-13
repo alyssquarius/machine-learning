@@ -76,9 +76,13 @@ export default function LoginPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: new URL("/dashboard", window.location.href).href },
+        options: { 
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (error) setError(friendlyError(error));
+    } catch (err) {
+      setError("Terjadi kesalahan saat login dengan Google.");
     } finally {
       setGoogleLoading(false);
     }
