@@ -400,20 +400,41 @@
     return [...new Set([...master, ...used])].sort((a, b) => a.localeCompare(b, 'id'));
   }
 
-  function matchCity(c, q) {
-    return c.toLocaleLowerCase('id').includes(q);
+  function fillBuyLocList() {
+    // Satu kontrol ketik + pilih (datalist) — pilihan sama seperti Kota di form Jual.
+    const list = $('#buy-loc-list');
+    if (!list) return;
+    const cities = allCityOptions();
+    list.innerHTML = '<option value="Semua lokasi"></option>' + cities.map((c) => `<option value="${escAttr(c)}"></option>`).join('');
   }
-
-  function fillBuyLocs() {
-    const sel = $('#buy-loc');
-    if (!sel) return;
-    const q = ($('#buy-loc-search')?.value || '').trim().toLocaleLowerCase('id');
-    const locs = allCityOptions().filter((c) => !q || matchCity(c, q));
-    const cur = buyState.loc;
-    sel.innerHTML = '<option value="all">Semua lokasi</option>' + locs.map((c) => `<option value="${escAttr(c)}">${esc(c)}</option>`).join('')
-      + (q ? `<option value="__empty" disabled>${locs.length ? locs.length + ' kota cocok' : 'Tidak ada kota yang cocok'}</option>` : '');
-    sel.value = locs.includes(cur) ? cur : 'all';
-    buyState.loc = sel.value;
+  // Ubah ketikan lokasi menjadi state: 'all' | nama kota | 'q:teks bebas'.
+  function resolveBuyLocValue(raw) {
+    const v = String(raw ?? '').trim();
+    if (!v) return 'all';
+    const low = v.toLocaleLowerCase('id');
+    if (low === 'all' || low === 'semua' || low === 'semua lokasi') return 'all';
+    const cities = allCityOptions();
+    const hit = cities.find((c) => c.toLocaleLowerCase('id') === low);
+    if (hit) return hit;
+    // Kota di luar master tetap bisa dipakai bila sama persis dengan data.
+    if (store()) {
+      const used = [...new Set(store().all().map((c) => (c.location || '').trim()).filter((x) => x && x !== '-'))];
+      const usedHit = used.find((c) => c.toLocaleLowerCase('id') === low);
+      if (usedHit) return usedHit;
+    }
+    return 'q:' + v;
+  }
+  function buyLocDisplay() {
+    const l = buyState.loc;
+    if (!l || l === 'all') return 'Semua lokasi';
+    if (typeof l === 'string' && l.startsWith('q:')) return l.slice(2);
+    return l;
+  }
+  // Tampilkan nilai aktif di input (jangan ganggu saat mengetik).
+  function syncBuyLocInput() {
+    const input = $('#buy-loc');
+    if (!input || document.activeElement === input) return;
+    input.value = buyLocDisplay();
   }
 
   // Isi datalist kota di form Jual (satu kontrol: ketik + pilih).
@@ -495,8 +516,7 @@
     set('#buy-sort', 'new');
     set('#buy-min', '');
     set('#buy-max', '');
-    set('#buy-loc', 'all');
-    set('#buy-loc-search', '');
+    set('#buy-loc', 'Semua lokasi');
     set('#buy-year', 'all');
     safe(renderBuy, 'render-beli-reset')();
     toast('Filter dikembalikan ke awal.');
@@ -513,7 +533,8 @@
   function renderBuy() {
     if (!store()) return;
     fillBuyCats();
-    fillBuyLocs();
+    fillBuyLocList();
+    syncBuyLocInput();
     fillBuyYears();
     paintPriceChips();
     // Hanya yang siap dibeli (running). Menunggu verifikasi (queued) tidak tampil di Beli.
@@ -521,7 +542,14 @@
     const q = buyState.q.trim().toLowerCase();
     if (q) list = list.filter((c) => c.title.toLowerCase().includes(q) || (c.location || '').toLowerCase().includes(q) || (c.category || '').toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q));
     if (buyState.cat !== 'all') list = list.filter((c) => c.category === buyState.cat);
-    if (buyState.loc !== 'all') list = list.filter((c) => (c.location || '-') === buyState.loc);
+    if (buyState.loc !== 'all') {
+      if (typeof buyState.loc === 'string' && buyState.loc.startsWith('q:')) {
+        const lq = buyState.loc.slice(2).toLocaleLowerCase('id');
+        if (lq) list = list.filter((c) => String(c.location || '').toLocaleLowerCase('id').includes(lq));
+      } else {
+        list = list.filter((c) => (c.location || '-') === buyState.loc);
+      }
+    }
     if (buyState.year !== 'all') list = list.filter((c) => String(c.year) === String(buyState.year));
     const min = buyState.min === '' ? null : Number(buyState.min);
     const max = buyState.max === '' ? null : Number(buyState.max);
@@ -1304,16 +1332,20 @@
       $('#buy-max')?.addEventListener('input', onPrice);
     } catch (err) { console.error('[marketplace] bind buy-price gagal:', err); }
     try {
-      $('#buy-loc')?.addEventListener('change', (e) => { buyState.loc = e.target.value; safe(renderBuy, 'render-beli-loc')(); });
-    } catch (err) { console.error('[marketplace] bind buy-loc gagal:', err); }
-    try {
-      // Search di dalam dropdown lokasi (debounce, tidak me-reset pilihan aktif).
+      // Lokasi satu kontrol ketik + pilih (datalist), sama seperti Kota di form Jual.
+      // change = pilih dari saran, input (debounce) = ketik bebas memfilter lokasi.
       let locT = null;
-      $('#buy-loc-search')?.addEventListener('input', () => {
+      const applyLoc = (raw) => {
+        buyState.loc = resolveBuyLocValue(raw);
+        safe(renderBuy, 'render-beli-loc')();
+      };
+      $('#buy-loc')?.addEventListener('change', (e) => { clearTimeout(locT); applyLoc(e.target.value); });
+      $('#buy-loc')?.addEventListener('input', (e) => {
         clearTimeout(locT);
-        locT = setTimeout(() => safe(fillBuyLocs, 'isi-search-lokasi')(), 200);
+        const raw = e.target.value;
+        locT = setTimeout(() => applyLoc(raw), 250);
       });
-    } catch (err) { console.error('[marketplace] bind buy-loc-search gagal:', err); }
+    } catch (err) { console.error('[marketplace] bind buy-loc gagal:', err); }
     try {
       // Kontrol kota form Jual sudah satu input + datalist (filter otomatis browser).
       // Validasi ringan: kosongkan pesan hitung bila ada.

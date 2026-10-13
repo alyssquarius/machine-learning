@@ -392,12 +392,7 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
                     <input id="buy-min" type="number" min="0" inputmode="numeric" placeholder="Harga min (Rp)" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2 px-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
                     <input id="buy-max" type="number" min="0" inputmode="numeric" placeholder="Harga maks (Rp)" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2 px-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
-                    <div class="flex flex-col gap-2">
-                      <input id="buy-loc-search" type="search" placeholder="Cari lokasi..." autocomplete="off" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2 px-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" />
-                      <select id="buy-loc" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-white bg-white dark:bg-zinc-900 focus:border-black dark:focus:border-white outline-none transition appearance-none">
-                        <option value="all">Semua lokasi</option>
-                      </select>
-                    </div>
+                    <input id="buy-loc" list="buy-loc-list" type="text" placeholder="Ketik & pilih kota..." autocomplete="off" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2 px-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-zinc-500 focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition" /><datalist id="buy-loc-list"></datalist>
                     <select id="buy-year" class="w-full rounded-lg border border-gray-300 dark:border-zinc-700 py-2 pl-3 pr-8 text-sm text-gray-900 dark:text-white bg-white dark:bg-zinc-900 focus:border-black dark:focus:border-white outline-none transition appearance-none">
                       <option value="all">Semua tahun</option>
                     </select>
