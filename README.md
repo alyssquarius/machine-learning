@@ -31,10 +31,10 @@ bukan kode aplikasi. Build webpack lolos penuh (13 route static).
 
 ## Struktur
 
-- `app/` — App Router: `(app)/dashboard|jual|beli|favorit|riwayat|pengaturan`, `(auth)/login|register|forgot-password|reset-password`, `loading/error/not-found`
-- `components/` — `app-shell`, `auth-shell`, `car-card`, `dashboard-widgets`, `hist-text`, `modals`, `sell-shared`, `store-provider`, `theme-*`, `toast`, `icons`
-- `lib/` — `cities` (kota se-Indonesia), `market` (widget/checkout/filter), `format`, `supabase/client|server|middleware`
-- `proxy.ts` — session Supabase (Next.js 16)
+- `app/` — App Router: `(app)/dashboard|jual|beli|favorit|riwayat|pengaturan|profil`, `(auth)/login|register|forgot-password|reset-password`, `loading/error/not-found`
+- `components/` — `app-shell`, `auth-shell`, `car-card`, `dashboard-widgets`, `hist-text`, `modals`, `sell-shared`, `store-provider`, `theme-*`, `toast`, `icons`, `whatsapp-contact`
+- `lib/` — `cities` (kota se-Indonesia), `market` (widget/checkout/filter), `format`, `config`, `supabase/client|server|middleware`
+- `middleware.ts` — session Supabase (Next.js 16)
 - `app/globals.css` — satu-satunya global CSS (Tailwind murni)
 
 ## Konvensi UI

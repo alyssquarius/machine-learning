@@ -5,6 +5,8 @@ import { useStore } from "@/components/store-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { useToast } from "@/components/toast";
+import { WhatsAppContact } from "@/components/whatsapp-contact";
+import { config } from "@/lib/config";
 
 export default function ProfilPage() {
   const store = useStore();
@@ -89,6 +91,19 @@ export default function ProfilPage() {
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </button>
         </div>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <h3 className="mb-4 text-lg font-semibold text-black dark:text-white">
+          Butuh Bantuan?
+        </h3>
+        <p className="mb-4 text-sm text-gray-600 dark:text-zinc-400">
+          Hubungi customer service kami melalui WhatsApp untuk informasi lebih lanjut tentang AutoBuyCars.
+        </p>
+        <WhatsAppContact
+          phoneNumber={config.whatsapp.phoneNumber}
+          message={`Halo, saya ${displayName || "pengguna AutoBuyCars"} (${email}). Saya ingin bertanya tentang...`}
+        />
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell";
+import { WhatsAppFloatingButton } from "@/components/whatsapp-contact";
+import { config } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -7,5 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <>
+      <AppShell>{children}</AppShell>
+      <WhatsAppFloatingButton phoneNumber={config.whatsapp.phoneNumber} />
+    </>
+  );
 }
