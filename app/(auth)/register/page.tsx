@@ -31,33 +31,20 @@ export default function RegisterPage() {
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [checking, setChecking] = React.useState(true);
-
   React.useEffect(() => {
     let cancelled = false;
-    const fallback = setTimeout(() => {
-      if (!cancelled) setChecking(false);
-    }, 2000);
-    
     (async () => {
       try {
         const supabase = createClient();
         const { data } = await supabase.auth.getSession();
         if (cancelled) return;
-        clearTimeout(fallback);
         if (data.session) router.replace("/dashboard");
-        else setChecking(false);
       } catch {
-        if (!cancelled) {
-          clearTimeout(fallback);
-          setChecking(false);
-        }
+        // Abaikan error, form tetap tampil
       }
     })();
-    
     return () => {
       cancelled = true;
-      clearTimeout(fallback);
     };
   }, [router]);
 
@@ -126,13 +113,6 @@ export default function RegisterPage() {
       setLoading(false);
     }
   }
-
-  if (checking)
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
-        <p className="text-sm text-gray-500 dark:text-zinc-400">Memeriksa sesi...</p>
-      </div>
-    );
 
   return (
     <AuthShell title="Buat Akun Baru" subtitle="Lengkapi form di bawah untuk mulai jual beli mobil.">
