@@ -83,7 +83,7 @@
       bar.classList.toggle('flex', hidden.length > 0);
     }
     if (chips) chips.innerHTML = hidden.map((w) =>
-      `<button data-show-widget="${w.id}" class="rounded-full border border-gray-300 dark:border-zinc-700 px-3 py-1 text-xs font-medium text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800">👁 ${w.label} ✕</button>`).join('');
+      `<button data-show-widget="${w.id}" class="inline-flex items-center gap-1.5 rounded-full border border-gray-300 dark:border-zinc-700 px-3 py-1 text-xs font-medium text-black dark:text-white transition hover:bg-gray-100 dark:hover:bg-zinc-800"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg> ${w.label}</button>`).join('');
     // Panel Pengaturan: daftar centang tampil/sembunyi.
     const box = $('#widget-toggles');
     if (box) box.innerHTML = WIDGETS.map((w) => {
