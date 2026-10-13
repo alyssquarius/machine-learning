@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import * as React from "react";
 import { Icon } from "@/components/icons";
 import { useStore, imageFor, type Car } from "@/components/store-provider";
@@ -24,19 +23,22 @@ const STATUS_CLS: Record<string, string> = {
 function CarImage({ car, big = false }: { car: Car; big?: boolean }) {
   const fallback = imageFor(car.category);
   const [src, setSrc] = React.useState(car.image || fallback);
+  const [error, setError] = React.useState(false);
+  
   React.useEffect(() => {
     setSrc(car.image || fallback);
+    setError(false);
   }, [car.image, fallback]);
+  
   return (
-    <Image
+    <img
       src={src}
       alt={car.title}
-      width={800}
-      height={450}
-      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-      unoptimized
       onError={() => {
-        if (src !== fallback) setSrc(fallback);
+        if (!error && src !== fallback) {
+          setError(true);
+          setSrc(fallback);
+        }
       }}
       className={`w-full object-cover ${big ? "h-44" : "h-36"}`}
     />

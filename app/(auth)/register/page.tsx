@@ -89,7 +89,7 @@ export default function RegisterPage() {
         password: pw,
         options: {
           data: { full_name: fullName },
-          emailRedirectTo: new URL("/dashboard", window.location.href).href,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) {
@@ -100,15 +100,9 @@ export default function RegisterPage() {
         setError("Email sudah terdaftar. Silakan login.");
         return;
       }
-      if (data.session) {
-        router.replace("/dashboard");
-        return;
-      }
-      (e.target as HTMLFormElement).reset();
-      setPassword("");
-      setSuccess(
-        "Pendaftaran berhasil. Kami mengirim email verifikasi, buka email tersebut lalu klik tautannya untuk mengaktifkan akun."
-      );
+      
+      // Redirect ke halaman verifikasi email dengan OTP
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } finally {
       setLoading(false);
     }

@@ -63,6 +63,23 @@ export default function LoginPage() {
         setError(friendlyError(error));
         return;
       }
+      
+      // Cek apakah user sudah punya role
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        
+        if (!profile || !profile.role) {
+          // User baru, redirect ke choose-role
+          router.replace("/choose-role");
+          return;
+        }
+      }
+      
       router.replace("/dashboard");
     } finally {
       setLoading(false);
@@ -184,6 +201,14 @@ export default function LoginPage() {
           Daftar sekarang
         </Link>
       </p>
+      <div className="mt-4">
+        <Link
+          href="/dashboard"
+          className="block w-full rounded-lg border-2 border-dashed border-gray-300 py-3 text-center text-sm font-medium text-gray-600 transition-colors hover:border-gray-400 hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
+        >
+          Jelajahi tanpa masuk
+        </Link>
+      </div>
     </AuthShell>
   );
 }
