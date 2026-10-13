@@ -216,14 +216,14 @@ function PopularList() {
 }
 
 const TONE: Record<string, string> = {
-  beli: "bg-emerald-500",
-  jual: "bg-blue-500",
-  tawar: "bg-amber-500",
-  favorit: "bg-pink-500",
+  beli: "bg-zinc-950 dark:bg-white",
+  jual: "bg-zinc-500",
+  tawar: "bg-zinc-400",
+  favorit: "bg-zinc-400",
   status: "bg-zinc-500",
-  verifikasi: "bg-violet-500",
+  verifikasi: "bg-zinc-300 dark:bg-zinc-600",
   batal: "bg-red-500",
-  hapus: "bg-gray-500",
+  hapus: "bg-zinc-300 dark:bg-zinc-600",
 };
 
 function RecentActivity() {
