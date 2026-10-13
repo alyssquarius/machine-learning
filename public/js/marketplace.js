@@ -405,7 +405,7 @@
     const list = $('#buy-loc-list');
     if (!list) return;
     const cities = allCityOptions();
-    list.innerHTML = '<option value="Semua lokasi"></option>' + cities.map((c) => `<option value="${escAttr(c)}"></option>`).join('');
+    list.innerHTML = cities.map((c) => `<option value="${escAttr(c)}"></option>`).join('');
   }
   // Ubah ketikan lokasi menjadi state: 'all' | nama kota | 'q:teks bebas'.
   function resolveBuyLocValue(raw) {
@@ -426,7 +426,7 @@
   }
   function buyLocDisplay() {
     const l = buyState.loc;
-    if (!l || l === 'all') return 'Semua lokasi';
+    if (!l || l === 'all') return '';
     if (typeof l === 'string' && l.startsWith('q:')) return l.slice(2);
     return l;
   }
@@ -516,7 +516,7 @@
     set('#buy-sort', 'new');
     set('#buy-min', '');
     set('#buy-max', '');
-    set('#buy-loc', 'Semua lokasi');
+    set('#buy-loc', '');
     set('#buy-year', 'all');
     safe(renderBuy, 'render-beli-reset')();
     toast('Filter dikembalikan ke awal.');
