@@ -114,8 +114,7 @@ if ($('#logout')) {
 }
 
 // ---------- Sesi & data pengguna ----------
-// Catatan: UI jangan dikunci di balik `invisible` bila Supabase gagal/offline.
-// Router marketplace tetap jalan; blok ini hanya mengisi profil bila sesi ada.
+// Production: dashboard wajib login Supabase. Tanpa sesi -> kembali ke login.
 function unhideApp() {
   if ($('#app')) $('#app').classList.remove('invisible');
 }
@@ -135,14 +134,12 @@ function renderDashboardSafe() {
 }
 
 (async () => {
-  // Fallback: jangan biarkan layar tetap invisible lebih dari 1,5 dtk.
-  setTimeout(() => {
-    unhideApp();
-    if (!window.__dashboardRendered) {
-      window.__dashboardRendered = true;
-      renderDashboardSafe();
-    }
-  }, 1500);
+  // Production: jangan render apa pun sebelum sesi dipastikan.
+  // App tetap `invisible` sampai login terkonfirmasi / redirect ke login.
+  let settled = false;
+  const authTimer = setTimeout(() => {
+    if (!settled) window.location.replace('index.html');
+  }, 6000);
 
   let session = null;
   try {
@@ -150,17 +147,19 @@ function renderDashboardSafe() {
     const { data } = await window.supabaseClient.auth.getSession();
     session = data?.session || null;
   } catch (err) {
-    console.error('[dashboard] cek sesi gagal (mode demo):', err);
-    unhideApp();
-    if (!window.__dashboardRendered) {
-      window.__dashboardRendered = true;
-      renderDashboardSafe();
-    }
-    return;
+    console.error('[dashboard] cek sesi gagal:', err);
+    // Gagal cek sesi = anggap belum login, kembali ke halaman login.
+    settled = true;
+    clearTimeout(authTimer);
+    return window.location.replace('index.html');
   }
 
   // Belum login: kembali ke halaman login.
-  if (!session) return window.location.replace('index.html');
+  if (!session) {
+    settled = true;
+    clearTimeout(authTimer);
+    return window.location.replace('index.html');
+  }
 
   const user = session.user;
   const meta = user.user_metadata || {};
@@ -198,8 +197,12 @@ function renderDashboardSafe() {
     });
   }
 
+  settled = true;
+  clearTimeout(authTimer);
   unhideApp();
   window.__dashboardRendered = true;
+  // Production per-akun: muat ruang data milik user ini (baru = kosong).
+  try { window.CarStore?.setOwner?.(user.id); } catch (err) { console.error('[dashboard] setOwner gagal:', err); }
   if (window.fillSettingsProfile) window.fillSettingsProfile(user);
   renderDashboardSafe();
 

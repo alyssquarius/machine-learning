@@ -1,17 +1,25 @@
 // AutoBuyCars - Toko data terpusat (inventaris, favorit, riwayat).
-// Disimpan di localStorage agar langsung jalan tanpa migrasi DB,
-// dan disiapkan agar mudah dipindah ke tabel Supabase nanti.
+// Production: data milik per-akun (owner = Supabase user.id), tersimpan di
+// localStorage per perangkat. Pengguna baru mulai kosong.
 (() => {
   'use strict';
 
-  const LS_CARS = 'abc_cars_v2';
-  const LS_FAVS = 'abc_favs_v1';
-  const LS_HIST = 'abc_hist_v1';
-  const LS_SET = 'abc_settings_v1';
+  // Production (v3): kunci penyimpanan per-akun, mulai kosong.
+  // Setiap akun memakai ruang datanya sendiri.
+  const LS_CARS = 'abc_cars_v3';
+  const LS_FAVS = 'abc_favs_v2';
+  const LS_HIST = 'abc_hist_v2';
+  const LS_SET = 'abc_settings_v2';
+  // Pemilik data (diisi dashboard.js setelah login via setOwner()).
+  // Membuat data per-akun walau tersimpan lokal per perangkat.
+  let ownerId = '';
+  const scoped = (base) => (ownerId ? `${base}_${ownerId}` : base);
+  const keyCars = () => scoped(LS_CARS);
+  const keyFavs = () => scoped(LS_FAVS);
+  const keyHist = () => scoped(LS_HIST);
+  const keySet = () => scoped(LS_SET);
 
-  const now = Date.now();
-  const H = 3600 * 1000;
-
+  // Foto bawaan per kategori — hanya fallback untuk listing baru tanpa URL foto.
   // Foto asli per merek (Wikimedia Commons, diverifikasi 200).
   const W = (n) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(n)}?width=800`;
   const BRAND_IMAGES = {
@@ -91,26 +99,7 @@
     return CATEGORY_IMAGES[category] || CATEGORY_IMAGES.Lainnya;
   }
 
-  const SEED_CARS = [
-    { id: 'c-fortuner', title: 'Toyota Fortuner 2.8 GR Sport', price: 485000000, year: 2024, km: 12000, location: 'Jakarta', category: 'SUV', status: 'running', interest: 98, badge: 'Populer', image: BRAND_IMAGES.fortuner, description: 'Kondisi mulus, servis rutin Toyota, pajak panjang.', createdAt: now - 2 * H },
-    { id: 'c-crv', title: 'Honda CR-V 2.0 RS e:HEV', price: 519000000, year: 2023, km: 8500, location: 'Surabaya', category: 'SUV', status: 'running', interest: 85, badge: 'Hot Deal', image: BRAND_IMAGES.crv, description: 'Hybrid irit, interior orisinal, kunci cadangan lengkap.', createdAt: now - 5 * H },
-    { id: 'c-ioniq5', title: 'Hyundai Ioniq 5 Signature', price: 695000000, year: 2023, km: 15000, location: 'Bandung', category: 'Listrik', status: 'queued', interest: 60, badge: 'Diskon', image: BRAND_IMAGES.ioniq5, description: 'Mobil listrik, baterai sehat, garansi resmi berjalan.', createdAt: now - 26 * H },
-    { id: 'c-civic', title: 'Honda Civic RS 1.5 Turbo', price: 465000000, year: 2022, km: 20000, location: 'Jakarta', category: 'Sedan', status: 'done', interest: 92, badge: 'Terjual', image: BRAND_IMAGES.civic, description: 'Terjual dengan verifikasi dan pembayaran penuh.', createdAt: now - 30 * H },
-    { id: 'c-pajero', title: 'Mitsubishi Pajero Sport Dakar', price: 445000000, year: 2021, km: 35000, location: 'Semarang', category: 'SUV', status: 'queued', interest: 54, badge: 'Baru', image: BRAND_IMAGES.pajero, description: 'Menunggu verifikasi dokumen oleh tim AutoBuyCars.', createdAt: now - 50 * H },
-    { id: 'c-bmw', title: 'BMW 320i Sport', price: 495000000, year: 2020, km: 40000, location: 'Jakarta', category: 'Sedan', status: 'failed', interest: 30, badge: 'Ditolak', image: BRAND_IMAGES.bmw, description: 'Ditolak: dokumen BPKB tidak sesuai data pengajuan.', createdAt: now - 72 * H },
-    { id: 'c-avanza', title: 'Toyota Avanza 1.5 G CVT', price: 225000000, year: 2022, km: 25000, location: 'Bekasi', category: 'MPV', status: 'done', interest: 78, badge: 'Terjual', image: BRAND_IMAGES.avanza, description: 'Terjual ke pembeli dari Bekasi, serah terima selesai.', createdAt: now - 96 * H },
-    { id: 'c-ayla', title: 'Daihatsu Ayla 1.2 R', price: 145000000, year: 2023, km: 10000, location: 'Depok', category: 'Hatchback', status: 'running', interest: 66, badge: 'Irit', image: BRAND_IMAGES.ayla, description: 'Cocok untuk harian, KM rendah, ban baru.', createdAt: now - 120 * H },
-  ];
-
-  const SEED_FAVS = ['c-fortuner', 'c-ioniq5', 'c-crv', 'c-avanza', 'c-ayla'];
-
-  const SEED_HIST = [
-    { id: 'h1', type: 'beli', text: 'Mobil <b>Honda Civic RS</b> berhasil terjual', ts: now - 2 * H },
-    { id: 'h2', type: 'tawar', text: 'Ada penawaran baru untuk <b>Toyota Fortuner</b>', ts: now - 5 * H },
-    { id: 'h3', type: 'jual', text: 'Mobil baru <b>Hyundai Ioniq 5</b> ditambahkan', ts: now - 26 * H },
-    { id: 'h4', type: 'verifikasi', text: 'Verifikasi dokumen <b>Mitsubishi Pajero</b> sedang diproses', ts: now - 50 * H },
-    { id: 'h5', type: 'batal', text: 'Penawaran pada <b>BMW 320i</b> dibatalkan oleh pembeli', ts: now - 72 * H },
-  ];
+  // Production: mulai kosong, tanpa data awal. Pengguna baru mengisi lewat Jual/Beli.
 
   function clone(v) {
     try {
@@ -138,7 +127,8 @@
     try {
       const raw = localStorage.getItem(key);
       if (!raw) return clone(fallback);
-      return JSON.parse(raw);
+      const val = JSON.parse(raw);
+      return val === undefined ? clone(fallback) : val;
     } catch {
       return clone(fallback);
     }
@@ -152,74 +142,91 @@
     window.dispatchEvent(new CustomEvent('storechange'));
   }
 
-  let cars = load(LS_CARS, SEED_CARS);
-  if (!Array.isArray(cars)) cars = clone(SEED_CARS);
-  // Normalisasi tiap baris agar data rusak/tampering di localStorage tidak bikin crash/XSS.
-  // - id harus string, title/price/year/km/location/category/status dibersihkan ke default aman.
-  // - offers harus array berisi entri valid (id/amount/ts/status whitelist).
   const STATUSES = ['done', 'running', 'queued', 'failed'];
-  cars = cars.filter((c) => c && typeof c.id === 'string').map((c) => {
-    const o = { ...c };
-    o.title = String(o.title || 'Mobil').slice(0, 80);
-    o.price = Math.max(0, Number(o.price) || 0);
-    const my = new Date().getFullYear();
-    o.year = Math.min(my, Math.max(1990, Number(o.year) || my));
-    o.km = Math.max(0, Number(o.km) || 0);
-    o.location = String(o.location || '-').slice(0, 60) || '-';
-    o.category = CATEGORIES.includes(o.category) ? o.category : 'Lainnya';
-    o.status = STATUSES.includes(o.status) ? o.status : 'queued';
-    o.interest = Math.max(0, Math.min(100, Number(o.interest) || 0));
-    o.badge = String(o.badge || '').slice(0, 24);
-    o.image = typeof o.image === 'string' ? o.image.slice(0, 500) : '';
-    o.description = typeof o.description === 'string' ? o.description.slice(0, 500) : '';
-    o.createdAt = Number(o.createdAt) > 0 ? Number(o.createdAt) : Date.now();
-    o.offers = Array.isArray(o.offers) ? o.offers.filter((x) => x && typeof x.id === 'string').map((x) => ({
-      id: String(x.id),
-      amount: Math.max(0, Number(x.amount) || 0),
-      note: String(x.note || '').slice(0, 140),
-      ts: Number(x.ts) > 0 ? Number(x.ts) : Date.now(),
-      status: ['pending', 'accepted', 'rejected'].includes(x.status) ? x.status : 'pending',
-    })) : [];
-    if (o.purchase && typeof o.purchase === 'object') {
-      const p = o.purchase;
-      o.purchase = {
-        method: ['tunai', 'kredit', 'tawar'].includes(p.method) ? p.method : 'tunai',
-        dp: Math.max(0, Number(p.dp) || 0),
-        tenor: Math.max(0, Number(p.tenor) || 0),
-        rate: Math.max(0, Math.min(30, Number(p.rate) || 0)),
-        installment: Math.max(0, Number(p.installment) || 0),
-        name: String(p.name || '').slice(0, 60),
-        phone: String(p.phone || '').slice(0, 20),
-        ts: Number(p.ts) > 0 ? Number(p.ts) : Date.now(),
-      };
-    } else {
-      delete o.purchase;
-    }
-    return o;
-  });
-  let favs = load(LS_FAVS, SEED_FAVS);
-  if (!Array.isArray(favs)) favs = [];
-  let hist = load(LS_HIST, SEED_HIST);
-  if (!Array.isArray(hist)) hist = [];
-  let settings = load(LS_SET, {});
-  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) settings = {};
-  settings = Object.assign({ target: 10, displayName: '', notifRead: 0 }, settings);
 
-  // Bersihkan data lama dari localStorage: teks riwayat boleh punya <b> saja,
-  // tag lain (mis. <script>/<img> dari input lama) dinetralkan agar render aman.
-  hist = hist.filter((h) => h && typeof h.text === 'string').map((h) => ({
-    ...h,
-    text: String(h.text).replace(/<(?!b>|\/b>)/gi, '&lt;'),
-  }));
+  function normalizeCars(arr) {
+    if (!Array.isArray(arr)) return [];
+    // Normalisasi tiap baris agar data rusak/tampering di localStorage tidak bikin crash/XSS.
+    // - id harus string, title/price/year/km/location/category/status dibersihkan ke default aman.
+    // - offers harus array berisi entri valid (id/amount/ts/status whitelist).
+    return arr.filter((c) => c && typeof c.id === 'string').map((c) => {
+      const o = { ...c };
+      o.title = String(o.title || 'Mobil').slice(0, 80);
+      o.price = Math.max(0, Number(o.price) || 0);
+      const my = new Date().getFullYear();
+      o.year = Math.min(my, Math.max(1990, Number(o.year) || my));
+      o.km = Math.max(0, Number(o.km) || 0);
+      o.location = String(o.location || '-').slice(0, 60) || '-';
+      o.category = CATEGORIES.includes(o.category) ? o.category : 'Lainnya';
+      o.status = STATUSES.includes(o.status) ? o.status : 'queued';
+      o.interest = Math.max(0, Math.min(100, Number(o.interest) || 0));
+      o.badge = String(o.badge || '').slice(0, 24);
+      o.image = typeof o.image === 'string' ? o.image.slice(0, 500) : '';
+      o.description = typeof o.description === 'string' ? o.description.slice(0, 500) : '';
+      o.createdAt = Number(o.createdAt) > 0 ? Number(o.createdAt) : Date.now();
+      o.offers = Array.isArray(o.offers) ? o.offers.filter((x) => x && typeof x.id === 'string').map((x) => ({
+        id: String(x.id),
+        amount: Math.max(0, Number(x.amount) || 0),
+        note: String(x.note || '').slice(0, 140),
+        ts: Number(x.ts) > 0 ? Number(x.ts) : Date.now(),
+        status: ['pending', 'accepted', 'rejected'].includes(x.status) ? x.status : 'pending',
+      })) : [];
+      if (o.purchase && typeof o.purchase === 'object') {
+        const p = o.purchase;
+        o.purchase = {
+          method: ['tunai', 'kredit', 'tawar'].includes(p.method) ? p.method : 'tunai',
+          dp: Math.max(0, Number(p.dp) || 0),
+          tenor: Math.max(0, Number(p.tenor) || 0),
+          rate: Math.max(0, Math.min(30, Number(p.rate) || 0)),
+          installment: Math.max(0, Number(p.installment) || 0),
+          name: String(p.name || '').slice(0, 60),
+          phone: String(p.phone || '').slice(0, 20),
+          ts: Number(p.ts) > 0 ? Number(p.ts) : Date.now(),
+        };
+      } else {
+        delete o.purchase;
+      }
+      return o;
+    });
+  }
 
-  // Samakan favorit dengan id mobil yang masih ada.
-  favs = favs.filter((id) => cars.some((c) => c.id === id));
+  function normalizeHist(arr) {
+    if (!Array.isArray(arr)) return [];
+    // Teks riwayat boleh punya <b> saja, tag lain dinetralkan agar render aman.
+    return arr.filter((h) => h && typeof h.text === 'string').map((h) => ({
+      ...h,
+      text: String(h.text).replace(/<(?!b>|\/b>)/gi, '&lt;'),
+    }));
+  }
+
+  function normalizeSettings(v) {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return { target: 10, displayName: '', notifRead: 0 };
+    return Object.assign({ target: 10, displayName: '', notifRead: 0 }, v);
+  }
+
+  let cars = [];
+  let favs = [];
+  let hist = [];
+  let settings = { target: 10, displayName: '', notifRead: 0 };
+
+  function loadAll() {
+    // Production: default kosong. Kunci scoped per-akun.
+    cars = normalizeCars(load(keyCars(), []));
+    favs = load(keyFavs(), []);
+    if (!Array.isArray(favs)) favs = [];
+    hist = normalizeHist(load(keyHist(), []));
+    settings = normalizeSettings(load(keySet(), {}));
+    // Samakan favorit dengan id mobil yang masih ada.
+    favs = favs.filter((id) => cars.some((c) => c.id === id));
+  }
+
+  loadAll();
 
   function persist() {
-    save(LS_CARS, cars);
-    save(LS_FAVS, favs);
-    save(LS_HIST, hist.slice(0, 60));
-    save(LS_SET, settings);
+    save(keyCars(), cars);
+    save(keyFavs(), favs);
+    save(keyHist(), hist.slice(0, 60));
+    save(keySet(), settings);
     emit();
   }
 
@@ -501,9 +508,9 @@
       hist = hist.slice(0, 60);
       if (!silent) persist();
       else {
-        save(LS_HIST, hist);
-        save(LS_CARS, cars);
-        save(LS_FAVS, favs);
+        save(keyHist(), hist);
+        save(keyCars(), cars);
+        save(keyFavs(), favs);
         emit();
       }
     },
@@ -552,12 +559,24 @@
     },
 
     reset() {
-      cars = clone(SEED_CARS);
-      favs = [...SEED_FAVS];
-      hist = clone(SEED_HIST).map((h) => ({ ...h, ts: Date.now() - (now - h.ts) }));
-      settings = { target: 10, displayName: '', notifRead: Date.now() };
+      // Hapus seluruh data milik akun ini.
+      cars = [];
+      favs = [];
+      hist = [];
+      settings = { target: 10, displayName: settings.displayName || '', notifRead: Date.now() };
       persist();
     },
+
+    // ---------- Scoping per-akun ----------
+    // Dipanggil dashboard.js setelah login: setOwner(user.id) memuat ulang data
+    // milik akun tersebut (kunci scoped), pengguna baru mulai kosong.
+    setOwner(id) {
+      ownerId = String(id || '');
+      loadAll();
+      emit();
+      return ownerId;
+    },
+    owner() { return ownerId; },
 
     // ---------- Aksi tambahan yang kurang ----------
     duplicate(id) {

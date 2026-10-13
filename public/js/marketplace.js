@@ -149,7 +149,7 @@
   };
 
   // Foto bawaan per kategori — samakan dengan store.js agar konsisten di semua halaman.
-  // (Fallback saja; tiap mobil seed sudah punya foto mereknya sendiri.)
+  // (Fallback saja bila listing tanpa URL foto.)
   const W = (n) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(n)}?width=800`;
   const CATEGORY_IMAGES = {
     SUV: W('2015 Toyota Fortuner (New Zealand).jpg'),
@@ -1070,7 +1070,7 @@
         return;
       }
       if (e.target.closest('[data-guide-contact]')) {
-        toast('Butuh bantuan? Hubungi tim via menu Pengaturan → Reset Data untuk demo.');
+        toast('Butuh bantuan? Hubungi tim AutoBuyCars melalui email bantuan.');
         return;
       }
     });
@@ -1211,14 +1211,14 @@
     try {
       $('#btn-reset-data')?.addEventListener('click', () => {
         if (!store()) { toast('Data belum siap. Muat ulang halaman.'); return; }
-        if (!confirm('Kembalikan semua data ke awal?')) return;
+        if (!confirm('Hapus semua data milik akun ini di perangkat ini?')) return;
         store().reset();
         window.dispatchEvent(new CustomEvent('marketplace:resetbuy'));
         // Sinkronkan pencarian global dashboard ke halaman beli
         const s = $('#search');
         if (s) { s.value = ''; buyState.q = ''; }
         showPage(currentRoute());
-        toast('Data dikembalikan ke awal.');
+        toast('Data akun dihapus.');
       });
     } catch (err) { console.error('[marketplace] bind reset gagal:', err); }
 
