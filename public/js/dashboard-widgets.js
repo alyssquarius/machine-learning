@@ -7,6 +7,12 @@
   const store = () => window.CarStore;
   const rp = (n) => (window.fmtRp ? window.fmtRp(n) : 'Rp ' + Number(n || 0).toLocaleString('id-ID'));
   const ago = (ts) => (window.timeAgo ? window.timeAgo(ts) : '');
+  // Escape teks pengguna sebelum masuk innerHTML (anti stored-XSS).
+  // Riwayat CarStore boleh mengandung <b> (disanitasi saat load), jadi tidak di-escape di sini.
+  const esc = (s) => (window.escHtml
+    ? window.escHtml(s)
+    : String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
+  const escAttr = (s) => esc(s).replace(/"/g, '&quot;');
 
   // ---------- Ikon ----------
   const ICONS = {
@@ -155,7 +161,16 @@
     return { cum, labels };
   }
   function labelsFor(range, n) {
-    if (range === '7H') return DAYS.slice(-n);
+    if (range === '7H') {
+      // Label hari aktual 7 hari terakhir (bukan Sen–Min statis).
+      const names = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+      const out = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 864e5);
+        out.push(names[d.getDay()]);
+      }
+      return out;
+    }
     if (range === '30H') {
       const out = [];
       for (let i = 0; i < n; i++) out.push(`H${Math.round(((i + 1) * 30) / n)}`);
@@ -203,8 +218,9 @@
 
     const s = series(range);
     const x = (i) => PL + (i * (W - PL - PR)) / (s.n - 1);
-    const yAcc = (v) => PT + ((100 - v) / 50) * (H - PT - PB);
-    const yLoss = (v) => PT + (1 - v) * (H - PT - PB);
+    // Skala 0–100% untuk kedua garis (atas = 100%, bawah = 0%).
+    const yAcc = (v) => PT + ((100 - v) / 100) * (H - PT - PB);
+    const yLoss = (v) => PT + ((100 - v) / 100) * (H - PT - PB);
     const accPts = s.acc.map((v, i) => [x(i), yAcc(v)]);
     const lossPts = s.loss.map((v, i) => [x(i), yLoss(v)]);
     const accPath = smooth(accPts);
@@ -213,9 +229,10 @@
     let grid = '';
     for (let i = 0; i < 5; i++) {
       const y = PT + (i * (H - PT - PB)) / 4;
+      const pct = 100 - i * 25;
       grid += `<line x1="${PL}" x2="${W - PR}" y1="${y}" y2="${y}" stroke="${strokeGrid}" stroke-dasharray="4 4"/>
-        <text x="${PL - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="${textFill}">${100 - i * 12.5}%</text>
-        <text x="${W - PR + 8}" y="${y + 4}" font-size="11" fill="${textFill}">${(1 - i * 0.25).toFixed(2)}</text>`;
+        <text x="${PL - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="${textFill}">${pct}%</text>
+        <text x="${W - PR + 8}" y="${y + 4}" font-size="11" fill="${textFill}">${pct}%</text>`;
     }
     const xl = s.labels.map((l, i) => `<text x="${x(i)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="${textFill}">${l}</text>`).join('');
 
@@ -402,9 +419,9 @@
     tableBody.innerHTML = rows.map((c) => {
       const st = STATUS[c.status] || STATUS.queued;
       return `<tr class="transition hover:bg-gray-50 dark:hover:bg-zinc-800/60 border-b border-gray-100 dark:border-zinc-800 cursor-pointer" data-detail="${c.id}">
-        <td class="py-3 px-6"><p class="font-medium text-black dark:text-white">${c.title}</p><p class="text-xs text-gray-500 dark:text-zinc-400">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p></td>
+        <td class="py-3 px-6"><p class="font-medium text-black dark:text-white">${esc(c.title)}</p><p class="text-xs text-gray-500 dark:text-zinc-400">${Number(c.year) || '-'} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${esc(c.location)}</p></td>
         <td class="py-3 px-6 font-semibold text-black dark:text-white">${rp(c.price)}</td>
-        <td class="py-3 px-6"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${st.cls}">${st.label}</span></td>
+        <td class="py-3 px-6"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${st.cls}">${esc(st.label)}</span></td>
         <td class="py-3 px-6 text-gray-500 dark:text-zinc-400">${ago(c.createdAt)}</td></tr>`;
     }).join('');
 
@@ -444,17 +461,18 @@
     if (!coursesEl || !store()) return;
     const list = store().popular(3);
     coursesEl.innerHTML = list.map((c) => {
-      const img = (c.image || '').trim() || POP_IMAGES[c.category] || POP_IMAGES.Lainnya;
+      const raw = String(c.image || '').trim();
+      const img = (/^https?:\/\//i.test(raw) && raw.length <= 500 ? raw : '') || POP_IMAGES[c.category] || POP_IMAGES.Lainnya;
       return `
       <div class="rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 transition hover:border-gray-300 dark:hover:border-zinc-700 cursor-pointer" data-detail="${c.id}">
         <div class="flex gap-3">
-          <img src="${img}" alt="${c.title}" loading="lazy" class="h-16 w-20 shrink-0 rounded-md object-cover bg-gray-100 dark:bg-zinc-800" onerror="this.style.display='none'" />
+          <img src="${img}" alt="${escAttr(c.title)}" loading="lazy" class="h-16 w-20 shrink-0 rounded-md object-cover bg-gray-100 dark:bg-zinc-800" onerror="this.style.display='none'" />
           <div class="min-w-0 flex-1">
             <div class="flex items-start justify-between gap-2">
-              <p class="font-semibold text-black dark:text-white leading-snug text-sm truncate">${c.title}</p>
-              <span class="shrink-0 rounded-full bg-zinc-950 dark:bg-white px-2 py-0.5 text-[11px] font-medium text-white dark:text-zinc-950">${c.badge || c.category}</span>
+              <p class="font-semibold text-black dark:text-white leading-snug text-sm truncate">${esc(c.title)}</p>
+              <span class="shrink-0 rounded-full bg-zinc-950 dark:bg-white px-2 py-0.5 text-[11px] font-medium text-white dark:text-zinc-950">${esc(c.badge || c.category)}</span>
             </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-zinc-400">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p>
+            <p class="mt-1 text-xs text-gray-500 dark:text-zinc-400">${Number(c.year) || '-'} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${esc(c.location)}</p>
             <div class="mt-1 text-sm font-bold text-black dark:text-white">${rp(c.price)}</div>
           </div>
         </div>

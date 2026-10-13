@@ -8,6 +8,13 @@
   const store = () => window.CarStore;
   const rp = (n) => (window.fmtRp ? window.fmtRp(n) : 'Rp ' + Number(n || 0).toLocaleString('id-ID'));
   const ago = (ts) => (window.timeAgo ? window.timeAgo(ts) : '');
+  // Escape teks pengguna sebelum masuk innerHTML (anti stored-XSS).
+  const esc = (s) => (window.escHtml
+    ? window.escHtml(s)
+    : String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+  // Untuk atribut HTML: pastikan id/parameter aman (huruf, angka, - _ : .).
+  const escId = (s) => String(s ?? '').replace(/[^a-zA-Z0-9\-_:.]/g, '');
+  const escAttr = (s) => esc(s).replace(/"/g, '&quot;');
 
   const PAGES = ['dashboard', 'jual', 'beli', 'favorit', 'riwayat', 'pengaturan'];
   const TITLES = {
@@ -153,8 +160,8 @@
     Lainnya: W('Honda CR-V e-HEV Elegance AWD (VI) – f 14072024.jpg'),
   };
   function carImage(c) {
-    const url = (c.image || '').trim();
-    if (url) return url;
+    const url = String(c.image || '').trim();
+    if (/^https?:\/\//i.test(url) && url.length <= 500) return url;
     return CATEGORY_IMAGES[c.category] || CATEGORY_IMAGES.Lainnya;
   }
 
@@ -162,7 +169,7 @@
     const h = big ? 'h-44' : 'h-36';
     const src = carImage(c);
     const fallback = CATEGORY_IMAGES[c.category] || CATEGORY_IMAGES.Lainnya;
-    return `<div class="${h} w-full overflow-hidden bg-gray-100 dark:bg-zinc-800"><img src="${src}" alt="${c.title}" loading="lazy" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='${fallback}'" /></div>`;
+    return `<div class="${h} w-full overflow-hidden bg-gray-100 dark:bg-zinc-800"><img src="${src}" alt="${esc(c.title)}" loading="lazy" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='${fallback}'" /></div>`;
   }
 
   // Badge + daftar penawaran ringkas pada kartu.
@@ -180,7 +187,7 @@
       <div class="flex items-center justify-between gap-2 rounded-lg border border-gray-200 dark:border-zinc-800 px-3 py-2 text-xs">
         <div class="min-w-0">
           <p class="font-bold text-black dark:text-white">${rp(o.amount)}</p>
-          <p class="text-gray-500 dark:text-zinc-400 truncate">${o.note ? o.note + ' • ' : ''}${ago(o.ts)} • ${o.status === 'pending' ? 'menunggu' : o.status === 'accepted' ? 'diterima' : 'ditolak'}</p>
+          <p class="text-gray-500 dark:text-zinc-400 truncate">${o.note ? esc(o.note) + ' • ' : ''}${ago(o.ts)} • ${o.status === 'pending' ? 'menunggu' : o.status === 'accepted' ? 'diterima' : 'ditolak'}</p>
         </div>
         ${o.status === 'pending' ? `<div class="flex shrink-0 gap-1">
           <button data-accept="${c.id}:${o.id}" class="rounded-md bg-zinc-950 dark:bg-white px-2.5 py-1 text-[11px] font-semibold text-white dark:text-zinc-950">Terima</button>
@@ -204,11 +211,11 @@
         <span class="absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${STATUS_CLS[c.status] || STATUS_CLS.queued}">${st}</span>
       </div>
       <div class="flex flex-1 flex-col p-4">
-        <h3 class="font-bold text-black dark:text-white leading-snug cursor-pointer hover:underline line-clamp-2 min-h-[2.75rem]" data-detail="${c.id}">${c.title}</h3>
-        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 truncate">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location}</p>
+        <h3 class="font-bold text-black dark:text-white leading-snug cursor-pointer hover:underline line-clamp-2 min-h-[2.75rem]" data-detail="${c.id}">${esc(c.title)}</h3>
+        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 truncate">${Number(c.year) || '-'} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${esc(c.location)}</p>
         <div class="mt-2 flex items-center justify-between gap-2">
           <p class="font-bold text-black dark:text-white truncate">${rp(c.price)}</p>
-          <span class="shrink-0 text-[11px] font-medium text-gray-500 dark:text-zinc-400">${c.category || ''}</span>
+          <span class="shrink-0 text-[11px] font-medium text-gray-500 dark:text-zinc-400">${esc(c.category || '')}</span>
         </div>
         <div class="mt-3 flex flex-wrap gap-2">
           ${c.status === 'running' && !opts.sell
@@ -379,7 +386,7 @@
     if (!sel || !store()) return;
     const cats = [...new Set(store().all().map((c) => c.category).filter(Boolean))];
     const cur = buyState.cat;
-    sel.innerHTML = '<option value="all">Semua kategori</option>' + cats.map((c) => `<option value="${c}">${c}</option>`).join('');
+    sel.innerHTML = '<option value="all">Semua kategori</option>' + cats.map((c) => `<option value="${escAttr(c)}">${esc(c)}</option>`).join('');
     sel.value = cats.includes(cur) ? cur : 'all';
     buyState.cat = sel.value;
   }
@@ -401,7 +408,7 @@
     const q = ($('#buy-loc-search')?.value || '').trim().toLocaleLowerCase('id');
     const locs = allCityOptions().filter((c) => !q || matchCity(c, q));
     const cur = buyState.loc;
-    sel.innerHTML = '<option value="all">Semua lokasi</option>' + locs.map((c) => `<option value="${c}">${c}</option>`).join('')
+    sel.innerHTML = '<option value="all">Semua lokasi</option>' + locs.map((c) => `<option value="${escAttr(c)}">${esc(c)}</option>`).join('')
       + (q ? `<option value="__empty" disabled>${locs.length ? locs.length + ' kota cocok' : 'Tidak ada kota yang cocok'}</option>` : '');
     sel.value = locs.includes(cur) ? cur : 'all';
     buyState.loc = sel.value;
@@ -418,7 +425,7 @@
     const inMaster = new Set(Object.values(groups).flat());
     const extra = used.filter((x) => !inMaster.has(x)).sort((a, b) => a.localeCompare(b, 'id'));
     const all = [...Object.keys(groups).sort((a, b) => a.localeCompare(b, 'id')).flatMap((prov) => groups[prov]), ...extra];
-    list.innerHTML = all.map((c) => `<option value="${c}"></option>`).join('');
+    list.innerHTML = all.map((c) => `<option value="${escAttr(c)}"></option>`).join('');
     if (keep) input.value = keep;
   }
 
@@ -635,21 +642,21 @@
       <div class="p-6">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ${STATUS_CLS[c.status] || STATUS_CLS.queued}">${st}</span>
-            <h3 class="mt-2 text-xl font-bold text-black dark:text-white leading-snug">${c.title}</h3>
-            <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">${c.year} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${c.location} • ${c.category || ''}</p>
+            <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ${STATUS_CLS[c.status] || STATUS_CLS.queued}">${esc(st)}</span>
+            <h3 class="mt-2 text-xl font-bold text-black dark:text-white leading-snug">${esc(c.title)}</h3>
+            <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">${Number(c.year) || '-'} • ${Number(c.km || 0).toLocaleString('id-ID')} km • ${esc(c.location)} • ${esc(c.category || '')}</p>
           </div>
           <button data-close-detail class="shrink-0 rounded-lg border border-gray-200 dark:border-zinc-800 p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 transition"><svg data-icon="x" class="h-4 w-4 pointer-events-none"></svg></button>
         </div>
         <p class="mt-3 text-2xl font-bold text-black dark:text-white">${rp(c.price)}</p>
-        <p class="mt-3 text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">${c.description || 'Tidak ada deskripsi.'}</p>
+        <p class="mt-3 text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">${esc(c.description) || 'Tidak ada deskripsi.'}</p>
         ${c.purchase ? `<div class="mt-3 rounded-lg border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 p-3 text-xs text-gray-600 dark:text-zinc-300">
           <p class="font-bold text-black dark:text-white mb-1">Info pembelian</p>
           ${c.purchase.method === 'kredit'
-            ? `<p>DP ${rp(c.purchase.dp)} • ${c.purchase.tenor}× ${rp(c.purchase.installment)}/bln • bunga ${c.purchase.rate}%/thn${c.purchase.name ? ` • ${c.purchase.name}` : ''}</p>`
+            ? `<p>DP ${rp(c.purchase.dp)} • ${c.purchase.tenor}× ${rp(c.purchase.installment)}/bln • bunga ${Number(c.purchase.rate) || 0}%/thn${c.purchase.name ? ` • ${esc(c.purchase.name)}` : ''}</p>`
             : c.purchase.method === 'tawar'
-              ? `<p>Dibeli via tawaran yang diterima${c.purchase.name ? ` • ${c.purchase.name}` : ''}</p>`
-              : `<p>Tunai${c.purchase.name ? ` • ${c.purchase.name} (${c.purchase.phone || '-'})` : ''}</p>`}
+              ? `<p>Dibeli via tawaran yang diterima${c.purchase.name ? ` • ${esc(c.purchase.name)}` : ''}</p>`
+              : `<p>Tunai${c.purchase.name ? ` • ${esc(c.purchase.name)} (${esc(c.purchase.phone) || '-'})` : ''}</p>`}
         </div>` : ''}
         <div class="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-400">
           <span class="inline-flex items-center gap-1">❤ ${c.interest || 0}% diminati</span><span>•</span><span>Ditambahkan ${ago(c.createdAt)}</span>
@@ -734,12 +741,12 @@
       const r = checkoutCalc(price, dp, tenor, rate);
       if (inst) inst.textContent = rp(r.monthly);
       if (box) box.textContent = `Pinjaman ${rp(r.principal)} • tenor ${tenor} bln • bunga ${rate}%/thn • total bayar ${rp(r.total + dp)}`;
-      if (sum) sum.innerHTML = `<b class="text-black dark:text-white">${c ? c.title : ''}</b> — harga ${rp(price)}, DP ${rp(dp)}, sisa ${rp(r.principal)}, cicilan <b class="text-black dark:text-white">${rp(r.monthly)}/bln</b> × ${tenor} bln.`;
+      if (sum) sum.innerHTML = `<b class="text-black dark:text-white">${c ? esc(c.title) : ''}</b> — harga ${rp(price)}, DP ${rp(dp)}, sisa ${rp(r.principal)}, cicilan <b class="text-black dark:text-white">${rp(r.monthly)}/bln</b> × ${tenor} bln.`;
       return r;
     }
     if (inst) inst.textContent = rp(0);
     if (box) box.textContent = '';
-    if (sum) sum.innerHTML = `<b class="text-black dark:text-white">${c ? c.title : ''}</b> — bayar tunai penuh <b class="text-black dark:text-white">${rp(price)}</b>. Serah terima setelah pembayaran terverifikasi.`;
+    if (sum) sum.innerHTML = `<b class="text-black dark:text-white">${c ? esc(c.title) : ''}</b> — bayar tunai penuh <b class="text-black dark:text-white">${rp(price)}</b>. Serah terima setelah pembayaran terverifikasi.`;
     return null;
   }
   function openCheckoutModal(id) {

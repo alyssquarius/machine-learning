@@ -80,8 +80,13 @@
   window.CITY_GROUPS = CITY_GROUPS;
   window.INDONESIA_CITIES = Object.values(CITY_GROUPS).flat().sort((a, b) => a.localeCompare(b, 'id'));
 
+  // Kategori resmi (whitelist) agar tidak bisa disuntik via console.
+  const CATEGORIES = ['SUV', 'Sedan', 'MPV', 'Hatchback', 'Listrik', 'Lainnya'];
+  function cleanCategory(c, fallback) {
+    return CATEGORIES.includes(c) ? c : (fallback || 'Lainnya');
+  }
   function imageFor(category, explicit) {
-    const url = (explicit || '').trim();
+    const url = safeImageUrl(explicit);
     if (url) return url;
     return CATEGORY_IMAGES[category] || CATEGORY_IMAGES.Lainnya;
   }
@@ -114,6 +119,21 @@
     return JSON.parse(JSON.stringify(v));
   }
 
+  // Escape HTML untuk semua input pengguna (judul, nama, catatan) agar tidak
+  // bisa menyuntik <script> via listing/tawaran/checkout (stored XSS).
+  function esc(s) {
+    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  window.escHtml = esc;
+
+  // Hanya izinkan URL foto http/https (tolak javascript:/data: dsb).
+  function safeImageUrl(u) {
+    const s = String(u || '').trim();
+    if (!s) return '';
+    if (/^https?:\/\//i.test(s) && s.length <= 500) return s;
+    return '';
+  }
+
   function load(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -133,9 +153,64 @@
   }
 
   let cars = load(LS_CARS, SEED_CARS);
+  if (!Array.isArray(cars)) cars = clone(SEED_CARS);
+  // Normalisasi tiap baris agar data rusak/tampering di localStorage tidak bikin crash/XSS.
+  // - id harus string, title/price/year/km/location/category/status dibersihkan ke default aman.
+  // - offers harus array berisi entri valid (id/amount/ts/status whitelist).
+  const STATUSES = ['done', 'running', 'queued', 'failed'];
+  cars = cars.filter((c) => c && typeof c.id === 'string').map((c) => {
+    const o = { ...c };
+    o.title = String(o.title || 'Mobil').slice(0, 80);
+    o.price = Math.max(0, Number(o.price) || 0);
+    const my = new Date().getFullYear();
+    o.year = Math.min(my, Math.max(1990, Number(o.year) || my));
+    o.km = Math.max(0, Number(o.km) || 0);
+    o.location = String(o.location || '-').slice(0, 60) || '-';
+    o.category = CATEGORIES.includes(o.category) ? o.category : 'Lainnya';
+    o.status = STATUSES.includes(o.status) ? o.status : 'queued';
+    o.interest = Math.max(0, Math.min(100, Number(o.interest) || 0));
+    o.badge = String(o.badge || '').slice(0, 24);
+    o.image = typeof o.image === 'string' ? o.image.slice(0, 500) : '';
+    o.description = typeof o.description === 'string' ? o.description.slice(0, 500) : '';
+    o.createdAt = Number(o.createdAt) > 0 ? Number(o.createdAt) : Date.now();
+    o.offers = Array.isArray(o.offers) ? o.offers.filter((x) => x && typeof x.id === 'string').map((x) => ({
+      id: String(x.id),
+      amount: Math.max(0, Number(x.amount) || 0),
+      note: String(x.note || '').slice(0, 140),
+      ts: Number(x.ts) > 0 ? Number(x.ts) : Date.now(),
+      status: ['pending', 'accepted', 'rejected'].includes(x.status) ? x.status : 'pending',
+    })) : [];
+    if (o.purchase && typeof o.purchase === 'object') {
+      const p = o.purchase;
+      o.purchase = {
+        method: ['tunai', 'kredit', 'tawar'].includes(p.method) ? p.method : 'tunai',
+        dp: Math.max(0, Number(p.dp) || 0),
+        tenor: Math.max(0, Number(p.tenor) || 0),
+        rate: Math.max(0, Math.min(30, Number(p.rate) || 0)),
+        installment: Math.max(0, Number(p.installment) || 0),
+        name: String(p.name || '').slice(0, 60),
+        phone: String(p.phone || '').slice(0, 20),
+        ts: Number(p.ts) > 0 ? Number(p.ts) : Date.now(),
+      };
+    } else {
+      delete o.purchase;
+    }
+    return o;
+  });
   let favs = load(LS_FAVS, SEED_FAVS);
+  if (!Array.isArray(favs)) favs = [];
   let hist = load(LS_HIST, SEED_HIST);
-  let settings = Object.assign({ target: 10, displayName: '', notifRead: 0 }, load(LS_SET, {}));
+  if (!Array.isArray(hist)) hist = [];
+  let settings = load(LS_SET, {});
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) settings = {};
+  settings = Object.assign({ target: 10, displayName: '', notifRead: 0 }, settings);
+
+  // Bersihkan data lama dari localStorage: teks riwayat boleh punya <b> saja,
+  // tag lain (mis. <script>/<img> dari input lama) dinetralkan agar render aman.
+  hist = hist.filter((h) => h && typeof h.text === 'string').map((h) => ({
+    ...h,
+    text: String(h.text).replace(/<(?!b>|\/b>)/gi, '&lt;'),
+  }));
 
   // Samakan favorit dengan id mobil yang masih ada.
   favs = favs.filter((id) => cars.some((c) => c.id === id));
@@ -206,41 +281,46 @@
       return list;
     },
     bestOffer(id) {
-      const list = this.offersFor(id);
+      const list = this.offersFor(id).filter((o) => o.status === 'pending');
       if (!list.length) return null;
       return list.reduce((a, b) => (b.amount > a.amount ? b : a));
     },
     makeOffer(id, amount, note) {
       const car = cars.find((c) => c.id === id);
-      if (!car || car.status === 'done') return null;
+      // Hanya mobil yang sedang dijual (running) yang bisa ditawar.
+      if (!car || car.status !== 'running') return null;
       const val = Number(amount) || 0;
       if (val < 1000000) return null;
       car.offers = car.offers || [];
-      const offer = { id: uid('o'), amount: val, note: (note || '').trim(), ts: Date.now(), status: 'pending' };
+      const offer = { id: uid('o'), amount: val, note: (note || '').trim().slice(0, 140), ts: Date.now(), status: 'pending' };
       car.offers.unshift(offer);
       car.interest = Math.max(0, Math.min(100, (car.interest || 50) + 1));
-      this.log('tawar', `Penawaran ${window.fmtRp(val)} untuk <b>${car.title}</b>`, true, car.id);
+      this.log('tawar', `Penawaran ${window.fmtRp(val)} untuk <b>${esc(car.title)}</b>`, true, car.id);
       persist();
       return offer;
     },
     decideOffer(id, offerId, accept) {
       const car = cars.find((c) => c.id === id);
       if (!car || !car.offers) return null;
+      // Jangan proses bila mobil sudah terjual / tawaran sudah diputus.
+      if (car.status === 'done') return null;
       const offer = car.offers.find((o) => o.id === offerId);
-      if (!offer) return null;
+      if (!offer || offer.status !== 'pending') return null;
       offer.status = accept ? 'accepted' : 'rejected';
       if (accept) {
+        // Tolak tawaran pending lain agar tidak nyangkut setelah terjual.
+        car.offers.forEach((o) => { if (o.id !== offer.id && o.status === 'pending') o.status = 'rejected'; });
         car.price = offer.amount;
         car.status = 'done';
         car.badge = 'Terjual';
         car.purchase = {
           method: 'tawar', dp: 0, tenor: 0, rate: 0,
-          installment: 0, name: (offer.note || '').trim(),
+          installment: 0, name: (offer.note || '').trim().slice(0, 60),
           phone: '', ts: Date.now(),
         };
-        this.log('beli', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${car.title}</b> diterima`, true, car.id);
+        this.log('beli', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${esc(car.title)}</b> diterima`, true, car.id);
       } else {
-        this.log('batal', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${car.title}</b> ditolak`, true, car.id);
+        this.log('batal', `Penawaran ${window.fmtRp(offer.amount)} untuk <b>${esc(car.title)}</b> ditolak`, true, car.id);
       }
       persist();
       return offer;
@@ -252,30 +332,32 @@
       const on = !favs.includes(id);
       favs = on ? [...favs, id] : favs.filter((f) => f !== id);
       car.interest = Math.max(0, Math.min(100, (car.interest || 50) + (on ? 1 : -1)));
-      this.log('favorit', on ? `Mobil <b>${car.title}</b> ditambahkan ke favorit` : `Mobil <b>${car.title}</b> dihapus dari favorit`, true);
+      this.log('favorit', on ? `Mobil <b>${esc(car.title)}</b> ditambahkan ke favorit` : `Mobil <b>${esc(car.title)}</b> dihapus dari favorit`, true);
       persist();
       return on;
     },
 
     add(data) {
-      const category = data.category || 'SUV';
+      const category = cleanCategory(data.category, 'SUV');
+      const maxYear = new Date().getFullYear();
+      const yearNum = Math.min(maxYear, Math.max(1990, Number(data.year) || maxYear));
       const car = {
         id: uid('c'),
-        title: data.title.trim(),
-        price: Number(data.price) || 0,
-        year: Number(data.year) || new Date().getFullYear(),
-        km: Number(data.km) || 0,
-        location: data.location || '-',
+        title: String(data.title || '').trim().slice(0, 80),
+        price: Math.max(0, Number(data.price) || 0),
+        year: yearNum,
+        km: Math.max(0, Number(data.km) || 0),
+        location: String(data.location || '-').slice(0, 60) || '-',
         category,
         status: 'queued',
         interest: 50,
         badge: 'Baru',
         image: imageFor(category, data.image),
-        description: (data.description || '').trim(),
+        description: String(data.description || '').trim().slice(0, 500),
         createdAt: Date.now(),
       };
       cars.unshift(car);
-      this.log('jual', `Mobil baru <b>${car.title}</b> ditambahkan, menunggu verifikasi`, true);
+      this.log('jual', `Mobil baru <b>${esc(car.title)}</b> ditambahkan, menunggu verifikasi`, true);
       persist();
       return car;
     },
@@ -283,25 +365,54 @@
     update(id, patch) {
       const car = cars.find((c) => c.id === id);
       if (!car) return null;
-      Object.assign(car, patch);
+      // Whitelist agar tidak bisa menyuntik field sembarang via console.
+      const allowed = ['title', 'price', 'year', 'km', 'location', 'category', 'status', 'badge', 'image', 'description', 'interest'];
+      const clean = {};
+      Object.keys(patch || {}).forEach((k) => {
+        if (allowed.includes(k)) clean[k] = patch[k];
+      });
+      if (typeof clean.title === 'string') clean.title = clean.title.trim().slice(0, 80);
+      if (clean.price != null) clean.price = Math.max(0, Number(clean.price) || 0);
+      if (clean.year != null) { const my = new Date().getFullYear(); clean.year = Math.min(my, Math.max(1990, Number(clean.year) || my)); }
+      if (clean.km != null) clean.km = Math.max(0, Number(clean.km) || 0);
+      if (typeof clean.location === 'string') clean.location = clean.location.trim().slice(0, 60) || '-';
+      if (typeof clean.description === 'string') clean.description = clean.description.trim().slice(0, 500);
+      if (typeof clean.image === 'string') {
+        const t = clean.image.trim();
+        // Kosong = hapus (render pakai fallback kategori). Non-http (javascript:/data:) dibuang.
+        if (!t) clean.image = '';
+        else {
+          const s = safeImageUrl(t);
+          if (s) clean.image = s;
+          else delete clean.image;
+        }
+      }
+      if (typeof clean.badge === 'string') clean.badge = clean.badge.trim().slice(0, 24);
+      if (clean.status != null && !['done', 'running', 'queued', 'failed'].includes(clean.status)) delete clean.status;
+      if (clean.interest != null) clean.interest = Math.max(0, Math.min(100, Number(clean.interest) || 0));
+      Object.assign(car, clean);
       persist();
       return car;
     },
 
     remove(id) {
       const car = cars.find((c) => c.id === id);
+      if (!car) return false;
       cars = cars.filter((c) => c.id !== id);
       favs = favs.filter((f) => f !== id);
-      if (car) this.log('hapus', `Listing <b>${car.title}</b> dihapus`, true);
+      this.log('hapus', `Listing <b>${esc(car.title)}</b> dihapus`, true);
       persist();
+      return true;
     },
 
     setStatus(id, status) {
       const car = cars.find((c) => c.id === id);
       if (!car) return null;
+      // Whitelist status agar tidak bisa diisi sembarang via console.
+      if (!['done', 'running', 'queued', 'failed'].includes(status)) return null;
       car.status = status;
       const label = { done: 'terjual', running: 'ditayangkan', queued: 'menunggu verifikasi', failed: 'ditolak' }[status] || status;
-      this.log('status', `Mobil <b>${car.title}</b> ${label}`, true);
+      this.log('status', `Mobil <b>${esc(car.title)}</b> ${label}`, true);
       persist();
       return car;
     },
@@ -310,7 +421,7 @@
     edit(id, data) {
       const car = cars.find((c) => c.id === id);
       if (!car) return null;
-      const title = (data.title || '').trim();
+      const title = String(data.title || '').trim().slice(0, 80);
       const price = Number(data.price) || 0;
       const year = Number(data.year) || car.year;
       const maxYear = new Date().getFullYear();
@@ -318,41 +429,42 @@
       car.title = title;
       car.price = price;
       car.year = year;
-      car.km = Number(data.km) || 0;
-      car.location = (data.location || '').trim() || '-';
-      car.category = data.category || car.category;
+      car.km = Math.max(0, Number(data.km) || 0);
+      car.location = String(data.location || '').trim().slice(0, 60) || '-';
+      car.category = cleanCategory(data.category, car.category);
       if (Object.prototype.hasOwnProperty.call(data, 'image')) {
-        const img = (data.image || '').trim();
+        const img = safeImageUrl(data.image);
         // Kosong = pertahankan foto lama (jangan timpa jadi string kosong).
         // Khusus reset eksplisit, panggil update(id, {image: ''}).
         if (img) car.image = img;
       }
-      car.description = (data.description || '').trim();
-      this.log('jual', `Listing <b>${car.title}</b> diperbarui`, true);
+      car.description = String(data.description || '').trim().slice(0, 500);
+      this.log('jual', `Listing <b>${esc(car.title)}</b> diperbarui`, true);
       persist();
       return car;
     },
 
     buy(id, opts = {}) {
       const car = cars.find((c) => c.id === id);
-      if (!car || car.status === 'done') return false;
+      // Hanya yang masih dijual yang bisa dibeli (queued/failed/done ditolak).
+      if (!car || car.status !== 'running') return false;
       car.status = 'done';
       car.badge = 'Terjual';
       const method = opts.method === 'kredit' ? 'kredit' : 'tunai';
       car.purchase = {
         method,
-        dp: Number(opts.dp) || 0,
-        tenor: Number(opts.tenor) || 0,
-        rate: Number(opts.rate) || 0,
-        installment: Number(opts.installment) || 0,
-        name: (opts.name || '').trim(),
-        phone: (opts.phone || '').trim(),
+        dp: Math.max(0, Number(opts.dp) || 0),
+        tenor: Math.max(0, Number(opts.tenor) || 0),
+        rate: Math.max(0, Number(opts.rate) || 0),
+        installment: Math.max(0, Number(opts.installment) || 0),
+        name: String(opts.name || '').trim().slice(0, 60),
+        phone: String(opts.phone || '').trim().slice(0, 20),
         ts: Date.now(),
       };
       if (method === 'kredit') {
-        this.log('beli', `Mobil <b>${car.title}</b> dibeli kredit — DP ${window.fmtRp(car.purchase.dp)}, ${car.purchase.tenor}× ${window.fmtRp(car.purchase.installment)}/bln`, true, car.id);
+        this.log('beli', `Mobil <b>${esc(car.title)}</b> dibeli kredit — DP ${window.fmtRp(car.purchase.dp)}, ${car.purchase.tenor}× ${window.fmtRp(car.purchase.installment)}/bln`, true, car.id);
       } else {
-        this.log('beli', `Mobil <b>${car.title}</b> berhasil dibeli tunai (${window.fmtRp(car.price)})`, true, car.id);
+        this.log('beli', `Mobil <b>${esc(car.title)}</b> berhasil dibeli tunai (${window.fmtRp(car.price)})`, true, car.id);
       }
       persist();
       return true;
@@ -383,7 +495,9 @@
     },
 
     log(type, text, silent, carId) {
-      hist.unshift({ id: uid('h'), type, text, ts: Date.now(), carId: carId || null });
+      const allowed = ['beli', 'jual', 'tawar', 'favorit', 'status', 'verifikasi', 'batal', 'hapus'];
+      const t = allowed.includes(type) ? type : 'status';
+      hist.unshift({ id: uid('h'), type: t, text: String(text ?? ''), ts: Date.now(), carId: carId || null });
       hist = hist.slice(0, 60);
       if (!silent) persist();
       else {
@@ -395,7 +509,7 @@
     },
 
     getTarget() { try { return Number(settings.target) || 10; } catch { return 10; } },
-    setTarget(n) { settings.target = Math.max(1, Number(n) || 10); persist(); },
+    setTarget(n) { const v = Math.max(1, Math.min(100, Math.round(Number(n) || 10))); settings.target = v; persist(); return v; },
 
     // ---------- Visibilitas widget dashboard (bisa di-hide) ----------
     getHiddenWidgets() { try { return Array.isArray(settings.hiddenWidgets) ? [...settings.hiddenWidgets] : []; } catch { return []; } },
@@ -429,12 +543,12 @@
     },
     clearHistory() { hist = []; persist(); },
     exportHistoryCSV() {
-      const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
       const rows = [['waktu', 'tipe', 'teks']];
       this.history().forEach((h) => {
-        rows.push([new Date(h.ts).toLocaleString('id-ID'), h.type, h.text.replace(/<[^>]+>/g, '')]);
+        rows.push([new Date(h.ts).toLocaleString('id-ID'), h.type, String(h.text ?? '').replace(/<[^>]+>/g, '')]);
       });
-      return rows.map((r) => r.map(esc).join(',')).join('\n');
+      return rows.map((r) => r.map(q).join(',')).join('\n');
     },
 
     reset() {
@@ -451,14 +565,14 @@
       if (!src) return null;
       const car = clone(src);
       car.id = uid('c');
-      car.title = `${src.title} (Salinan)`;
+      car.title = String(src.title || 'Mobil').slice(0, 70) + ' (Salinan)';
       car.status = 'queued';
       car.badge = 'Baru';
       car.offers = [];
       delete car.purchase;
       car.createdAt = Date.now();
       cars.unshift(car);
-      this.log('jual', `Listing <b>${car.title}</b> diduplikat dari <b>${src.title}</b>`, true, car.id);
+      this.log('jual', `Listing <b>${esc(car.title)}</b> diduplikat dari <b>${esc(src.title)}</b>`, true, car.id);
       persist();
       return car;
     },
