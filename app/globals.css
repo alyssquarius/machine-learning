@@ -31,18 +31,16 @@
   }
 }
 
-/* Dark mode: hindari hitam pekat + putih murni yang menyilaukan. */
-html.dark {
-  --color-zinc-950: #1c1c22;
-  --color-zinc-900: #222229;
-  --color-zinc-800: #2e2e36;
-  --color-white: #b9b9c1;
-  color-scheme: dark;
+/* Dark mode configuration untuk Tailwind v4 */
+@layer base {
+  html.dark {
+    color-scheme: dark;
+  }
 }
 
-/* Foto diredupkan sedikit di dark mode agar tidak "nembak". */
+/* Foto diredupkan sedikit di dark mode agar tidak terlalu menyilaukan. */
 html.dark img {
-  filter: brightness(0.86) contrast(0.97);
+  filter: brightness(0.9) contrast(0.98);
 }
 
 html.dark ::-webkit-scrollbar-thumb {
