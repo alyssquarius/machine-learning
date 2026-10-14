@@ -14,13 +14,13 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Role } from "@/lib/roles";
 
-const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: "home" },
-  { href: "/jual", label: "Jual Mobil", icon: "tag" },
-  { href: "/beli", label: "Beli Mobil", icon: "cart" },
-  { href: "/favorit", label: "Favorit", icon: "heart" },
-  { href: "/riwayat", label: "Riwayat", icon: "history" },
-  { href: "/pengaturan", label: "Pengaturan", icon: "cog" },
+const ALL_NAV = [
+  { href: "/dashboard", label: "Dashboard", icon: "home", roles: ["admin", "dealer", "buyer", "guest"] },
+  { href: "/jual", label: "Jual Mobil", icon: "tag", roles: ["admin", "dealer"] },
+  { href: "/beli", label: "Beli Mobil", icon: "cart", roles: ["admin", "dealer", "buyer", "guest"] },
+  { href: "/favorit", label: "Favorit", icon: "heart", roles: ["admin", "dealer", "buyer"] },
+  { href: "/riwayat", label: "Riwayat", icon: "history", roles: ["admin", "dealer", "buyer"] },
+  { href: "/pengaturan", label: "Pengaturan", icon: "cog", roles: ["admin", "dealer", "buyer"] },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -154,6 +154,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const unread = store.unreadCount();
   const notifs = store.history().slice(0, 3);
 
+  // Filter NAV sesuai role
+  const NAV = ALL_NAV.filter((n) => n.roles.includes(role));
+
   function toggleSidebar() {
     if (window.matchMedia("(min-width: 1024px)").matches) {
       setCollapsed((c) => {
@@ -214,13 +217,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={n.href}
                 title={n.label}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium ${
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium active:scale-97 transition-transform ${
                   on ? "nav-active" : "nav-item"
                 }`}
               >
                 <Icon name={n.icon} className="h-5 w-5 shrink-0" />
                 <span className="truncate">{n.label}</span>
-                {n.href === "/favorit" ? (
+                {n.href === "/favorit" && favCount > 0 ? (
                   <span
                     id="nav-fav-count"
                     className="ml-auto shrink-0 rounded-full bg-zinc-950 px-2 py-0.5 text-[11px] font-bold text-white dark:bg-white dark:text-zinc-950"
@@ -249,14 +252,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {isGuest ? (
               <Link
                 href="/login"
-                className="block w-full rounded-lg bg-black py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+                className="block w-full rounded-lg bg-black py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
               >
                 Masuk / Daftar
               </Link>
             ) : (
               <Link
                 href="/pengaturan"
-                className="block w-full rounded-lg border border-gray-300 py-2.5 text-center text-sm font-medium text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+                className="block w-full rounded-lg border border-gray-300 py-2.5 text-center text-sm font-medium text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
               >
                 Pengaturan Akun
               </Link>
@@ -273,7 +276,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={toggleSidebar}
               title="Buka / tutup sidebar"
               aria-label="Buka / tutup sidebar"
-              className="shrink-0 rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+              className="shrink-0 rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 active:scale-97 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
             >
               <Icon name="menu" />
             </button>
@@ -314,7 +317,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   setNotifOpen((o) => !o);
                 }}
                 aria-expanded={notifOpen}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 hover:text-black dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 hover:text-black active:scale-97 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
               >
                 <Icon name="bell" />
                 <span
@@ -325,7 +328,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
               <div
                 id="notif-menu"
-                className={`absolute right-0 z-50 mt-3 w-80 origin-top-right rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 ${
+                className={`absolute right-0 z-50 mt-3 w-80 origin-top-right animate-zoom-in rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 ${
                   notifOpen ? "" : "hidden"
                 }`}
               >
@@ -363,7 +366,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   setUserOpen((o) => !o);
                 }}
                 aria-expanded={userOpen}
-                className="flex items-center gap-2 rounded-full p-1 pr-3 transition hover:bg-gray-100 focus:outline-none dark:hover:bg-zinc-800"
+                className="flex items-center gap-2 rounded-full p-1 pr-3 transition hover:bg-gray-100 active:scale-97 focus:outline-none dark:hover:bg-zinc-800"
               >
                 <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-black dark:bg-white">
                   {avatarUrl ? (
@@ -385,7 +388,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
               <div
                 id="user-menu"
-                className={`absolute right-0 z-50 mt-3 w-56 origin-top-right rounded-xl border border-gray-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-950 ${
+                className={`absolute right-0 z-50 mt-3 w-56 origin-top-right animate-zoom-in rounded-xl border border-gray-200 bg-white p-2 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 ${
                   userOpen ? "" : "hidden"
                 }`}
               >
@@ -397,7 +400,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/login"
                       onClick={() => setUserOpen(false)}
-                      className="block rounded-lg bg-black px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+                      className="block rounded-lg bg-black px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
                     >
                       Masuk / Daftar
                     </Link>
@@ -435,7 +438,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 animate-fade-in">
           {children}
           <footer className="clear-both mt-10 flex w-full flex-col gap-4 border-t border-gray-200 pb-2 pt-6 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left dark:border-zinc-800">
             <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">
