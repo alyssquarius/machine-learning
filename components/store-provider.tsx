@@ -41,6 +41,7 @@ export interface Car {
   badge: string;
   image: string;
   description: string;
+  sellerPhone?: string;
   createdAt: number;
   offers: Offer[];
   purchase?: Purchase;

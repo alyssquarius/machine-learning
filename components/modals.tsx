@@ -26,10 +26,10 @@ function ModalShell({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950 ${
+        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-2xl animate-zoom-in dark:border-zinc-800 dark:bg-zinc-950 ${
           wide ? "max-w-lg" : "max-w-md"
         }`}
       >
@@ -42,7 +42,7 @@ function ModalShell({
 function FieldError({ msg }: { msg: string }) {
   if (!msg) return null;
   return (
-    <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+    <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600 animate-fade-in dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
       {msg}
     </p>
   );
@@ -67,6 +67,7 @@ export function SellModal({
   const [err, setErr] = React.useState("");
   const [priceDisplay, setPriceDisplay] = React.useState(editing?.price?.toLocaleString("id-ID") || "");
   const [kmDisplay, setKmDisplay] = React.useState(editing?.km?.toLocaleString("id-ID") || "");
+  const [sellerPhone, setSellerPhone] = React.useState(editing?.sellerPhone || "");
   const maxYear = new Date().getFullYear();
 
   function formatNumber(val: string): string {
@@ -89,19 +90,21 @@ export function SellModal({
     const category = String(fd.get("category") || "SUV");
     const image = String(fd.get("image") || "").trim();
     const description = String(fd.get("description") || "").trim();
+    const phone = String(fd.get("sellerPhone") || "").trim();
 
     if (title.length < 4) return setErr("Judul minimal 4 karakter.");
     if (!price || price < 1000000) return setErr("Harga minimal Rp 1.000.000.");
     if (!year || year < 1990 || year > maxYear) return setErr(`Tahun harus 1990–${maxYear}.`);
     if (!location) return setErr("Kota wajib diisi.");
+    if (!phone || phone.replace(/\D/g, "").length < 9) return setErr("Nomor WhatsApp penjual wajib diisi (minimal 9 digit).");
 
     setErr("");
     if (editing) {
-      const ok = store.edit(editing.id, { title, price, year, km, location, category, image, description });
+      const ok = store.edit(editing.id, { title, price, year, km, location, category, image, description, sellerPhone: phone });
       if (!ok) return setErr("Gagal menyimpan. Periksa kembali isian.");
       toast("Listing diperbarui.");
     } else {
-      store.add({ title, price, year, km, location, category, image, description });
+      store.add({ title, price, year, km, location, category, image, description, sellerPhone: phone });
       toast("Listing ditambahkan, menunggu verifikasi.");
     }
     onClose(true);
@@ -118,7 +121,7 @@ export function SellModal({
             {editing ? "Perbarui data mobilmu." : 'Listing baru masuk sebagai "Menunggu" verifikasi.'}
           </p>
         </div>
-        <button onClick={() => onClose()} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 dark:border-zinc-800 dark:hover:bg-zinc-800">
+        <button onClick={() => onClose()} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
           ✕
         </button>
       </div>
@@ -182,19 +185,30 @@ export function SellModal({
             </select>
           </div>
           <div>
-            <label className={labelCls}>URL Foto (opsional)</label>
-            <input name="image" defaultValue={editing?.image || ""} placeholder="https://..." className={inputCls} />
+            <label className={labelCls}>Nomor WhatsApp Penjual *</label>
+            <input
+              name="sellerPhone"
+              type="text"
+              value={sellerPhone}
+              onChange={(e) => setSellerPhone(e.target.value)}
+              placeholder="cth: 081234567890"
+              className={inputCls}
+            />
           </div>
+        </div>
+        <div>
+          <label className={labelCls}>URL Foto (opsional)</label>
+          <input name="image" defaultValue={editing?.image || ""} placeholder="https://..." className={inputCls} />
         </div>
         <div>
           <label className={labelCls}>Deskripsi</label>
           <textarea name="description" rows={3} defaultValue={editing?.description || ""} placeholder="Kondisi, servis, pajak..." className={inputCls} />
         </div>
         <div className="flex gap-3 pt-1">
-          <button type="button" onClick={() => onClose()} className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">
+          <button type="button" onClick={() => onClose()} className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">
             Batal
           </button>
-          <button type="submit" className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200">
+          <button type="submit" className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200">
             {editing ? "Simpan Perubahan" : "Pasang Listing"}
           </button>
         </div>
@@ -246,7 +260,7 @@ export function DetailModal({
               {c.year} • {c.km.toLocaleString("id-ID")} km • {c.location} • {c.category}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 dark:border-zinc-800 dark:hover:bg-zinc-800">
+          <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
             ✕
           </button>
         </div>
@@ -286,7 +300,7 @@ export function DetailModal({
                 onClose();
                 onBuy(c.id);
               }}
-              className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+              className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
             >
               Beli Sekarang
             </button>
@@ -296,7 +310,7 @@ export function DetailModal({
               store.toggleFav(c.id);
               toast(on ? "Dihapus dari favorit." : "Ditambahkan ke favorit.");
             }}
-            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${
+            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-4 py-2.5 text-sm font-semibold transition active:scale-97 ${
               on
                 ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950"
                 : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
@@ -314,7 +328,7 @@ export function DetailModal({
               onClose();
               onOffer(c.id);
             }}
-            className="mt-2 w-full rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+            className="mt-2 w-full rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
           >
             Ajukan Tawaran
           </button>
@@ -339,7 +353,7 @@ export function DetailModal({
                           toast("Tawaran diterima, mobil terjual.");
                           onClose();
                         }}
-                        className="rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white dark:bg-white dark:text-zinc-950"
+                        className="rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white active:scale-97 dark:bg-white dark:text-zinc-950"
                       >
                         Terima
                       </button>
@@ -348,7 +362,7 @@ export function DetailModal({
                           store.decideOffer(c.id, o.id, false);
                           toast("Tawaran ditolak.");
                         }}
-                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold dark:border-zinc-700"
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold active:scale-97 dark:border-zinc-700"
                       >
                         Tolak
                       </button>
@@ -371,47 +385,63 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
   const { toast } = useToast();
   const car = store.get(carId);
   const [err, setErr] = React.useState("");
+  const [amountDisplay, setAmountDisplay] = React.useState("");
+
   if (!car) return null;
-  const c = car;
+
+  function formatNumber(val: string): string {
+    const num = val.replace(/\D/g, "");
+    return num ? parseInt(num, 10).toLocaleString("id-ID") : "";
+  }
+  function parseNumber(val: string): number {
+    return parseInt(val.replace(/\D/g, "") || "0", 10);
+  }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const amount = Number(fd.get("amount") || 0);
-    const note = String(fd.get("note") || "");
+    const amount = parseNumber(amountDisplay);
+    const note = String(fd.get("note") || "").trim();
+
     if (!amount || amount < 1000000) return setErr("Tawaran minimal Rp 1.000.000.");
-    const ok = store.makeOffer(c.id, amount, note);
-    if (!ok) return setErr("Gagal mengirim tawaran. Mobil mungkin sudah terjual.");
-    toast("Tawaran terkirim.");
+    setErr("");
+    store.makeOffer(carId, amount, note);
+    toast("Penawaran berhasil dikirim ke penjual.");
     onClose();
   }
 
   return (
     <ModalShell onClose={onClose}>
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-black dark:text-white">Ajukan Tawaran</h3>
-          <p className="text-xs text-gray-500 dark:text-zinc-400">{c.title} — {fmtRp(c.price)}</p>
-        </div>
-        <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 dark:border-zinc-800 dark:hover:bg-zinc-800">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-bold text-black dark:text-white">Ajukan Tawaran Harga</h3>
+        <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
           ✕
         </button>
       </div>
+      <p className="mb-4 text-xs text-gray-500 dark:text-zinc-400">
+        Mobil: <span className="font-semibold text-black dark:text-white">{car.title}</span> (Harga: {fmtRp(car.price)})
+      </p>
       <FieldError msg={err} />
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className={labelCls}>Harga tawaran (Rp) *</label>
-          <input name="amount" type="number" min={1000000} placeholder="cth: 450000000" className={inputCls} />
+          <label className={labelCls}>Jumlah Tawaran (Rp) *</label>
+          <input
+            type="text"
+            value={amountDisplay}
+            onChange={(e) => setAmountDisplay(formatNumber(e.target.value))}
+            placeholder="cth: 230.000.000"
+            className={inputCls}
+          />
         </div>
         <div>
-          <label className={labelCls}>Catatan (opsional)</label>
-          <textarea name="note" rows={2} maxLength={140} placeholder="cth: bayar tunai minggu ini" className={inputCls} />
+          <label className={labelCls}>Catatan / Pesan untuk Penjual</label>
+          <input name="note" placeholder="cth: Hubungi saya jika deal" className={inputCls} />
         </div>
         <div className="flex gap-3 pt-1">
-          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">
             Batal
           </button>
-          <button type="submit" className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200">
+          <button type="submit" className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200">
             Kirim Tawaran
           </button>
         </div>
@@ -420,136 +450,152 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
   );
 }
 
-// ---------- Modal Checkout ----------
+// ---------- Modal Checkout (Beli) ----------
 
-export function CheckoutModal({ carId, onClose }: { carId: string; onClose: (done?: boolean) => void }) {
+export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () => void }) {
   const store = useStore();
   const { toast } = useToast();
   const car = store.get(carId);
   const [method, setMethod] = React.useState<"tunai" | "kredit">("tunai");
+  const [dpPct, setDpPct] = React.useState(30);
   const [tenor, setTenor] = React.useState(36);
-  const [dp, setDp] = React.useState("");
-  const [rate, setRate] = React.useState("8");
+  const [name, setName] = React.useState("");
+  const [phone, setPhone] = React.useState("");
   const [err, setErr] = React.useState("");
+
   if (!car) return null;
   const c = car;
-  const price = Number(c.price) || 0;
-  const dpNum = Math.max(0, Number(dp) || 0);
-  const rateNum = Math.max(0, Math.min(30, Number(rate) || 0));
-  const sim = checkoutCalc(price, dpNum, tenor, rateNum);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const name = String(fd.get("name") || "").trim();
-    const phone = String(fd.get("phone") || "").replace(/[^\d]/g, "");
-    if (name.length < 3) return setErr("Nama pembeli minimal 3 karakter.");
-    if (phone.length < 9) return setErr("Nomor HP minimal 9 digit.");
-    if (method === "kredit") {
-      if (dpNum < Math.round(price * 0.1)) return setErr(`DP minimal 10% (${fmtRp(Math.round(price * 0.1))}).`);
-      if (dpNum >= price) return setErr("DP harus lebih kecil dari harga mobil.");
-    }
+  const calc = checkoutCalc(c.price, dpPct, tenor, 8);
+
+  function onCheckout() {
+    if (!name.trim()) return setErr("Nama lengkap wajib diisi.");
+    if (!phone.trim() || phone.replace(/\D/g, "").length < 9) return setErr("Nomor WhatsApp/Telepon wajib diisi.");
     setErr("");
-    const payload =
-      method === "kredit"
-        ? { method: "kredit" as const, name, phone, dp: dpNum, tenor, rate: rateNum, installment: sim.monthly }
-        : { method: "tunai" as const, name, phone };
-    const ok = store.buy(c.id, payload);
-    if (!ok) return setErr("Gagal memproses. Mobil mungkin sudah terjual.");
-    toast(
-      method === "kredit"
-        ? `Pembelian kredit berhasil! Cicilan ${fmtRp(sim.monthly)}/bln × ${tenor} bln.`
-        : "Pembelian tunai berhasil!"
-    );
-    onClose(true);
+    const ok = store.buy(c.id, {
+      method,
+      dp: calc.dp,
+      tenor,
+      rate: 8,
+      installment: calc.installment,
+      name: name.trim(),
+      phone: phone.trim(),
+    });
+    if (!ok) return setErr("Gagal melakukan pembelian.");
+    toast(method === "kredit" ? "Pengajuan kredit berhasil dikirim." : "Pembelian tunai berhasil.");
+    onClose();
   }
 
-  const payBtn = (on: boolean) =>
-    `rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${on ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950" : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"}`;
-
   return (
-    <ModalShell onClose={() => onClose()} wide>
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-black dark:text-white">Checkout Pembelian</h3>
-          <p className="text-xs text-gray-500 dark:text-zinc-400">{c.title} — {fmtRp(price)}</p>
-        </div>
-        <button onClick={() => onClose()} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 dark:border-zinc-800 dark:hover:bg-zinc-800">
+    <ModalShell onClose={onClose} wide>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-bold text-black dark:text-white">Pembelian Mobil</h3>
+        <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
           ✕
         </button>
       </div>
+      <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <p className="font-bold text-black dark:text-white">{car.title}</p>
+        <p className="mt-0.5 text-lg font-semibold text-black dark:text-white">{fmtRp(car.price)}</p>
+      </div>
       <FieldError msg={err} />
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelCls}>Nama pembeli *</label>
-            <input name="name" placeholder="Nama lengkap" className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>No. HP *</label>
-            <input name="phone" type="tel" inputMode="tel" placeholder="08xx" className={inputCls} />
-          </div>
-        </div>
+      <div className="space-y-4">
         <div>
-          <label className={labelCls}>Metode pembayaran</label>
+          <label className={labelCls}>Metode Pembayaran</label>
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => setMethod("tunai")} className={payBtn(method === "tunai")}>
-              Tunai
+            <button
+              type="button"
+              onClick={() => setMethod("tunai")}
+              className={`rounded-lg border py-2.5 text-sm font-semibold transition active:scale-97 ${
+                method === "tunai"
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                  : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+              }`}
+            >
+              Tunai (Cash)
             </button>
-            <button type="button" onClick={() => setMethod("kredit")} className={payBtn(method === "kredit")}>
-              Kredit / Cicilan
+            <button
+              type="button"
+              onClick={() => setMethod("kredit")}
+              className={`rounded-lg border py-2.5 text-sm font-semibold transition active:scale-97 ${
+                method === "kredit"
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                  : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+              }`}
+            >
+              Kredit (Cicilan)
             </button>
           </div>
         </div>
-        {method === "kredit" ? (
-          <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-zinc-800">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>DP (Rp)</label>
-                <input type="number" min={0} value={dp} onChange={(e) => setDp(e.target.value)} placeholder="cth: 100000000" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Bunga / tahun (%)</label>
-                <input type="number" min={0} max={30} step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} className={inputCls} />
+
+        {method === "kredit" && (
+          <div className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-zinc-800">
+            <div>
+              <label className={labelCls}>Uang Muka (DP): {dpPct}% ({fmtRp(calc.dp)})</label>
+              <div className="flex gap-2">
+                {[20, 30, 40, 50].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setDpPct(p)}
+                    className={`flex-1 rounded-lg border py-1.5 text-xs font-semibold transition active:scale-97 ${
+                      dpPct === p
+                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                        : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+                    }`}
+                  >
+                    {p}%
+                  </button>
+                ))}
               </div>
             </div>
             <div>
-              <label className={labelCls}>Tenor</label>
-              <div className="flex flex-wrap gap-2">
+              <label className={labelCls}>Tenor (Bulan)</label>
+              <div className="grid grid-cols-4 gap-2">
                 {TENORS.map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setTenor(t)}
-                    className={`rounded-full border px-4 py-1.5 text-xs font-medium transition ${tenor === t ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950" : "border-gray-300 text-gray-600 hover:text-black dark:border-zinc-700 dark:text-zinc-300 dark:hover:text-white"}`}
+                    className={`rounded-lg border py-1.5 text-xs font-semibold transition active:scale-97 ${
+                      tenor === t
+                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                        : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+                    }`}
                   >
                     {t} bln
                   </button>
                 ))}
               </div>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <p className="mb-1 text-xs text-gray-500 dark:text-zinc-400">Estimasi cicilan per bulan</p>
-              <p className="text-xl font-bold text-black dark:text-white">{fmtRp(sim.monthly)}</p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                Pinjaman {fmtRp(sim.principal)} • tenor {tenor} bln • bunga {rateNum}%/thn • total bayar {fmtRp(sim.total + dpNum)}
-              </p>
+            <div className="rounded-lg bg-gray-100 p-3 text-sm dark:bg-zinc-900">
+              <p className="font-semibold text-black dark:text-white">Estimasi Cicilan:</p>
+              <p className="mt-1 text-lg font-bold text-black dark:text-white">{fmtRp(calc.installment)} / bulan</p>
+              <p className="text-xs text-gray-500 dark:text-zinc-400">Bunga 8% / tahun • Pokok hutang {fmtRp(calc.principal)}</p>
             </div>
           </div>
-        ) : null}
-        <div className="break-words rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
-          <b className="text-black dark:text-white">{c.title}</b> — harga {fmtRp(price)}
-          {method === "kredit" ? `, DP ${fmtRp(dpNum)}, sisa ${fmtRp(sim.principal)}, cicilan ${fmtRp(sim.monthly)}/bln × ${tenor} bln.` : ", bayar tunai penuh."}
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Nama Lengkap *</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Budi Santoso" className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>No. WhatsApp / Telepon *</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="cth: 081234567890" className={inputCls} />
+          </div>
         </div>
-        <div className="flex gap-3 pt-1">
-          <button type="button" onClick={() => onClose()} className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">
+
+        <div className="flex gap-3 pt-2">
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">
             Batal
           </button>
-          <button type="submit" className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200">
-            Bayar Sekarang
+          <button type="button" onClick={onCheckout} className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200">
+            {method === "kredit" ? "Ajukan Kredit" : "Konfirmasi Pembelian"}
           </button>
         </div>
-      </form>
+      </div>
     </ModalShell>
   );
 }

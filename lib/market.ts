@@ -1,8 +1,9 @@
-export function checkoutCalc(price: number, dp: number, tenor: number, rate: number) {
+export function checkoutCalc(price: number, dpPct: number, tenor: number, rate: number) {
+  const dp = Math.round((price * dpPct) / 100);
   const principal = Math.max(0, price - dp);
   const total = principal * (1 + (rate / 100) * (tenor / 12));
-  const monthly = tenor > 0 ? Math.round(total / tenor) : 0;
-  return { principal, total: Math.round(total), monthly };
+  const installment = tenor > 0 ? Math.round(total / tenor) : 0;
+  return { dp, principal, total: Math.round(total), installment };
 }
 
 export const TENORS = [12, 24, 36, 48, 60];
