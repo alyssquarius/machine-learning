@@ -71,7 +71,7 @@ export function CarCard({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="car-card-hover animate-fade-in overflow-hidden rounded-xl border border-gray-200 bg-white transition dark:border-zinc-800 dark:bg-zinc-900">
       <div className="relative cursor-pointer" onClick={() => onDetail?.(car.id)}>
         <CarImage car={car} />
         <button

@@ -44,16 +44,55 @@ html.dark .text-gray-600 {
   color: #a1a1aa !important;
 }
 
+/* ---------- ANIMASI PROFESIONAL & INTERAKSI ---------- */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-zoom-in {
+  animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Efek klik tombol profesional (tactile press feedback) */
+button:not(:disabled), a:not([role="link"]) {
+  transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+button:not(:disabled):active, .btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Efek card mobil hover */
+.car-card-hover {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.car-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.12);
+}
+
 /* Utilitas Tailwind kustom */
 @layer utilities {
   .nav-item {
     border-left: 3px solid transparent;
     color: rgb(75 85 99);
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .nav-item:hover {
     background-color: rgb(243 244 246);
     color: rgb(17 24 39);
+    transform: translateX(2px);
   }
   .dark .nav-item {
     color: rgb(161 161 170);
@@ -67,6 +106,7 @@ html.dark .text-gray-600 {
     background-color: rgb(243 244 246);
     border-left: 3px solid rgb(0 0 0);
     color: rgb(17 24 39);
+    transition: all 0.2s ease;
   }
   .dark .nav-active {
     background-color: rgb(39 39 42);
