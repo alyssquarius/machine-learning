@@ -2,6 +2,48 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Konfigurasi Tema Warna Otomatis untuk Tailwind CSS v4 */
+@theme {
+  --color-white: #ffffff;
+  --color-black: #09090b;
+}
+
+/* Dark mode otomatis untuk background dan teks dasar */
+html.dark {
+  background-color: #121216;
+  color: #f4f4f5;
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #121216;
+  color: #f4f4f5;
+}
+
+/* Override kartu dan container putih menjadi gelap di mode dark */
+html.dark .bg-white {
+  background-color: #1c1c22 !important;
+  border-color: #27272a !important;
+  color: #f4f4f5 !important;
+}
+
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+  border-color: #27272a !important;
+}
+
+html.dark .text-black,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700 {
+  color: #f4f4f5 !important;
+}
+
+html.dark .text-gray-500,
+html.dark .text-gray-600 {
+  color: #a1a1aa !important;
+}
+
 /* Utilitas Tailwind kustom */
 @layer utilities {
   .nav-item {
@@ -30,13 +72,6 @@
     background-color: rgb(39 39 42);
     border-left-color: rgb(255 255 255);
     color: rgb(255 255 255);
-  }
-}
-
-/* Dark mode configuration untuk Tailwind v4 */
-@layer base {
-  html.dark {
-    color-scheme: dark;
   }
 }
 
