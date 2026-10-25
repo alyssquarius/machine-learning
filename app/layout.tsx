@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StoreProvider } from "@/components/store-provider";
 import { ToastProvider } from "@/components/toast";
+import { RoleProvider } from "@/components/role-provider";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -36,7 +37,9 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <StoreProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <RoleProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </RoleProvider>
           </StoreProvider>
         </ThemeProvider>
       </body>

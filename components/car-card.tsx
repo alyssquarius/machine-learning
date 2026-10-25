@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { useStore, imageFor, type Car } from "@/components/store-provider";
 import { useToast } from "@/components/toast";
+import { useRole } from "@/components/role-provider";
 import { fmtRp, timeAgo } from "@/lib/format";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
 
@@ -69,10 +71,21 @@ export function CarCard({
   onBuy?: (id: string) => void;
   onOffer?: (id: string) => void;
 }) {
+  const router = useRouter();
+  const { role } = useRole();
   const store = useStore();
   const { toast } = useToast();
   const best = store.bestOffer(car.id);
   const isFav = store.isFav(car.id);
+
+  function requireAuth(actionName: string): boolean {
+    if (role === "guest") {
+      toast(`Silakan masuk atau daftar akun untuk ${actionName}.`);
+      router.push("/login");
+      return false;
+    }
+    return true;
+  }
 
   function act(fn: () => void, msg: string) {
     fn();
@@ -90,6 +103,7 @@ export function CarCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (!requireAuth("menyimpan mobil ke favorit")) return;
               act(
                 () => store.toggleFav(car.id),
                 isFav ? "Dihapus dari favorit." : "Disimpan ke favorit.",
@@ -258,7 +272,10 @@ export function CarCard({
             <>
               {car.status === "running" ? (
                 <button
-                  onClick={() => onBuy?.(car.id)}
+                  onClick={() => {
+                    if (!requireAuth("membeli mobil")) return;
+                    onBuy?.(car.id);
+                  }}
                   className="flex-1 rounded-lg bg-black py-2 text-xs font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
                 >
                   Beli Sekarang
@@ -275,7 +292,10 @@ export function CarCard({
         </div>
         {!sell && car.status === "running" ? (
           <button
-            onClick={() => onOffer?.(car.id)}
+            onClick={() => {
+              if (!requireAuth("mengajukan penawaran")) return;
+              onOffer?.(car.id);
+            }}
             className="mt-2 w-full rounded-lg border border-gray-300 py-2 text-xs font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
           >
             Ajukan Tawaran

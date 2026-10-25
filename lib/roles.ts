@@ -134,7 +134,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission> = {
     canContactSeller: true, // Bisa kontak penjual via WhatsApp
     canReceiveOffers: false,
     canSendMessages: true,
-    canAccessDashboard: true,
+    canAccessDashboard: false, // Buyer fokus belanja di katalog, tidak butuh dashboard penjualan
     canChangeSettings: false,
   },
 

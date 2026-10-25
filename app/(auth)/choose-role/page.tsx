@@ -82,10 +82,11 @@ export default function ChooseRolePage() {
         // Table belum ada, lanjut saja
       }
 
-      router.replace("/dashboard");
+      const target = role === "dealer" ? "/dashboard" : "/beli";
+      router.replace(target);
       router.refresh();
     } catch {
-      router.replace("/dashboard");
+      router.replace("/beli");
     }
   }
 

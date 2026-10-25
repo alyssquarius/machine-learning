@@ -13,13 +13,14 @@ import { useStore } from "@/components/store-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Role } from "@/lib/roles";
+import { useRole } from "@/components/role-provider";
 
 const ALL_NAV = [
   {
     href: "/dashboard",
     label: "Dashboard",
     icon: "home",
-    roles: ["admin", "dealer", "buyer", "guest"],
+    roles: ["admin", "dealer"],
   },
   {
     href: "/jual",
@@ -57,94 +58,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const store = useStore();
-  const [user, setUser] = React.useState<User | null>(null);
-  const [role, setRole] = React.useState<Role>("guest");
-  const [authChecked, setAuthChecked] = React.useState(false);
+  const { user, role, authChecked, logout } = useRole();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [userOpen, setUserOpen] = React.useState(false);
-
-  // Auth check & fetch role
-  React.useEffect(() => {
-    let cancelled = false;
-    const supabase = createClient();
-
-    async function fetchUserRole(
-      userId: string,
-      email?: string,
-    ): Promise<Role> {
-      if (email === "admin@autobuycars.com") {
-        return "admin";
-      }
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", userId)
-          .single();
-
-        if (
-          profile?.role &&
-          ["admin", "dealer", "buyer"].includes(profile.role)
-        ) {
-          return profile.role as Role;
-        }
-      } catch {
-        /* abaikan */
-      }
-      return "buyer";
-    }
-
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (cancelled) return;
-        const session = data?.session;
-        if (session?.user) {
-          setUser(session.user);
-          store.setOwner(session.user.id);
-          const r = await fetchUserRole(session.user.id, session.user.email);
-          if (!cancelled) setRole(r);
-        } else {
-          setUser(null);
-          setRole("guest");
-        }
-      } catch {
-        if (!cancelled) {
-          setUser(null);
-          setRole("guest");
-        }
-      } finally {
-        if (!cancelled) {
-          setAuthChecked(true);
-        }
-      }
-    })();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (cancelled) return;
-      if (event === "SIGNED_OUT") {
-        setUser(null);
-        setRole("guest");
-        store.setOwner("");
-        router.replace("/login");
-      } else if (event === "SIGNED_IN" && session?.user) {
-        setUser(session.user);
-        store.setOwner(session.user.id);
-        const r = await fetchUserRole(session.user.id, session.user.email);
-        if (!cancelled) setRole(r);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      subscription.unsubscribe();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Restore collapse desktop
   React.useEffect(() => {
@@ -186,20 +104,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function logout() {
-    try {
-      await createClient().auth.signOut();
-      store.setOwner("");
-    } catch {
-      /* abaikan */
-    } finally {
-      setUser(null);
-      setRole("guest");
-      router.replace("/login");
-      router.refresh();
-    }
-  }
-
   const isGuest = !user;
   const displayName = isGuest
     ? "Pengunjung"
@@ -234,9 +138,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const defaultHref = ["admin", "dealer"].includes(role) ? "/dashboard" : "/beli";
   const activeHref =
     NAV.find((n) => pathname === n.href || pathname.startsWith(n.href + "/"))
-      ?.href || "/dashboard";
+      ?.href || defaultHref;
 
   return (
     <div className={`flex min-h-screen ${authChecked ? "" : "invisible"}`}>

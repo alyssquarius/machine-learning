@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { ActivityBars, Donut, KpiGrid, TrendChart } from "@/components/dashboard-widgets";
 import { HistText } from "@/components/hist-text";
 import { useStore } from "@/components/store-provider";
+import { useRole } from "@/components/role-provider";
 import { createClient } from "@/lib/supabase/client";
 import { fmtRp, timeAgo } from "@/lib/format";
 import { STATUS_LABEL } from "@/components/car-card";
@@ -257,9 +259,28 @@ function RecentActivity() {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { role, permissions, authChecked } = useRole();
   const store = useStore();
   const hidden = store.getHiddenWidgets();
   const isHidden = (id: string) => hidden.includes(id);
+
+  React.useEffect(() => {
+    if (authChecked && !permissions.canAccessDashboard) {
+      router.replace("/beli");
+    }
+  }, [authChecked, permissions.canAccessDashboard, router]);
+
+  if (!authChecked || !permissions.canAccessDashboard) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black dark:border-zinc-700 dark:border-t-white" />
+          <p className="mt-3 text-xs text-gray-500 dark:text-zinc-400">Memuat katalog mobil...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

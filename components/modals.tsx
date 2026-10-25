@@ -1,10 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { CATEGORIES, CITY_GROUPS, INDONESIA_CITIES } from "@/lib/cities";
 import { useStore, type Car } from "@/components/store-provider";
 import { useToast } from "@/components/toast";
+import { useRole } from "@/components/role-provider";
 import { fmtRp, timeAgo } from "@/lib/format";
 import { checkoutCalc, TENORS } from "@/lib/market";
 import { STATUS_LABEL } from "@/components/car-card";
@@ -231,9 +233,21 @@ export function DetailModal({
   onBuy: (id: string) => void;
   onOffer: (id: string) => void;
 }) {
+  const router = useRouter();
+  const { role } = useRole();
   const store = useStore();
   const { toast } = useToast();
   const car = store.get(carId);
+
+  function requireAuth(actionName: string): boolean {
+    if (role === "guest") {
+      toast(`Silakan masuk atau daftar akun untuk ${actionName}.`);
+      router.push("/login");
+      return false;
+    }
+    return true;
+  }
+
   if (!car) return null;
   const c = car;
   const on = store.isFav(c.id);
@@ -298,6 +312,7 @@ export function DetailModal({
           {c.status === "running" ? (
             <button
               onClick={() => {
+                if (!requireAuth("membeli mobil")) return;
                 onClose();
                 onBuy(c.id);
               }}
@@ -308,6 +323,7 @@ export function DetailModal({
           ) : null}
           <button
             onClick={() => {
+              if (!requireAuth("menyimpan mobil ke favorit")) return;
               store.toggleFav(c.id);
               toast(on ? "Dihapus dari favorit." : "Ditambahkan ke favorit.");
             }}
@@ -326,6 +342,7 @@ export function DetailModal({
         {c.status !== "done" ? (
           <button
             onClick={() => {
+              if (!requireAuth("mengajukan penawaran")) return;
               onClose();
               onOffer(c.id);
             }}
@@ -355,7 +372,7 @@ export function DetailModal({
                       {o.note || "—"} • {timeAgo(o.ts)} • {o.status}
                     </p>
                   </div>
-                  {o.status === "pending" ? (
+                  {o.status === "pending" && (role === "admin" || role === "dealer") ? (
                     <div className="flex shrink-0 gap-1.5">
                       <button
                         onClick={() => {
