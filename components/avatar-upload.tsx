@@ -12,8 +12,40 @@ interface AvatarUploadProps {
   size?: number;
 }
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB input (akan di-compress)
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const AVATAR_PX = 256; // resize ke 256x256
+
+/**
+ * Resize & compress gambar di client menggunakan Canvas API.
+ * Output: data:image/jpeg;base64,... (biasanya ~10-30 KB)
+ */
+function resizeImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Crop ke persegi dari tengah
+      const min = Math.min(img.width, img.height);
+      const sx = (img.width - min) / 2;
+      const sy = (img.height - min) / 2;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = AVATAR_PX;
+      canvas.height = AVATAR_PX;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas not supported"));
+        return;
+      }
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, AVATAR_PX, AVATAR_PX);
+      // Compress sebagai JPEG quality 0.8
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      resolve(dataUrl);
+    };
+    img.onerror = () => reject(new Error("Gagal membaca gambar"));
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 export function AvatarUpload({
   userId,
@@ -38,65 +70,43 @@ export function AvatarUpload({
 
     // Validasi tipe
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast("Format file harus JPG, PNG, atau WebP.");
+      toast("Format file harus JPG, PNG, WebP, atau GIF.");
       return;
     }
 
     // Validasi ukuran
     if (file.size > MAX_FILE_SIZE) {
-      toast("Ukuran file maksimal 2 MB.");
+      toast("Ukuran file maksimal 5 MB.");
       return;
     }
 
     setUploading(true);
     try {
+      // Resize & compress di client
+      const dataUrl = await resizeImage(file);
+
+      // Simpan data URL ke tabel profiles
       const supabase = createClient();
-      const ext = file.name.split(".").pop() || "jpg";
-      const filePath = `${userId}/avatar.${ext}`;
-
-      // Upload ke Supabase Storage bucket "avatars"
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.warn("Upload error:", uploadError.message);
-        toast("Gagal upload foto. Coba lagi.");
-        return;
-      }
-
-      // Dapatkan public URL
-      const { data: publicData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      // Tambah cache buster agar browser muat ulang
-      const publicUrl = `${publicData.publicUrl}?t=${Date.now()}`;
-
-      // Simpan ke profiles
       const { error: updateError } = await supabase
         .from("profiles")
-        .upsert({
-          id: userId,
-          avatar_url: publicUrl,
+        .update({
+          avatar_url: dataUrl,
           updated_at: new Date().toISOString(),
-        });
+        })
+        .eq("id", userId);
 
       if (updateError) {
         console.warn("Update profile error:", updateError.message);
-        toast("Foto terupload tapi gagal simpan ke profil.");
+        toast("Gagal menyimpan foto profil. Coba lagi.");
         return;
       }
 
-      setPreview(publicUrl);
-      onUploaded(publicUrl);
+      setPreview(dataUrl);
+      onUploaded(dataUrl);
       toast("Foto profil berhasil diperbarui.");
     } catch (err) {
       console.error("Avatar upload failed:", err);
-      toast("Terjadi kesalahan saat upload foto.");
+      toast("Terjadi kesalahan saat memproses foto.");
     } finally {
       setUploading(false);
       // Reset input agar bisa pilih file yang sama
@@ -109,17 +119,15 @@ export function AvatarUpload({
     setUploading(true);
     try {
       const supabase = createClient();
-
-      // Hapus file dari storage (coba semua ekstensi umum)
-      const exts = ["jpg", "jpeg", "png", "webp"];
-      const paths = exts.map((ext) => `${userId}/avatar.${ext}`);
-      await supabase.storage.from("avatars").remove(paths);
-
-      // Hapus dari profiles
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({ avatar_url: null, updated_at: new Date().toISOString() })
         .eq("id", userId);
+
+      if (error) {
+        toast("Gagal menghapus foto.");
+        return;
+      }
 
       setPreview("");
       onUploaded("");
@@ -207,14 +215,14 @@ export function AvatarUpload({
           </button>
         )}
         <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-          JPG, PNG, atau WebP. Maks 2 MB.
+          JPG, PNG, WebP, atau GIF. Maks 5 MB.
         </p>
       </div>
 
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/gif"
         onChange={handleFile}
         className="hidden"
       />
