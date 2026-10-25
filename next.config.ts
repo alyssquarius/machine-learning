@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "*.imgur.com" },
       { protocol: "https", hostname: "i.imgur.com" },
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "ockjqpieaelthsebbxqx.supabase.co" },
     ],
     // Allow all domains (untuk development/demo)
     // Di production, sebaiknya whitelist domain spesifik

@@ -28,6 +28,7 @@ export default function PengaturanPage() {
   const [saved, setSaved] = React.useState(false);
   const [user, setUser] = React.useState({ name: "User", email: "user@example.com" });
   const [displayName, setDisplayName] = React.useState("");
+  const [avatarUrl, setAvatarUrl] = React.useState("");
   const [target, setTarget] = React.useState("10");
   const dnTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const tgTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -37,7 +38,7 @@ export default function PengaturanPage() {
     setTarget(String(store.getTarget()));
     createClient()
       .auth.getUser()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         const u = data?.user;
         if (!u) return;
         const dn = store.getDisplayName();
@@ -45,6 +46,20 @@ export default function PengaturanPage() {
           name: dn || String(u.user_metadata?.full_name || u.email?.split("@")[0] || "User"),
           email: u.email || "",
         });
+        // Fetch avatar dari profiles
+        try {
+          const supabase = createClient();
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("avatar_url")
+            .eq("id", u.id)
+            .single();
+          setAvatarUrl(
+            profile?.avatar_url || u.user_metadata?.avatar_url || ""
+          );
+        } catch {
+          setAvatarUrl(u.user_metadata?.avatar_url || "");
+        }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.ready]);
@@ -164,8 +179,14 @@ export default function PengaturanPage() {
             Nama sapaan di banner. Tersimpan otomatis saat diketik.
           </p>
           <div className="mb-4 flex items-center gap-3 rounded-lg border border-gray-200 p-4 dark:border-zinc-800">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-black text-lg font-bold text-white dark:bg-white dark:text-zinc-950">
-              {avatarInitial}
+            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-black dark:bg-white">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-lg font-bold text-white dark:text-zinc-950">
+                  {avatarInitial}
+                </span>
+              )}
             </div>
             <div className="min-w-0">
               <p className="truncate font-semibold text-black dark:text-white">{user.name}</p>

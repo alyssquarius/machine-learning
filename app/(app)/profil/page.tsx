@@ -7,20 +7,36 @@ import type { User } from "@supabase/supabase-js";
 import { useToast } from "@/components/toast";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
 import { config } from "@/lib/config";
+import { AvatarUpload } from "@/components/avatar-upload";
 
 export default function ProfilPage() {
   const store = useStore();
   const { toast } = useToast();
   const [user, setUser] = React.useState<User | null>(null);
   const [displayName, setDisplayName] = React.useState("");
+  const [avatarUrl, setAvatarUrl] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (data.user) {
         setUser(data.user);
         setDisplayName(store.getDisplayName() || data.user.user_metadata?.full_name || "");
+
+        // Ambil avatar_url dari profiles (prioritas), fallback ke user_metadata
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("avatar_url")
+            .eq("id", data.user.id)
+            .single();
+          setAvatarUrl(
+            profile?.avatar_url || data.user.user_metadata?.avatar_url || ""
+          );
+        } catch {
+          setAvatarUrl(data.user.user_metadata?.avatar_url || "");
+        }
       }
     });
   }, [store]);
@@ -40,7 +56,6 @@ export default function ProfilPage() {
   }
 
   const email = user?.email || "";
-  const avatarUrl = user?.user_metadata?.avatar_url || "";
   const initial = (displayName || "U").trim().charAt(0).toUpperCase();
 
   return (
@@ -55,17 +70,33 @@ export default function ProfilPage() {
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="mb-6 flex items-center gap-4">
-          <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-black dark:bg-white">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-            ) : (
+        {/* Foto Profil */}
+        <div className="mb-6">
+          <label className="mb-3 block text-sm font-medium text-gray-700 dark:text-zinc-300">
+            Foto Profil
+          </label>
+          {user ? (
+            <AvatarUpload
+              userId={user.id}
+              currentUrl={avatarUrl}
+              fallbackInitial={initial}
+              onUploaded={(url) => setAvatarUrl(url)}
+              size={80}
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-black dark:bg-white">
               <span className="text-2xl font-bold text-white dark:text-zinc-950">{initial}</span>
-            )}
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-black dark:text-white">{displayName || "User"}</h3>
-            <p className="text-sm text-gray-500 dark:text-zinc-400">{email}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Info user */}
+        <div className="mb-6 rounded-lg border border-gray-200 p-4 dark:border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-black dark:text-white">{displayName || "User"}</h3>
+              <p className="text-sm text-gray-500 dark:text-zinc-400">{email}</p>
+            </div>
           </div>
         </div>
 

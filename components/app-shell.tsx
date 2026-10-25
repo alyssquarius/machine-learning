@@ -63,6 +63,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [userOpen, setUserOpen] = React.useState(false);
+  const [profileAvatarUrl, setProfileAvatarUrl] = React.useState("");
+
+  // Fetch avatar_url dari profiles
+  React.useEffect(() => {
+    if (!user) {
+      setProfileAvatarUrl("");
+      return;
+    }
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", user.id)
+          .single();
+        if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url);
+      } catch {
+        /* abaikan */
+      }
+    })();
+  }, [user]);
 
   // Restore collapse desktop
   React.useEffect(() => {
@@ -112,7 +134,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
       );
   const email = user?.email || "";
-  const avatarUrl = String(user?.user_metadata?.avatar_url || "");
+  const avatarUrl = profileAvatarUrl || String(user?.user_metadata?.avatar_url || "");
   const initial = isGuest
     ? "G"
     : (displayName || "U").trim().charAt(0).toUpperCase() || "U";
