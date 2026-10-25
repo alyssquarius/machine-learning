@@ -46,12 +46,12 @@ export default function ChooseRolePage() {
         return;
       }
 
-      // Coba simpan ke profiles (graceful jika table belum ada)
+      // Simpan role ke profiles (dealer atau buyer)
       try {
         await supabase.from("profiles").upsert({
           id: user.id,
           role,
-          display_name: user.user_metadata?.full_name || "",
+          display_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "",
           verified: role === "buyer",
           updated_at: new Date().toISOString(),
         });
@@ -60,6 +60,7 @@ export default function ChooseRolePage() {
       }
 
       router.replace("/dashboard");
+      router.refresh();
     } catch {
       router.replace("/dashboard");
     }

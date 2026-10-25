@@ -147,23 +147,13 @@ export default function BeliClient() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-black sm:text-3xl dark:text-white">
-            Beli Mobil
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-            {list.length} mobil tersedia untuk dibeli.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/jual"
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
-          >
-            Jual Mobilmu
-          </Link>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-black sm:text-3xl dark:text-white">
+          Beli Mobil
+        </h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
+          {list.length} mobil tersedia untuk dibeli.
+        </p>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">

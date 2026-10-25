@@ -126,10 +126,12 @@ export default function PengaturanPage() {
   async function logout() {
     try {
       await createClient().auth.signOut();
+      store.setOwner("");
     } catch {
       /* abaikan */
     } finally {
       router.replace("/login");
+      router.refresh();
     }
   }
 

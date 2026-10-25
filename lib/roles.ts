@@ -80,7 +80,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission> = {
     canChangeSettings: true,
   },
 
-  // DEALER - Seller yang terverifikasi, bisa jual mobil
+  // DEALER - Seller yang terverifikasi, bisa jual mobil & beli mobil
   dealer: {
     canCreateListing: true,
     canEditOwnListing: true,
@@ -89,10 +89,10 @@ export const ROLE_PERMISSIONS: Record<Role, Permission> = {
     canDeleteAnyListing: false,
     canApproveListing: false,
     canRejectListing: false,
-    canMakeOffer: false, // Dealer fokus jual, bukan beli
+    canMakeOffer: true, // Dealer juga bisa menawar mobil
     canAcceptOffer: true, // Bisa terima penawaran untuk listing sendiri
     canRejectOffer: true,
-    canBuyCar: false,
+    canBuyCar: true, // Dealer bisa beli mobil
     canViewOwnTransactions: true,
     canViewAllTransactions: false,
     canViewUsers: false,
@@ -197,10 +197,11 @@ export function canPerformAction(
   const perms = getPermissions(userRole);
 
   // Special case: owner check
-  if (options?.isOwner) {
-    if (action === "canEditOwnListing" || action === "canDeleteOwnListing") {
-      return perms[action];
+  if (action === "canEditOwnListing" || action === "canDeleteOwnListing") {
+    if (options?.isOwner === false && !perms.canEditAnyListing) {
+      return false;
     }
+    return perms[action];
   }
 
   // Special case: role hierarchy (admin > dealer > buyer > guest)

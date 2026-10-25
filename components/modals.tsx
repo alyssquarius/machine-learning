@@ -8,6 +8,7 @@ import { useToast } from "@/components/toast";
 import { fmtRp, timeAgo } from "@/lib/format";
 import { checkoutCalc, TENORS } from "@/lib/market";
 import { STATUS_LABEL } from "@/components/car-card";
+import { WhatsAppContact } from "@/components/whatsapp-contact";
 
 function ModalShell({
   onClose,
@@ -333,6 +334,15 @@ export function DetailModal({
             Ajukan Tawaran
           </button>
         ) : null}
+        <div className="mt-2">
+          <WhatsAppContact
+            phoneNumber={c.sellerPhone || "6281234567890"}
+            message={`Halo, saya tertarik dengan mobil ${c.title} seharga ${fmtRp(c.price)} di AutoBuyCars.`}
+            className="w-full justify-center py-2.5 text-sm font-semibold"
+          >
+            Hubungi Penjual via WhatsApp
+          </WhatsAppContact>
+        </div>
         {offers.length > 0 ? (
           <div className="mt-4">
             <h4 className="mb-2 text-sm font-bold text-black dark:text-white">Tawaran ({offers.length})</h4>
