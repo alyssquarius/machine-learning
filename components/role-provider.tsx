@@ -19,6 +19,7 @@ export interface RoleContextType {
   authChecked: boolean;
   logout: () => Promise<void>;
   hasPermission: (permission: keyof Permission) => boolean;
+  refreshRole: () => Promise<void>;
 }
 
 const RoleContext = React.createContext<RoleContextType | null>(null);
@@ -141,6 +142,21 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function refreshRole() {
+    try {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      const u = data?.user;
+      if (u) {
+        setUser(u);
+        const r = await fetchUserRole(u.id, u.email);
+        setRole(r);
+      }
+    } catch {
+      /* abaikan */
+    }
+  }
+
   const permissions = React.useMemo(() => getPermissions(role), [role]);
 
   const value = React.useMemo<RoleContextType>(
@@ -151,6 +167,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       authChecked,
       logout,
       hasPermission: (perm) => checkPermission(role, perm),
+      refreshRole,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [user, role, permissions, authChecked],

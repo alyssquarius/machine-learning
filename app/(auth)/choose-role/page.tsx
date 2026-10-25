@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { AuthShell } from "@/components/auth-shell";
 import { createClient } from "@/lib/supabase/client";
+import { useRole } from "@/components/role-provider";
 
 const ROLES = [
   {
@@ -50,6 +51,7 @@ const ROLES = [
 
 export default function ChooseRolePage() {
   const router = useRouter();
+  const { refreshRole } = useRole();
   const [selected, setSelected] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
 
@@ -91,6 +93,9 @@ export default function ChooseRolePage() {
       } catch {
         /* localStorage tidak tersedia */
       }
+
+      // Update role di RoleProvider SEBELUM navigate
+      await refreshRole();
 
       const target = role === "dealer" ? "/dashboard" : "/beli";
       router.replace(target);
