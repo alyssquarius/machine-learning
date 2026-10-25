@@ -31,9 +31,11 @@ export async function GET(request: Request) {
             return NextResponse.redirect(`${origin}/choose-role`);
           }
 
-          if (profile.role === "buyer") {
-            return NextResponse.redirect(`${origin}/beli`);
+          // Redirect sesuai role
+          if (["admin", "dealer"].includes(profile.role)) {
+            return NextResponse.redirect(`${origin}/dashboard`);
           }
+          return NextResponse.redirect(`${origin}/beli`);
         } catch {
           // Jika tabel profiles belum ada di database, arahkan ke choose-role
           return NextResponse.redirect(`${origin}/choose-role`);
@@ -42,5 +44,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/beli`);
+  return NextResponse.redirect(`${origin}/choose-role`);
 }

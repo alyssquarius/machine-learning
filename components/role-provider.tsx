@@ -43,7 +43,22 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (profile?.role && ["admin", "dealer", "buyer"].includes(profile.role)) {
+        // Sync ke localStorage
+        try {
+          localStorage.setItem(`abc_role_${userId}`, profile.role);
+        } catch {
+          /* abaikan */
+        }
         return profile.role as Role;
+      }
+    } catch {
+      /* abaikan */
+    }
+    // Fallback: baca dari localStorage (diset oleh choose-role)
+    try {
+      const cached = localStorage.getItem(`abc_role_${userId}`);
+      if (cached && ["admin", "dealer", "buyer"].includes(cached)) {
+        return cached as Role;
       }
     } catch {
       /* abaikan */
@@ -104,9 +119,18 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function logout() {
+    const userId = user?.id;
     try {
       await createClient().auth.signOut();
       store.setOwner("");
+      // Bersihkan cached role
+      if (userId) {
+        try {
+          localStorage.removeItem(`abc_role_${userId}`);
+        } catch {
+          /* abaikan */
+        }
+      }
     } catch {
       /* abaikan */
     } finally {

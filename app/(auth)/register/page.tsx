@@ -38,7 +38,20 @@ export default function RegisterPage() {
         const supabase = createClient();
         const { data } = await supabase.auth.getSession();
         if (cancelled) return;
-        if (data.session) router.replace("/dashboard");
+        if (data.session?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", data.session.user.id)
+            .single();
+          if (cancelled) return;
+          const role = profile?.role;
+          if (["admin", "dealer"].includes(role)) {
+            router.replace("/dashboard");
+          } else {
+            router.replace("/beli");
+          }
+        }
       } catch {
         // Abaikan error, form tetap tampil
       }

@@ -35,7 +35,20 @@ export default function LoginPage() {
         const supabase = createClient();
         const { data } = await supabase.auth.getSession();
         if (cancelled) return;
-        if (data.session) router.replace("/dashboard");
+        if (data.session?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", data.session.user.id)
+            .single();
+          if (cancelled) return;
+          const role = profile?.role;
+          if (["admin", "dealer"].includes(role)) {
+            router.replace("/dashboard");
+          } else {
+            router.replace("/beli");
+          }
+        }
       } catch {
         // Abaikan error, form tetap tampil
       }
@@ -63,7 +76,25 @@ export default function LoginPage() {
         setError(friendlyError(error));
         return;
       }
-      router.replace("/dashboard");
+      // Cek role user untuk redirect yang tepat
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        const role = profile?.role;
+        if (!role) {
+          router.replace("/choose-role");
+        } else if (["admin", "dealer"].includes(role)) {
+          router.replace("/dashboard");
+        } else {
+          router.replace("/beli");
+        }
+      } else {
+        router.replace("/beli");
+      }
     } finally {
       setLoading(false);
     }

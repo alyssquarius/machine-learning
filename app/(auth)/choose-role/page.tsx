@@ -70,7 +70,7 @@ export default function ChooseRolePage() {
 
       // Simpan role ke profiles (dealer atau buyer)
       try {
-        await supabase.from("profiles").upsert({
+        const { error: upsertError } = await supabase.from("profiles").upsert({
           id: user.id,
           role,
           display_name:
@@ -78,8 +78,18 @@ export default function ChooseRolePage() {
           verified: role === "buyer",
           updated_at: new Date().toISOString(),
         });
+        if (upsertError) {
+          console.warn("Upsert profile error:", upsertError.message);
+        }
+      } catch (err) {
+        console.warn("Upsert profile exception:", err);
+      }
+
+      // Simpan role ke localStorage sebagai backup
+      try {
+        localStorage.setItem(`abc_role_${user.id}`, role);
       } catch {
-        // Table belum ada, lanjut saja
+        /* localStorage tidak tersedia */
       }
 
       const target = role === "dealer" ? "/dashboard" : "/beli";
