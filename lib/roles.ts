@@ -178,7 +178,10 @@ export function getPermissions(role: Role): Permission {
 /**
  * Check if role has specific permission
  */
-export function hasPermission(role: Role, permission: keyof Permission): boolean {
+export function hasPermission(
+  role: Role,
+  permission: keyof Permission,
+): boolean {
   const perms = getPermissions(role);
   return perms[permission];
 }
@@ -192,7 +195,7 @@ export function canPerformAction(
   options?: {
     isOwner?: boolean; // Apakah user adalah pemilik resource
     targetRole?: Role; // Role dari target (untuk user management)
-  }
+  },
 ): boolean {
   const perms = getPermissions(userRole);
 

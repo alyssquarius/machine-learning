@@ -49,19 +49,41 @@ export default function BeliClient() {
   const yearTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const usedCities = React.useMemo(
-    () => [...new Set(store.all().map((c) => (c.location || "").trim()).filter((x) => x && x !== "-"))],
+    () => [
+      ...new Set(
+        store
+          .all()
+          .map((c) => (c.location || "").trim())
+          .filter((x) => x && x !== "-"),
+      ),
+    ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store.cars]
+    [store.cars],
   );
   const cats = React.useMemo(
-    () => [...new Set(store.all().map((c) => c.category).filter(Boolean))],
+    () => [
+      ...new Set(
+        store
+          .all()
+          .map((c) => c.category)
+          .filter(Boolean),
+      ),
+    ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store.cars]
+    [store.cars],
   );
   const years = React.useMemo(
-    () => [...new Set(store.all().map((c) => Number(c.year)).filter((y) => y > 0))].sort((a, b) => b - a),
+    () =>
+      [
+        ...new Set(
+          store
+            .all()
+            .map((c) => Number(c.year))
+            .filter((y) => y > 0),
+        ),
+      ].sort((a, b) => b - a),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store.cars]
+    [store.cars],
   );
 
   // Deep-link: /beli?q=...&detail=...
@@ -76,13 +98,19 @@ export default function BeliClient() {
   function onLocChange(v: string) {
     setLocRaw(v);
     if (locTimer.current) clearTimeout(locTimer.current);
-    locTimer.current = setTimeout(() => setLoc(resolveBuyLocValue(v, usedCities)), 250);
+    locTimer.current = setTimeout(
+      () => setLoc(resolveBuyLocValue(v, usedCities)),
+      250,
+    );
   }
   function onYearChange(v: string) {
     const digits = v.replace(/[^\d]/g, "").slice(0, 4);
     setYearRaw(digits);
     if (yearTimer.current) clearTimeout(yearTimer.current);
-    yearTimer.current = setTimeout(() => setYear(resolveBuyYearValue(digits)), 300);
+    yearTimer.current = setTimeout(
+      () => setYear(resolveBuyYearValue(digits)),
+      300,
+    );
   }
   function applyPreset(id: string) {
     const p = PRICE_PRESETS.find((x) => x.id === id);
@@ -114,13 +142,18 @@ export default function BeliClient() {
           c.title.toLowerCase().includes(needle) ||
           (c.location || "").toLowerCase().includes(needle) ||
           (c.category || "").toLowerCase().includes(needle) ||
-          (c.description || "").toLowerCase().includes(needle)
+          (c.description || "").toLowerCase().includes(needle),
       );
     if (cat !== "all") out = out.filter((c) => c.category === cat);
     if (loc !== "all") {
       if (loc.startsWith("q:")) {
         const lq = loc.slice(2).toLocaleLowerCase("id");
-        if (lq) out = out.filter((c) => String(c.location || "").toLocaleLowerCase("id").includes(lq));
+        if (lq)
+          out = out.filter((c) =>
+            String(c.location || "")
+              .toLocaleLowerCase("id")
+              .includes(lq),
+          );
       } else {
         out = out.filter((c) => (c.location || "-") === loc);
       }
@@ -128,7 +161,9 @@ export default function BeliClient() {
     if (year !== "all") {
       const yf = year.startsWith("q:") ? year.slice(2) : year;
       if (year.startsWith("q:"))
-        out = out.filter((c) => (yf ? String(c.year || "").includes(yf) : true));
+        out = out.filter((c) =>
+          yf ? String(c.year || "").includes(yf) : true,
+        );
       else out = out.filter((c) => String(c.year) === yf);
     }
     const minN = min === "" ? null : Number(min);
@@ -137,13 +172,20 @@ export default function BeliClient() {
     if (maxN != null) out = out.filter((c) => Number(c.price) <= maxN);
     if (sort === "cheap") out.sort((a, b) => a.price - b.price);
     else if (sort === "exp") out.sort((a, b) => b.price - a.price);
-    else if (sort === "love") out.sort((a, b) => (b.interest || 0) - (a.interest || 0));
+    else if (sort === "love")
+      out.sort((a, b) => (b.interest || 0) - (a.interest || 0));
     else out.sort((a, b) => b.createdAt - a.createdAt);
     return out;
   }, [store.cars, q, cat, sort, min, max, loc, year]);
 
   const dirty =
-    cat !== "all" || loc !== "all" || year !== "all" || min !== "" || max !== "" || q.trim() !== "" || sort !== "new";
+    cat !== "all" ||
+    loc !== "all" ||
+    year !== "all" ||
+    min !== "" ||
+    max !== "" ||
+    q.trim() !== "" ||
+    sort !== "new";
 
   return (
     <div>
@@ -159,12 +201,30 @@ export default function BeliClient() {
       <div className="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-col gap-3 md:flex-row">
           <div className="relative flex-1">
-            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+            <svg
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+                clipRule="evenodd"
+              />
             </svg>
-            <input value={q} onChange={(e) => setQ(e.target.value)} type="search" placeholder="Cari merek, model, atau kota..." className={inputCls} />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              type="search"
+              placeholder="Cari merek, model, atau kota..."
+              className={inputCls}
+            />
           </div>
-          <select value={cat} onChange={(e) => setCat(e.target.value)} className={selectCls}>
+          <select
+            value={cat}
+            onChange={(e) => setCat(e.target.value)}
+            className={selectCls}
+          >
             <option value="all">Semua kategori</option>
             {[...new Set([...CATEGORIES, ...cats])].map((c) => (
               <option key={c} value={c}>
@@ -172,7 +232,11 @@ export default function BeliClient() {
               </option>
             ))}
           </select>
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className={selectCls}>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className={selectCls}
+          >
             <option value="new">Terbaru</option>
             <option value="cheap">Termurah</option>
             <option value="exp">Termahal</option>
@@ -215,9 +279,11 @@ export default function BeliClient() {
               className={inputPlain}
             />
             <datalist id="buy-loc-list">
-              {[...new Set([...INDONESIA_CITIES, ...usedCities])].sort((a, b) => a.localeCompare(b, "id")).map((c) => (
-                <option key={c} value={c} />
-              ))}
+              {[...new Set([...INDONESIA_CITIES, ...usedCities])]
+                .sort((a, b) => a.localeCompare(b, "id"))
+                .map((c) => (
+                  <option key={c} value={c} />
+                ))}
             </datalist>
           </div>
           <div>
@@ -225,11 +291,18 @@ export default function BeliClient() {
               value={yearRaw}
               onChange={(e) => onYearChange(e.target.value)}
               onBeforeInput={(e) => {
-                if (e.nativeEvent instanceof InputEvent && e.nativeEvent.data && /[^\d]/.test(e.nativeEvent.data))
+                if (
+                  e.nativeEvent instanceof InputEvent &&
+                  e.nativeEvent.data &&
+                  /[^\d]/.test(e.nativeEvent.data)
+                )
                   e.preventDefault();
               }}
               onPaste={(e) => {
-                const t = e.clipboardData.getData("text").replace(/[^\d]/g, "").slice(0, 4);
+                const t = e.clipboardData
+                  .getData("text")
+                  .replace(/[^\d]/g, "")
+                  .slice(0, 4);
                 e.preventDefault();
                 onYearChange(t);
               }}
@@ -266,9 +339,23 @@ export default function BeliClient() {
             ))}
           </div>
           {dirty ? (
-            <button onClick={resetFilters} className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 transition hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <button
+              onClick={resetFilters}
+              className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 transition hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400"
+            >
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
               Reset filter
             </button>
@@ -295,10 +382,19 @@ export default function BeliClient() {
       )}
 
       {detailId ? (
-        <DetailModal carId={detailId} onClose={() => setDetailId(null)} onBuy={setBuyId} onOffer={setOfferId} />
+        <DetailModal
+          carId={detailId}
+          onClose={() => setDetailId(null)}
+          onBuy={setBuyId}
+          onOffer={setOfferId}
+        />
       ) : null}
-      {offerId ? <OfferModal carId={offerId} onClose={() => setOfferId(null)} /> : null}
-      {buyId ? <CheckoutModal carId={buyId} onClose={() => setBuyId(null)} /> : null}
+      {offerId ? (
+        <OfferModal carId={offerId} onClose={() => setOfferId(null)} />
+      ) : null}
+      {buyId ? (
+        <CheckoutModal carId={buyId} onClose={() => setBuyId(null)} />
+      ) : null}
     </div>
   );
 }
