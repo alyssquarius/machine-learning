@@ -13,6 +13,7 @@ import { STATUS_LABEL } from "@/components/car-card";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
 import { CarImageUpload } from "@/components/car-image-upload";
 import { ReceiptModal } from "@/components/invoice-modal";
+import { getAdminWhatsApp } from "@/lib/config";
 
 function ModalShell({
   onClose,
@@ -657,7 +658,7 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
     );
   }
 
-  const sellerPhone = c.sellerPhone || "0812-3456-7890";
+  const sellerPhone = c.sellerPhone || getAdminWhatsApp();
 
   return (
     <ModalShell onClose={onClose} wide>

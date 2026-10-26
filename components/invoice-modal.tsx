@@ -4,6 +4,7 @@ import * as React from "react";
 import { type Car, type Purchase } from "@/components/store-provider";
 import { fmtRp } from "@/lib/format";
 import { WhatsAppIcon } from "@/components/icons";
+import { getAdminWhatsApp } from "@/lib/config";
 
 interface ReceiptModalProps {
   car: Car;
@@ -26,7 +27,7 @@ export function ReceiptModal({ car, purchase, onClose }: ReceiptModalProps) {
   }, [purchase.ts]);
 
   // Siapkan nomor WhatsApp penjual (prioritas: sellerPhone di listing -> fallback admin)
-  const sellerPhone = purchase.sellerPhone || car.sellerPhone || "6281234567890";
+  const sellerPhone = purchase.sellerPhone || car.sellerPhone || getAdminWhatsApp();
 
   // Pesan WhatsApp otomatis yang rapi dan profesional untuk penjual
   const waMessage = React.useMemo(() => {

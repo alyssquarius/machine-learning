@@ -177,7 +177,7 @@ export function CarCard({
         {!sell && (
           <div className="mt-3">
             <WhatsAppContact
-              phoneNumber={car.sellerPhone || "6281234567890"}
+              phoneNumber={car.sellerPhone || undefined}
               message={`Halo, saya tertarik dengan mobil ${car.title} seharga ${fmtRp(car.price)} di AutoBuyCars.`}
               className="w-full justify-center py-2 text-xs font-semibold"
             >
