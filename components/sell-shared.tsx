@@ -24,21 +24,21 @@ export function SellToolbar({
 }) {
   return (
     <>
-      <div className="mb-6 flex flex-col gap-4">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-black sm:text-3xl dark:text-white">
+          <h1 className="text-2xl font-extrabold tracking-tight text-black sm:text-3xl dark:text-white">
             Jual Mobil
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-            Pasang listing baru dan kelola status penjualanmu.
+            Pasang listing baru dengan foto berkualitas dan kelola status inventaris Anda.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={onAdd}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
             Tambah Listing
@@ -46,23 +46,23 @@ export function SellToolbar({
           <WhatsAppContact
             phoneNumber={config.whatsapp.phoneNumber}
             message="Halo, saya ingin menambahkan listing mobil untuk dijual. Mohon bantuannya untuk proses verifikasi."
-            className="bg-gray-100 text-black hover:bg-gray-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
+            className="rounded-full bg-gray-100 px-4 py-2.5 text-sm font-medium text-black transition hover:bg-gray-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
           >
-            Hubungi untuk Listing
+            Hubungi Admin
           </WhatsAppContact>
         </div>
       </div>
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-6 inline-flex overflow-x-auto rounded-full bg-gray-100 p-1 dark:bg-zinc-800/80 max-w-full">
         {SELL_FILTERS.map((f) => {
           const on = filter === f.id;
           return (
             <button
               key={f.id}
               onClick={() => onFilter(f.id)}
-              className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
                 on
-                  ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950"
-                  : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+                  ? "bg-white text-black shadow-xs dark:bg-zinc-700 dark:text-white"
+                  : "text-gray-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
               }`}
             >
               {f.label}

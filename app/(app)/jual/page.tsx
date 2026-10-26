@@ -72,11 +72,18 @@ export default function JualPage() {
   return (
     <div>
       <SellToolbar filter={filter} onFilter={setFilter} onAdd={openAdd} />
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-3.5 sm:gap-4 lg:grid-cols-4">
         {stats.map((t) => (
-          <div key={t.label} className="rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">{t.label}</p>
-            <p className="mt-1 text-2xl font-bold text-black dark:text-white">{t.value}</p>
+          <div
+            key={t.label}
+            className="rounded-2xl border border-gray-200/80 bg-white/80 p-4 backdrop-blur-md shadow-xs transition-all kpi-card-hover dark:border-zinc-800/80 dark:bg-zinc-900/80"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              {t.label}
+            </p>
+            <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-black dark:text-white">
+              {t.value}
+            </p>
           </div>
         ))}
       </div>

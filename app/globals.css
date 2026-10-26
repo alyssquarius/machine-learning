@@ -8,11 +8,31 @@
   --color-black: #09090b;
 }
 
+/* Konfigurasi Tipografi & Halus ala Apple */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 /* Dark mode otomatis untuk background dan teks dasar */
 html.dark {
   background-color: #121216;
   color: #f4f4f5;
   color-scheme: dark;
+}
+
+/* Glassmorphism frosted glass ala Apple */
+.apple-glass {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+html.dark .apple-glass {
+  background: rgba(28, 28, 34, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 html.dark body {

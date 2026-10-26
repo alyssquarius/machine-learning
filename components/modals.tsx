@@ -11,6 +11,7 @@ import { fmtRp, timeAgo } from "@/lib/format";
 import { checkoutCalc, TENORS } from "@/lib/market";
 import { STATUS_LABEL } from "@/components/car-card";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
+import { CarImageUpload } from "@/components/car-image-upload";
 
 function ModalShell({
   onClose,
@@ -29,11 +30,11 @@ function ModalShell({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity duration-300" onClick={onClose} />
       <div
-        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-2xl animate-zoom-in dark:border-zinc-800 dark:bg-zinc-950 ${
-          wide ? "max-w-lg" : "max-w-md"
+        className={`relative max-h-[92vh] w-full overflow-y-auto rounded-3xl border border-black/10 bg-white/95 p-6 shadow-2xl backdrop-blur-xl animate-zoom-in dark:border-white/10 dark:bg-zinc-900/95 ${
+          wide ? "max-w-xl" : "max-w-md"
         }`}
       >
         {children}
@@ -71,6 +72,7 @@ export function SellModal({
   const [priceDisplay, setPriceDisplay] = React.useState(editing?.price?.toLocaleString("id-ID") || "");
   const [kmDisplay, setKmDisplay] = React.useState(editing?.km?.toLocaleString("id-ID") || "");
   const [sellerPhone, setSellerPhone] = React.useState(editing?.sellerPhone || "");
+  const [carImage, setCarImage] = React.useState(editing?.image || "");
   const maxYear = new Date().getFullYear();
 
   function formatNumber(val: string): string {
@@ -91,7 +93,7 @@ export function SellModal({
     const km = parseNumber(kmDisplay);
     const location = String(fd.get("location") || "").trim();
     const category = String(fd.get("category") || "SUV");
-    const image = String(fd.get("image") || "").trim();
+    const image = carImage.trim() || String(fd.get("image") || "").trim();
     const description = String(fd.get("description") || "").trim();
     const phone = String(fd.get("sellerPhone") || "").trim();
 
@@ -200,8 +202,7 @@ export function SellModal({
           </div>
         </div>
         <div>
-          <label className={labelCls}>URL Foto (opsional)</label>
-          <input name="image" defaultValue={editing?.image || ""} placeholder="https://..." className={inputCls} />
+          <CarImageUpload value={carImage} onChange={setCarImage} />
         </div>
         <div>
           <label className={labelCls}>Deskripsi</label>

@@ -47,7 +47,7 @@ function CarImage({ car, big = false }: { car: Car; big?: boolean }) {
       />
       <div className="absolute right-3 top-3">
         <span
-          className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold ${STATUS_CLS[car.status] || STATUS_CLS.running}`}
+          className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold backdrop-blur-md shadow-xs ${STATUS_CLS[car.status] || STATUS_CLS.running}`}
         >
           {STATUS_LABEL[car.status] || "Dijual"}
         </span>
@@ -93,7 +93,7 @@ export function CarCard({
   }
 
   return (
-    <div className="car-card-hover animate-fade-in overflow-hidden rounded-xl border border-gray-200 bg-white transition dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="car-card-hover animate-fade-in overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-xs transition dark:border-zinc-800/90 dark:bg-zinc-900">
       <div
         className="relative cursor-pointer"
         onClick={() => onDetail?.(car.id)}
