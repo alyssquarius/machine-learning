@@ -105,6 +105,73 @@ html.dark .text-gray-600 {
   }
 }
 
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes floatDelay {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(7px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.06);
+  }
+}
+
+.animate-page-enter {
+  animation: pageEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+.animate-float-slow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-delay {
+  animation: floatDelay 6s ease-in-out infinite 1s;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 6s ease-in-out infinite alternate;
+}
+
+.auth-glow-bg {
+  background: radial-gradient(circle at 18% 20%, rgba(59, 130, 246, 0.07) 0%, transparent 45%),
+              radial-gradient(circle at 82% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+}
+
+html.dark .auth-glow-bg {
+  background: radial-gradient(circle at 18% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 55%),
+              radial-gradient(circle at 82% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 60%);
+}
+
 .animate-fade-in {
   animation: fadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

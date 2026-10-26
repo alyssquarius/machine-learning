@@ -480,8 +480,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 animate-fade-in">
-          {children}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <div key={pathname} className="animate-page-enter">
+            {children}
+          </div>
           <footer className="clear-both mt-10 flex w-full flex-col gap-4 border-t border-gray-200 pb-2 pt-6 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left dark:border-zinc-800">
             <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">
               &copy; 2026 AutoBuyCars. All rights reserved.
