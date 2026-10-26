@@ -17,8 +17,14 @@ export function WhatsAppContact({
   children,
 }: WhatsAppContactProps) {
   const handleClick = () => {
-    // Format nomor telepon (hapus karakter non-digit)
-    const cleanPhone = phoneNumber.replace(/\D/g, "");
+    // Format nomor telepon (hapus karakter non-digit dan ubah awalan 0 menjadi 62)
+    let cleanPhone = phoneNumber.replace(/\D/g, "");
+    if (cleanPhone.startsWith("0")) {
+      cleanPhone = "62" + cleanPhone.slice(1);
+    }
+    if (!cleanPhone.startsWith("62") && cleanPhone.length > 0) {
+      cleanPhone = "62" + cleanPhone;
+    }
     
     // Encode pesan untuk URL
     const encodedMessage = encodeURIComponent(message);
@@ -51,7 +57,13 @@ export function WhatsAppFloatingButton({
   message = "Halo, saya tertarik dengan AutoBuyCars",
 }: WhatsAppFloatingButtonProps) {
   const handleClick = () => {
-    const cleanPhone = phoneNumber.replace(/\D/g, "");
+    let cleanPhone = phoneNumber.replace(/\D/g, "");
+    if (cleanPhone.startsWith("0")) {
+      cleanPhone = "62" + cleanPhone.slice(1);
+    }
+    if (!cleanPhone.startsWith("62") && cleanPhone.length > 0) {
+      cleanPhone = "62" + cleanPhone;
+    }
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");

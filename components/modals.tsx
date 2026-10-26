@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { CATEGORIES, CITY_GROUPS, INDONESIA_CITIES } from "@/lib/cities";
-import { useStore, type Car, type CarStatus } from "@/components/store-provider";
+import { useStore, type Car, type CarStatus, type Purchase } from "@/components/store-provider";
 import { useToast } from "@/components/toast";
 import { useRole } from "@/components/role-provider";
 import { fmtRp, timeAgo } from "@/lib/format";
@@ -12,6 +12,7 @@ import { checkoutCalc, TENORS } from "@/lib/market";
 import { STATUS_LABEL } from "@/components/car-card";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
 import { CarImageUpload } from "@/components/car-image-upload";
+import { ReceiptModal } from "@/components/invoice-modal";
 
 function ModalShell({
   onClose,
@@ -318,10 +319,16 @@ export function DetailModal({
     return true;
   }
 
+  const [showReceipt, setShowReceipt] = React.useState(false);
+
   if (!car) return null;
   const c = car;
   const on = store.isFav(c.id);
   const offers = store.offersFor(c.id);
+
+  if (showReceipt && c.purchase) {
+    return <ReceiptModal car={c} purchase={c.purchase} onClose={() => setShowReceipt(false)} />;
+  }
 
   return (
     <ModalShell onClose={onClose} wide>
@@ -354,23 +361,31 @@ export function DetailModal({
           <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-zinc-300">{c.description}</p>
         ) : null}
         {c.purchase ? (
-          <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
-            {c.purchase.method === "kredit" ? (
-              <p>
-                Dibeli kredit — DP {fmtRp(c.purchase.dp)} • {c.purchase.tenor}× {fmtRp(c.purchase.installment)}/bln • bunga {Number(c.purchase.rate) || 0}%/thn
-                {c.purchase.name ? ` • ${c.purchase.name}` : ""}
-              </p>
-            ) : c.purchase.method === "tawar" ? (
-              <p>
-                Terjual via tawaran {fmtRp(c.price)}
-                {c.purchase.name ? ` • ${c.purchase.name}` : ""}
-              </p>
-            ) : (
-              <p>
-                Dibeli tunai {fmtRp(c.price)}
-                {c.purchase.name ? ` • ${c.purchase.name}` : ""}
-              </p>
-            )}
+          <div className="mt-3 rounded-2xl border border-gray-200/90 bg-gray-50/80 p-3.5 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-800/40">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                {c.purchase.paymentType === "booking"
+                  ? "Booking Terkonfirmasi"
+                  : c.purchase.method === "kredit"
+                  ? "Pengajuan Kredit"
+                  : "Unit Terjual"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowReceipt(true)}
+                className="inline-flex items-center gap-1 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white shadow-xs transition hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+              >
+                📄 Buka Nota Resmi
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-gray-600 dark:text-zinc-300">
+              {c.purchase.method === "kredit"
+                ? `Kredit — DP ${fmtRp(c.purchase.dp)} • ${c.purchase.tenor}× ${fmtRp(c.purchase.installment)}/bln • Pemohon: ${c.purchase.name}`
+                : c.purchase.method === "tawar"
+                ? `Terjual via tawaran ${fmtRp(c.price)} • Pembeli: ${c.purchase.name}`
+                : `Dibeli tunai ${fmtRp(c.price)} • Pembeli: ${c.purchase.name}`}
+            </p>
           </div>
         ) : null}
         <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
@@ -554,23 +569,36 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
   const { toast } = useToast();
   const car = store.get(carId);
   const [method, setMethod] = React.useState<"tunai" | "kredit">("tunai");
+  const [paymentType, setPaymentType] = React.useState<"full" | "booking">("booking");
+  const [deliveryMethod, setDeliveryMethod] = React.useState<"showroom" | "home_delivery" | "cod">("showroom");
   const [dpPct, setDpPct] = React.useState(30);
   const [tenor, setTenor] = React.useState(36);
   const [name, setName] = React.useState("");
   const [phone, setPhone] = React.useState("");
+  const [address, setAddress] = React.useState("");
+  const [note, setNote] = React.useState("");
   const [err, setErr] = React.useState("");
+  const [receipt, setReceipt] = React.useState<{ car: Car; purchase: Purchase } | null>(null);
 
   if (!car) return null;
   const c = car;
 
   const calc = checkoutCalc(c.price, dpPct, tenor, 8);
+  const bookingFee = 2500000;
 
   function onCheckout() {
-    if (!name.trim()) return setErr("Nama lengkap wajib diisi.");
-    if (!phone.trim() || phone.replace(/\D/g, "").length < 9) return setErr("Nomor WhatsApp/Telepon wajib diisi.");
+    if (!name.trim()) return setErr("Nama lengkap pembeli wajib diisi.");
+    if (!phone.trim() || phone.replace(/\D/g, "").length < 9) return setErr("Nomor WhatsApp/Telepon pembeli wajib diisi (minimal 9 digit).");
+    if (deliveryMethod === "home_delivery" && !address.trim()) return setErr("Alamat pengiriman wajib diisi untuk opsi kirim ke rumah.");
     setErr("");
-    const ok = store.buy(c.id, {
+
+    const purchaseResult = store.buy(c.id, {
       method,
+      paymentType,
+      bookingFee,
+      deliveryMethod,
+      address: address.trim(),
+      note: note.trim(),
       dp: calc.dp,
       tenor,
       rate: 8,
@@ -578,55 +606,143 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
       name: name.trim(),
       phone: phone.trim(),
     });
-    if (!ok) return setErr("Gagal melakukan pembelian.");
-    toast(method === "kredit" ? "Pengajuan kredit berhasil dikirim." : "Pembelian tunai berhasil.");
-    onClose();
+
+    if (!purchaseResult) return setErr("Gagal melakukan pembelian. Mobil mungkin sudah tidak tersedia.");
+
+    toast(
+      paymentType === "booking"
+        ? "Booking berhasil! Unit mobil telah diamankan dan nota resmi diterbitkan."
+        : method === "kredit"
+        ? "Pengajuan kredit berhasil diproses! Nota resmi telah diterbitkan."
+        : "Pembelian tunai berhasil dikonfirmasi! Nota resmi telah diterbitkan."
+    );
+
+    setReceipt({
+      car: { ...c, status: "done", badge: "Terjual", purchase: purchaseResult },
+      purchase: purchaseResult,
+    });
   }
+
+  // Jika pembelian sukses, tampilkan Nota Resmi
+  if (receipt) {
+    return (
+      <ReceiptModal
+        car={receipt.car}
+        purchase={receipt.purchase}
+        onClose={onClose}
+      />
+    );
+  }
+
+  const sellerPhone = c.sellerPhone || "0812-3456-7890";
 
   return (
     <ModalShell onClose={onClose} wide>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold text-black dark:text-white">Pembelian Mobil</h3>
+      <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-zinc-800">
+        <div>
+          <h3 className="text-lg font-bold text-black dark:text-white">Pemesanan & Pembelian Mobil</h3>
+          <p className="text-xs text-gray-500 dark:text-zinc-400">
+            Transaksi aman langsung terhubung dengan penjual terverifikasi
+          </p>
+        </div>
         <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
           ✕
         </button>
       </div>
-      <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="font-bold text-black dark:text-white">{car.title}</p>
-        <p className="mt-0.5 text-lg font-semibold text-black dark:text-white">{fmtRp(car.price)}</p>
+
+      {/* Ringkasan Mobil & Kontak Penjual */}
+      <div className="mb-4 rounded-2xl border border-gray-200/80 bg-gray-50/80 p-3.5 text-sm backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              Unit Mobil Dipilih
+            </span>
+            <p className="font-extrabold text-black dark:text-white">{c.title} ({c.year})</p>
+            <p className="text-xs text-gray-500 dark:text-zinc-400">{c.category} • {c.location || "Indonesia"}</p>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              Harga Unit
+            </span>
+            <p className="text-base font-black text-black dark:text-white">{fmtRp(c.price)}</p>
+          </div>
+        </div>
+        <div className="mt-2.5 flex items-center justify-between border-t border-gray-200/60 pt-2 text-xs text-gray-600 dark:border-zinc-800 dark:text-zinc-300">
+          <span>WhatsApp Penjual Unit:</span>
+          <span className="font-semibold text-emerald-600 dark:text-emerald-400">💬 {sellerPhone}</span>
+        </div>
       </div>
+
       <FieldError msg={err} />
+
       <div className="space-y-4">
+        {/* Pilihan Tipe Pembayaran (Booking Fee vs Pelunasan) */}
         <div>
-          <label className={labelCls}>Metode Pembayaran</label>
+          <label className={labelCls}>Skema Pembayaran Transaksi</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setPaymentType("booking")}
+              className={`rounded-xl border p-2.5 text-left text-xs transition active:scale-97 ${
+                paymentType === "booking"
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-bold">Tanda Jadi (Booking)</span>
+                <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">Rekomendasi</span>
+              </div>
+              <p className="mt-1 text-[11px] opacity-80">Bayar {fmtRp(bookingFee)} untuk kunci unit saat survei/COD</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPaymentType("full")}
+              className={`rounded-xl border p-2.5 text-left text-xs transition active:scale-97 ${
+                paymentType === "full"
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+              }`}
+            >
+              <div className="font-bold">Pelunasan Penuh</div>
+              <p className="mt-1 text-[11px] opacity-80">Pembayaran 100% lunas saat serah terima BPKB & STNK</p>
+            </button>
+          </div>
+        </div>
+
+        {/* Metode Pembayaran: Tunai vs Kredit */}
+        <div>
+          <label className={labelCls}>Metode Pembiayaan</label>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => setMethod("tunai")}
-              className={`rounded-lg border py-2.5 text-sm font-semibold transition active:scale-97 ${
+              className={`rounded-xl border py-2.5 text-xs font-semibold transition active:scale-97 ${
                 method === "tunai"
                   ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
                   : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
               }`}
             >
-              Tunai (Cash)
+              💵 Tunai Penuh (Cash)
             </button>
             <button
               type="button"
               onClick={() => setMethod("kredit")}
-              className={`rounded-lg border py-2.5 text-sm font-semibold transition active:scale-97 ${
+              className={`rounded-xl border py-2.5 text-xs font-semibold transition active:scale-97 ${
                 method === "kredit"
                   ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
                   : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
               }`}
             >
-              Kredit (Cicilan)
+              🏦 Kredit (Cicilan Leasing)
             </button>
           </div>
         </div>
 
+        {/* Form Simulasi Kredit jika opsi Kredit dipilih */}
         {method === "kredit" && (
-          <div className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-zinc-800">
+          <div className="space-y-3 rounded-2xl border border-gray-200 p-4 dark:border-zinc-800">
             <div>
               <label className={labelCls}>Uang Muka (DP): {dpPct}% ({fmtRp(calc.dp)})</label>
               <div className="flex gap-2">
@@ -647,7 +763,7 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
               </div>
             </div>
             <div>
-              <label className={labelCls}>Tenor (Bulan)</label>
+              <label className={labelCls}>Tenor Angsuran</label>
               <div className="grid grid-cols-4 gap-2">
                 {TENORS.map((t) => (
                   <button
@@ -665,34 +781,114 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
                 ))}
               </div>
             </div>
-            <div className="rounded-lg bg-gray-100 p-3 text-sm dark:bg-zinc-900">
-              <p className="font-semibold text-black dark:text-white">Estimasi Cicilan:</p>
-              <p className="mt-1 text-lg font-bold text-black dark:text-white">{fmtRp(calc.installment)} / bulan</p>
-              <p className="text-xs text-gray-500 dark:text-zinc-400">Bunga 8% / tahun • Pokok hutang {fmtRp(calc.principal)}</p>
+            <div className="rounded-xl bg-gray-100 p-3 text-xs dark:bg-zinc-900">
+              <p className="font-semibold text-black dark:text-white">Estimasi Angsuran Bulanan:</p>
+              <p className="mt-1 text-base font-extrabold text-blue-600 dark:text-blue-400">{fmtRp(calc.installment)} / bulan</p>
+              <p className="text-[11px] text-gray-500 dark:text-zinc-400">Bunga flat promo 8% / tahun • Pokok hutang {fmtRp(calc.principal)}</p>
             </div>
           </div>
         )}
 
+        {/* Metode Serah Terima ala Marketplace */}
+        <div>
+          <label className={labelCls}>Metode Serah Terima Kendaraan</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: "showroom", label: "🏢 Showroom", desc: "Ambil langsung" },
+              { id: "cod", label: "🤝 Janji Temu", desc: "Inspeksi (COD)" },
+              { id: "home_delivery", label: "🚚 Kirim Rumah", desc: "Towing express" },
+            ].map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setDeliveryMethod(m.id as never)}
+                className={`rounded-xl border p-2 text-center transition active:scale-97 ${
+                  deliveryMethod === m.id
+                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                }`}
+              >
+                <p className="text-xs font-bold">{m.label}</p>
+                <p className="text-[10px] opacity-75">{m.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Data Pembeli */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>Nama Lengkap *</label>
+            <label className={labelCls}>Nama Lengkap Pembeli *</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Budi Santoso" className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>No. WhatsApp / Telepon *</label>
+            <label className={labelCls}>No. WhatsApp Pembeli *</label>
             <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="cth: 081234567890" className={inputCls} />
           </div>
         </div>
 
+        {/* Alamat Serah Terima / Domisili */}
+        <div>
+          <label className={labelCls}>
+            Alamat Domisili / Lokasi Penyerahan {deliveryMethod === "home_delivery" ? "*" : "(Opsional)"}
+          </label>
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="cth: Jl. Sudirman No. 45, Jakarta Selatan"
+            className={inputCls}
+          />
+        </div>
+
+        {/* Catatan Pembeli */}
+        <div>
+          <label className={labelCls}>Catatan Tambahan untuk Penjual (Opsional)</label>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="cth: Mohon jadwalkan inspeksi Sabtu pagi jam 10..."
+            className={inputCls}
+          />
+        </div>
+
+        {/* Rincian Total Bayar & Tombol Konfirmasi */}
+        <div className="rounded-2xl border border-gray-100 bg-gray-50/80 p-3.5 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-800/40">
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs text-gray-500 dark:text-zinc-400">
+              {paymentType === "booking"
+                ? "Total Tanda Jadi (Booking Unit):"
+                : method === "kredit"
+                ? "Total Uang Muka (DP):"
+                : "Total Pembayaran Tunai:"}
+            </span>
+            <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
+              {fmtRp(paymentType === "booking" ? bookingFee : method === "kredit" ? calc.dp : c.price)}
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] text-gray-400 dark:text-zinc-500">
+            ✓ Termasuk Garansi Mesin 1 Tahun & Diberikan Nota Pembelian Resmi setelah konfirmasi.
+          </p>
+        </div>
+
         <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">
+          <button type="button" onClick={onClose} className="flex-1 rounded-full border border-gray-300 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">
             Batal
           </button>
-          <button type="button" onClick={onCheckout} className="flex-1 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200">
-            {method === "kredit" ? "Ajukan Kredit" : "Konfirmasi Pembelian"}
+          <button
+            type="button"
+            onClick={onCheckout}
+            className="flex-1 rounded-full bg-black py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-zinc-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+          >
+            {paymentType === "booking"
+              ? "Konfirmasi & Kunci Unit"
+              : method === "kredit"
+              ? "Ajukan Kredit Sekarang"
+              : "Konfirmasi Pembelian"}
           </button>
         </div>
       </div>
     </ModalShell>
   );
 }
+
+export { ReceiptModal };

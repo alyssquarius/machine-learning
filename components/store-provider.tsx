@@ -18,13 +18,20 @@ export interface Offer {
 }
 
 export interface Purchase {
+  invoiceNumber: string;
   method: "tunai" | "kredit" | "tawar";
+  paymentType?: "full" | "booking";
+  bookingFee?: number;
+  deliveryMethod?: "showroom" | "home_delivery" | "cod";
+  address?: string;
+  note?: string;
   dp: number;
   tenor: number;
   rate: number;
   installment: number;
   name: string;
   phone: string;
+  sellerPhone?: string;
   ts: number;
 }
 
@@ -175,17 +182,26 @@ function normalizeCars(arr: unknown): Car[] {
             }))
         : [];
       if (o.purchase && typeof o.purchase === "object") {
-        const p = o.purchase;
+        const p = o.purchase as Partial<Purchase>;
         o.purchase = {
+          invoiceNumber: String(p.invoiceNumber || `ABC-INV-${o.id}`).slice(0, 40),
           method: (["tunai", "kredit", "tawar"] as const).includes(p.method as "tunai")
             ? (p.method as Purchase["method"])
             : "tunai",
+          paymentType: p.paymentType === "booking" ? "booking" : "full",
+          bookingFee: Math.max(0, Number(p.bookingFee) || 0),
+          deliveryMethod: (["showroom", "home_delivery", "cod"] as const).includes(p.deliveryMethod as "showroom")
+            ? (p.deliveryMethod as Purchase["deliveryMethod"])
+            : "showroom",
+          address: String(p.address || "").slice(0, 200),
+          note: String(p.note || "").slice(0, 300),
           dp: Math.max(0, Number(p.dp) || 0),
           tenor: Math.max(0, Number(p.tenor) || 0),
           rate: Math.max(0, Math.min(30, Number(p.rate) || 0)),
           installment: Math.max(0, Number(p.installment) || 0),
           name: String(p.name || "").slice(0, 60),
-          phone: String(p.phone || "").slice(0, 20),
+          phone: String(p.phone || "").slice(0, 30),
+          sellerPhone: String(p.sellerPhone || o.sellerPhone || "").slice(0, 30),
           ts: Number(p.ts) > 0 ? Number(p.ts) : Date.now(),
         };
       } else {
@@ -265,8 +281,21 @@ interface StoreApi {
   edit(id: string, data: Partial<Car>): Car | null;
   buy(
     id: string,
-    opts?: { method?: "tunai" | "kredit"; dp?: number; tenor?: number; rate?: number; installment?: number; name?: string; phone?: string }
-  ): boolean;
+    opts?: {
+      method?: "tunai" | "kredit";
+      paymentType?: "full" | "booking";
+      bookingFee?: number;
+      deliveryMethod?: "showroom" | "home_delivery" | "cod";
+      address?: string;
+      note?: string;
+      dp?: number;
+      tenor?: number;
+      rate?: number;
+      installment?: number;
+      name?: string;
+      phone?: string;
+    }
+  ): Purchase | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log(type: string, text: string, silent?: boolean, carId?: string | null): void;
   setTarget(n: number): number;
@@ -569,6 +598,7 @@ export function StoreProvider({
           car.status = "done";
           car.badge = "Terjual";
           car.purchase = {
+            invoiceNumber: `ABC-INV-TWR-${Date.now().toString(36).toUpperCase()}`,
             method: "tawar",
             dp: 0,
             tenor: 0,
@@ -576,6 +606,7 @@ export function StoreProvider({
             installment: 0,
             name: (offer.note || "").trim().slice(0, 60),
             phone: "",
+            sellerPhone: car.sellerPhone || "",
             ts: Date.now(),
           };
           s.hist.unshift({
@@ -779,33 +810,51 @@ export function StoreProvider({
       buy(id, opts = {}) {
         const s = clone(cur());
         const car = s.cars.find((c) => c.id === id);
-        if (!car || car.status !== "running") return false;
+        if (!car || car.status !== "running") return null;
         car.status = "done";
         car.badge = "Terjual";
         const method = opts.method === "kredit" ? "kredit" : "tunai";
-        car.purchase = {
+        const now = Date.now();
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        const randStr = Math.floor(1000 + Math.random() * 9000);
+        const invoiceNumber = `ABC-INV-${dateStr}-${randStr}`;
+
+        const purchaseData: Purchase = {
+          invoiceNumber,
           method,
+          paymentType: opts.paymentType === "booking" ? "booking" : "full",
+          bookingFee: Math.max(0, Number(opts.bookingFee) || 0),
+          deliveryMethod: opts.deliveryMethod || "showroom",
+          address: String(opts.address || "").trim().slice(0, 200),
+          note: String(opts.note || "").trim().slice(0, 300),
           dp: Math.max(0, Number(opts.dp) || 0),
           tenor: Math.max(0, Number(opts.tenor) || 0),
           rate: Math.max(0, Number(opts.rate) || 0),
           installment: Math.max(0, Number(opts.installment) || 0),
           name: String(opts.name || "").trim().slice(0, 60),
-          phone: String(opts.phone || "").trim().slice(0, 20),
-          ts: Date.now(),
+          phone: String(opts.phone || "").trim().slice(0, 30),
+          sellerPhone: String(car.sellerPhone || "").trim(),
+          ts: now,
         };
+        car.purchase = purchaseData;
+
+        const paymentDesc =
+          purchaseData.paymentType === "booking"
+            ? `Tanda Jadi (Booking) Rp ${(purchaseData.bookingFee || 0).toLocaleString("id-ID")}`
+            : method === "kredit"
+            ? `Kredit — DP Rp ${purchaseData.dp.toLocaleString("id-ID")}, ${purchaseData.tenor}× Rp ${purchaseData.installment.toLocaleString("id-ID")}/bln`
+            : `Tunai Penuh (Rp ${car.price.toLocaleString("id-ID")})`;
+
         s.hist.unshift({
           id: uid("h"),
           type: "beli",
-          text:
-            method === "kredit"
-              ? `Mobil <b>${esc(car.title)}</b> dibeli kredit — DP Rp ${car.purchase.dp.toLocaleString("id-ID")}, ${car.purchase.tenor}× Rp ${car.purchase.installment.toLocaleString("id-ID")}/bln`
-              : `Mobil <b>${esc(car.title)}</b> berhasil dibeli tunai (Rp ${car.price.toLocaleString("id-ID")})`,
-          ts: Date.now(),
+          text: `Invoice <b>#${invoiceNumber}</b>: Pembelian mobil <b>${esc(car.title)}</b> oleh <b>${esc(purchaseData.name)}</b> (${paymentDesc})`,
+          ts: now,
           carId: car.id,
         });
         s.hist = s.hist.slice(0, 60);
         persist(s);
-        return true;
+        return purchaseData;
       },
       log(type, text, silent, carId) {
         const allowed = ["beli", "jual", "tawar", "favorit", "status", "verifikasi", "batal", "hapus"];

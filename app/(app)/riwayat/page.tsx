@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useStore } from "@/components/store-provider";
-import { DetailModal } from "@/components/modals";
+import { useStore, type Car } from "@/components/store-provider";
+import { DetailModal, ReceiptModal } from "@/components/modals";
 import { HistText } from "@/components/hist-text";
 import { useToast } from "@/components/toast";
 import { timeAgo } from "@/lib/format";
@@ -30,6 +30,7 @@ export default function RiwayatPage() {
   const [filterRaw, setFilterRaw] = React.useState("Semua aktivitas");
   const [filter, setFilter] = React.useState("all");
   const [detailId, setDetailId] = React.useState<string | null>(null);
+  const [receiptCar, setReceiptCar] = React.useState<Car | null>(null);
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function onFilterChange(v: string) {
@@ -126,17 +127,32 @@ export default function RiwayatPage() {
                   <p className="break-words text-sm text-gray-700 dark:text-zinc-300">
                     <HistText text={h.text} />
                   </p>
-                  <p className="mt-0.5 text-xs text-gray-400 dark:text-zinc-500">
-                    {timeAgo(h.ts)}
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-400 dark:text-zinc-500">
+                    <span>{timeAgo(h.ts)}</span>
                     {h.carId ? (
                       <>
-                        {" • "}
-                        <button onClick={() => setDetailId(h.carId)} className="font-semibold underline underline-offset-2 hover:opacity-70">
-                          Lihat mobil
+                        <span>•</span>
+                        <button onClick={() => setDetailId(h.carId)} className="font-semibold underline underline-offset-2 hover:opacity-70 text-black dark:text-white">
+                          Lihat detail mobil
                         </button>
                       </>
                     ) : null}
-                  </p>
+                    {h.type === "beli" && h.carId ? (() => {
+                      const matched = store.get(h.carId);
+                      if (!matched || !matched.purchase) return null;
+                      return (
+                        <>
+                          <span>•</span>
+                          <button
+                            onClick={() => setReceiptCar(matched)}
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
+                          >
+                            📄 Buka Nota Resmi
+                          </button>
+                        </>
+                      );
+                    })() : null}
+                  </div>
                 </div>
               </li>
             ))}
@@ -145,6 +161,9 @@ export default function RiwayatPage() {
       </div>
       {detailId ? (
         <DetailModal carId={detailId} onClose={() => setDetailId(null)} onBuy={() => {}} onOffer={() => {}} />
+      ) : null}
+      {receiptCar && receiptCar.purchase ? (
+        <ReceiptModal car={receiptCar} purchase={receiptCar.purchase} onClose={() => setReceiptCar(null)} />
       ) : null}
       <p className="hidden">{histLabel(filter.startsWith("q:") ? "all" : filter)}</p>
     </div>
