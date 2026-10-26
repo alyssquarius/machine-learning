@@ -9,40 +9,39 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient();
     const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (!sessionError) {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (user) {
-        // Cek apakah email adalah admin khusus
-        if (user.email === "admin@autobuycars.com") {
-          return NextResponse.redirect(`${origin}/dashboard`);
-        }
+        const isAdmin = user.email === "admin@autobuycars.com";
+        const defaultRole = isAdmin ? "admin" : "buyer";
 
         try {
-          // Cek tabel profiles
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .single();
-
-          // Jika profile belum ada atau role belum diset, wajib ke choose-role
-          if (profileError || !profile?.role) {
-            return NextResponse.redirect(`${origin}/choose-role`);
-          }
-
-          // Redirect sesuai role
-          if (["admin", "dealer"].includes(profile.role)) {
-            return NextResponse.redirect(`${origin}/dashboard`);
-          }
-          return NextResponse.redirect(`${origin}/beli`);
+          // Buat atau pastikan profile otomatis tersimpan sebagai role buyer (atau admin)
+          await supabase.from("profiles").upsert({
+            id: user.id,
+            role: defaultRole,
+            display_name:
+              user.user_metadata?.full_name ||
+              user.user_metadata?.name ||
+              user.email?.split("@")[0] ||
+              "Pengguna",
+            updated_at: new Date().toISOString(),
+          });
         } catch {
-          // Jika tabel profiles belum ada di database, arahkan ke choose-role
-          return NextResponse.redirect(`${origin}/choose-role`);
+          /* abaikan jika tabel profiles belum ada */
         }
+
+        if (isAdmin) {
+          return NextResponse.redirect(`${origin}/dashboard`);
+        }
+        return NextResponse.redirect(`${origin}/beli`);
       }
     }
   }
 
-  return NextResponse.redirect(`${origin}/choose-role`);
+  return NextResponse.redirect(`${origin}/beli`);
 }

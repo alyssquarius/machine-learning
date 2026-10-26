@@ -444,10 +444,10 @@ export function StoreProvider({
                   type: "beli",
                   text:
                     p.paymentType === "booking"
-                      ? `🎉 <b>PESANAN MASUK:</b> Mobil <b>${esc(c.title)}</b> dibooking oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). Tanda Jadi: Rp ${(p.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`
+                      ? `<b>PESANAN MASUK:</b> Mobil <b>${esc(c.title)}</b> dibooking oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). Tanda Jadi: Rp ${(p.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`
                       : p.method === "kredit"
-                      ? `🎉 <b>PENGAJUAN KREDIT:</b> Mobil <b>${esc(c.title)}</b> diajukan kredit oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). DP: Rp ${p.dp.toLocaleString("id-ID")}, Tenor: ${p.tenor} bln. Invoice <b>#${p.invoiceNumber}</b>.`
-                      : `🎉 <b>MOBIL TERJUAL:</b> Mobil <b>${esc(c.title)}</b> dibeli tunai oleh <b>${esc(p.name)}</b> (WA: ${p.phone}) seharga Rp ${c.price.toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`,
+                      ? `<b>PENGAJUAN KREDIT:</b> Mobil <b>${esc(c.title)}</b> diajukan kredit oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). DP: Rp ${p.dp.toLocaleString("id-ID")}, Tenor: ${p.tenor} bln. Invoice <b>#${p.invoiceNumber}</b>.`
+                      : `<b>MOBIL TERJUAL:</b> Mobil <b>${esc(c.title)}</b> dibeli tunai oleh <b>${esc(p.name)}</b> (WA: ${p.phone}) seharga Rp ${c.price.toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`,
                   ts: p.ts || Date.now(),
                   carId: c.id,
                 });
@@ -975,10 +975,10 @@ export function StoreProvider({
         // Teks notifikasi khusus untuk akun Penjual pemilik mobil
         const sellerNotifText =
           purchaseData.paymentType === "booking"
-            ? `🎉 <b>PESANAN MASUK!</b> Mobil <b>${esc(car.title)}</b> dibooking oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). Tanda Jadi: Rp ${(purchaseData.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`
+            ? `<b>PESANAN MASUK!</b> Mobil <b>${esc(car.title)}</b> dibooking oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). Tanda Jadi: Rp ${(purchaseData.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`
             : method === "kredit"
-            ? `🎉 <b>PENGAJUAN KREDIT!</b> Mobil <b>${esc(car.title)}</b> diajukan kredit oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). DP: Rp ${purchaseData.dp.toLocaleString("id-ID")}, Tenor: ${purchaseData.tenor} bln. Invoice <b>#${invoiceNumber}</b>.`
-            : `🎉 <b>MOBIL TERJUAL!</b> Mobil <b>${esc(car.title)}</b> berhasil dibeli tunai oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}) seharga Rp ${car.price.toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`;
+            ? `<b>PENGAJUAN KREDIT!</b> Mobil <b>${esc(car.title)}</b> diajukan kredit oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). DP: Rp ${purchaseData.dp.toLocaleString("id-ID")}, Tenor: ${purchaseData.tenor} bln. Invoice <b>#${invoiceNumber}</b>.`
+            : `<b>MOBIL TERJUAL!</b> Mobil <b>${esc(car.title)}</b> berhasil dibeli tunai oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}) seharga Rp ${car.price.toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`;
 
         // 3. Masukkan transaksi & notifikasi ke SEMUA akun Penjual pemilik mobil (cross-account)
         try {

@@ -162,8 +162,14 @@ export function SellModal({
               : "Isi data mobil dan tentukan apakah langsung ditayangkan ke pembeli."}
           </p>
         </div>
-        <button onClick={() => onClose()} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
-          ✕
+        <button
+          onClick={() => onClose()}
+          className="rounded-lg border border-gray-200 p-2 text-gray-500 transition hover:bg-gray-100 hover:text-black active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white"
+          aria-label="Tutup"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
       <FieldError msg={err} />
@@ -354,8 +360,14 @@ export function DetailModal({
               {c.year} • {c.km.toLocaleString("id-ID")} km • {c.location} • {c.category}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
-            ✕
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-gray-200 p-2 text-gray-500 transition hover:bg-gray-100 hover:text-black active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white"
+            aria-label="Tutup"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
         <p className="mt-3 text-2xl font-bold text-black dark:text-white">{fmtRp(c.price)}</p>
@@ -376,9 +388,12 @@ export function DetailModal({
               <button
                 type="button"
                 onClick={() => setShowReceipt(true)}
-                className="inline-flex items-center gap-1 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white shadow-xs transition hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+                className="inline-flex items-center gap-1.5 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white shadow-xs transition hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
               >
-                📄 Buka Nota Resmi
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Lihat Nota Resmi
               </button>
             </div>
             <p className="mt-2 text-xs text-gray-600 dark:text-zinc-300">
@@ -528,8 +543,14 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
     <ModalShell onClose={onClose}>
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-bold text-black dark:text-white">Ajukan Tawaran Harga</h3>
-        <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
-          ✕
+        <button
+          onClick={onClose}
+          className="rounded-lg border border-gray-200 p-2 text-gray-500 transition hover:bg-gray-100 hover:text-black active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white"
+          aria-label="Tutup"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
       <p className="mb-4 text-xs text-gray-500 dark:text-zinc-400">
@@ -647,8 +668,14 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
             Transaksi aman langsung terhubung dengan penjual terverifikasi
           </p>
         </div>
-        <button onClick={onClose} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
-          ✕
+        <button
+          onClick={onClose}
+          className="rounded-lg border border-gray-200 p-2 text-gray-500 transition hover:bg-gray-100 hover:text-black active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white"
+          aria-label="Tutup"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
@@ -671,7 +698,12 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
         </div>
         <div className="mt-2.5 flex items-center justify-between border-t border-gray-200/60 pt-2 text-xs text-gray-600 dark:border-zinc-800 dark:text-zinc-300">
           <span>WhatsApp Penjual Unit:</span>
-          <span className="font-semibold text-emerald-600 dark:text-emerald-400">💬 {sellerPhone}</span>
+          <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z" />
+            </svg>
+            {sellerPhone}
+          </span>
         </div>
       </div>
 
@@ -726,7 +758,7 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
                   : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
               }`}
             >
-              💵 Tunai Penuh (Cash)
+              Tunai Penuh (Cash)
             </button>
             <button
               type="button"
@@ -737,7 +769,7 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
                   : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
               }`}
             >
-              🏦 Kredit (Cicilan Leasing)
+              Kredit (Cicilan Leasing)
             </button>
           </div>
         </div>
@@ -796,9 +828,9 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
           <label className={labelCls}>Metode Serah Terima Kendaraan</label>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { id: "showroom", label: "🏢 Showroom", desc: "Ambil langsung" },
-              { id: "cod", label: "🤝 Janji Temu", desc: "Inspeksi (COD)" },
-              { id: "home_delivery", label: "🚚 Kirim Rumah", desc: "Towing express" },
+              { id: "showroom", label: "Showroom", desc: "Ambil langsung" },
+              { id: "cod", label: "Janji Temu", desc: "Inspeksi (COD)" },
+              { id: "home_delivery", label: "Kirim Towing", desc: "Express ke alamat" },
             ].map((m) => (
               <button
                 key={m.id}

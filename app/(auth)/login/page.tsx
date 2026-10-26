@@ -43,7 +43,7 @@ export default function LoginPage() {
             .single();
           if (cancelled) return;
           const role = profile?.role;
-          if (["admin", "dealer"].includes(role)) {
+          if (role === "admin") {
             router.replace("/dashboard");
           } else {
             router.replace("/beli");
@@ -79,15 +79,17 @@ export default function LoginPage() {
       // Cek role user untuk redirect yang tepat
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        if (user.email === "admin@autobuycars.com") {
+          router.replace("/dashboard");
+          return;
+        }
         const { data: profile } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", user.id)
           .single();
         const role = profile?.role;
-        if (!role) {
-          router.replace("/choose-role");
-        } else if (["admin", "dealer"].includes(role)) {
+        if (role === "admin") {
           router.replace("/dashboard");
         } else {
           router.replace("/beli");

@@ -114,8 +114,18 @@ export default function RegisterPage() {
       }
 
       // Jika session langsung ada (email confirmation disabled)
-      if (data.session) {
-        router.replace("/choose-role");
+      if (data.session && data.user) {
+        try {
+          await supabase.from("profiles").upsert({
+            id: data.user.id,
+            role: data.user.email === "admin@autobuycars.com" ? "admin" : "buyer",
+            display_name: fullName,
+            updated_at: new Date().toISOString(),
+          });
+        } catch {
+          /* abaikan */
+        }
+        router.replace("/beli");
         return;
       }
 

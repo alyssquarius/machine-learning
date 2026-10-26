@@ -203,132 +203,48 @@ export default function PengaturanPage() {
         </div>
       </div>
 
-      {/* SECTION: GANTI PERAN (PEMBELI / PENJUAL) */}
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="border-b border-gray-200 p-6 dark:border-zinc-800">
+      {/* SECTION: STATUS KEANGGOTAAN */}
+      <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white/95 shadow-xs backdrop-blur-md dark:border-zinc-800/90 dark:bg-zinc-900/95">
+        <div className="border-b border-gray-100 p-6 dark:border-zinc-800/80">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-bold text-black dark:text-white flex items-center gap-2">
-                <svg className="h-5 w-5 text-gray-700 dark:text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <h2 className="text-base font-bold text-black dark:text-white flex items-center gap-2">
+                <svg className="h-4 w-4 text-gray-700 dark:text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Peran Akun
+                Status Keanggotaan Akun
               </h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-                Pilih mode kerja Anda di platform. Menu dan hak akses akan langsung menyesuaikan secara instan.
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
+                Informasi hak akses dan status resmi akun Anda di platform AutoBuyCars.
               </p>
             </div>
-            {role !== "admin" && (
-              <span className="self-start sm:self-auto rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-                Mode saat ini: {role === "dealer" ? "Penjual" : "Pembeli"}
-              </span>
-            )}
+            <span className="self-start sm:self-auto rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+              {role === "admin" ? "Administrator" : "Pembeli Terverifikasi"}
+            </span>
           </div>
         </div>
 
         <div className="p-6">
           {role === "admin" ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+            <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
               <p className="text-sm font-semibold text-amber-900 dark:text-amber-300">
-                Akun Administrator
+                Akun Administrator Resmi
               </p>
-              <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
-                Anda memiliki akses penuh ke seluruh fitur pembeli, penjual, dan pengelolaan sistem platform.
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                Anda memiliki akses penuh ke seluruh operasional platform, verifikasi listing kendaraan, dan inspeksi riwayat transaksi.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Opsi 1: Mode Pembeli */}
-              <button
-                type="button"
-                onClick={() => handleSwitchRole("buyer")}
-                disabled={switchingRole || role === "buyer"}
-                className={`relative flex flex-col justify-between rounded-xl border-2 p-5 text-left transition-all ${
-                  role === "buyer"
-                    ? "border-black bg-zinc-50/60 shadow-xs dark:border-white dark:bg-zinc-800/40"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="9" cy="21" r="1" />
-                        <circle cx="20" cy="21" r="1" />
-                        <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
-                      </svg>
-                    </div>
-                    {role === "buyer" ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-0.5 text-[11px] font-bold text-white dark:bg-white dark:text-black">
-                        <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        Aktif
-                      </span>
-                    ) : (
-                      <span className="text-xs font-semibold text-gray-500 hover:text-black dark:text-zinc-400">
-                        {switchingRole ? "Memproses..." : "Pilih Mode Ini →"}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-black dark:text-white">
-                    Mode Pembeli
-                  </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-zinc-400">
-                    Jelajahi ribuan pilihan mobil, simpan favorit, lakukan penawaran harga, dan hubungi langsung penjual melalui WhatsApp.
-                  </p>
-                </div>
-                <div className="mt-4 border-t border-gray-100 pt-3 dark:border-zinc-800">
-                  <p className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
-                    Akses menu: Beli Mobil, Favorit, Riwayat Transaksi
-                  </p>
-                </div>
-              </button>
-
-              {/* Opsi 2: Mode Penjual */}
-              <button
-                type="button"
-                onClick={() => handleSwitchRole("dealer")}
-                disabled={switchingRole || role === "dealer"}
-                className={`relative flex flex-col justify-between rounded-xl border-2 p-5 text-left transition-all ${
-                  role === "dealer"
-                    ? "border-black bg-zinc-50/60 shadow-xs dark:border-white dark:bg-zinc-800/40"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                    </div>
-                    {role === "dealer" ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-0.5 text-[11px] font-bold text-white dark:bg-white dark:text-black">
-                        <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        Aktif
-                      </span>
-                    ) : (
-                      <span className="text-xs font-semibold text-gray-500 hover:text-black dark:text-zinc-400">
-                        {switchingRole ? "Memproses..." : "Pilih Mode Ini →"}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-black dark:text-white">
-                    Mode Penjual (Dealer)
-                  </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-zinc-400">
-                    Pasang iklan mobil Anda, atur inventaris, terima dan kelola tawaran masuk, serta pantau analitik performa penjualan.
-                  </p>
-                </div>
-                <div className="mt-4 border-t border-gray-100 pt-3 dark:border-zinc-800">
-                  <p className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
-                    Akses menu: Dashboard Analitik, Jual Mobil, Beli Mobil
-                  </p>
-                </div>
-              </button>
+            <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 dark:border-blue-900/30 dark:bg-blue-950/20">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                <p className="text-sm font-semibold text-blue-950 dark:text-blue-200">
+                  Akun Pembeli Aktif
+                </p>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-blue-800 dark:text-blue-300">
+                Akun Anda memiliki akses langsung ke seluruh katalog kendaraan terverifikasi, fitur booking online (tanda jadi), kalkulator kredit cicilan, penerbitan nota transaksi resmi, dan kontak langsung ke penjual via WhatsApp.
+              </p>
             </div>
           )}
         </div>
@@ -445,7 +361,7 @@ export default function PengaturanPage() {
             </div>
             <p className="mt-2 text-[11px] text-gray-500 dark:text-zinc-400">
               {sisa === 0
-                ? `🎉 Target ${targetNum} unit tercapai bulan ini!`
+                ? `Target ${targetNum} unit tercapai bulan ini!`
                 : `${soldMonth}/${targetNum} terjual bulan ini — ${sisa} lagi menuju target.`}
             </p>
           </div>

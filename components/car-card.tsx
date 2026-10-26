@@ -220,7 +220,7 @@ export function CarCard({
             className="mt-2.5 cursor-pointer rounded-xl border border-blue-200/80 bg-blue-50/80 p-2.5 text-xs transition hover:bg-blue-100/80 dark:border-blue-900/40 dark:bg-blue-950/40 dark:hover:bg-blue-900/40"
           >
             <div className="flex items-center justify-between font-bold text-blue-950 dark:text-blue-200">
-              <span className="truncate">🎉 Terjual ke: {car.purchase.name}</span>
+              <span className="truncate">Terjual ke: {car.purchase.name}</span>
               <span className="shrink-0 text-[10px] font-mono text-blue-600 dark:text-blue-400">#{car.purchase.invoiceNumber}</span>
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-blue-800 dark:text-blue-300">
@@ -229,8 +229,11 @@ export function CarCard({
                 {car.purchase.paymentType === "booking" ? "Tanda Jadi" : car.purchase.method === "kredit" ? "Kredit" : "Tunai"}
               </span>
             </div>
-            <p className="mt-1 text-[10px] font-semibold text-blue-600 underline underline-offset-2 dark:text-blue-400">
-              📄 Klik untuk buka nota resmi transaksi
+            <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Klik untuk buka nota resmi transaksi</span>
             </p>
           </div>
         )}
@@ -246,9 +249,12 @@ export function CarCard({
                       "Listing berhasil ditayangkan ke katalog pembeli!",
                     )
                   }
-                  className="flex-1 rounded-full bg-emerald-600 py-2 px-3 text-xs font-semibold text-white transition hover:bg-emerald-500 active:scale-95 shadow-xs"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-600 py-2 px-3 text-xs font-semibold text-white transition hover:bg-emerald-500 active:scale-95 shadow-xs"
                 >
-                  🚀 Tayangkan ke Pembeli
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                  <span>Tayangkan ke Pembeli</span>
                 </button>
               ) : null}
               {car.status === "running" ? (

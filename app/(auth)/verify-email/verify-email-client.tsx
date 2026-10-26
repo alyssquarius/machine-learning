@@ -84,10 +84,22 @@ export default function VerifyEmailPage() {
       }
       
       if (data.session) {
+        try {
+          if (data.user) {
+            const supabase = createClient();
+            await supabase.from("profiles").upsert({
+              id: data.user.id,
+              role: data.user.email === "admin@autobuycars.com" ? "admin" : "buyer",
+              updated_at: new Date().toISOString(),
+            });
+          }
+        } catch {
+          /* abaikan */
+        }
         setSuccess(true);
         setTimeout(() => {
-          router.replace("/choose-role");
-        }, 1500);
+          router.replace("/beli");
+        }, 1200);
       }
     } catch {
       setError("Terjadi kesalahan. Silakan coba lagi.");

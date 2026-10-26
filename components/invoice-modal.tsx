@@ -152,8 +152,11 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
             <button
               onClick={onClose}
               className="rounded-full border border-gray-200 p-2 text-gray-400 hover:bg-gray-100 hover:text-black active:scale-95 print:hidden dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white"
+              aria-label="Tutup nota"
             >
-              ✕
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
