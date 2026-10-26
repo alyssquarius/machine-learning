@@ -64,6 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [userOpen, setUserOpen] = React.useState(false);
   const [profileAvatarUrl, setProfileAvatarUrl] = React.useState("");
+  const [liveDisplayName, setLiveDisplayName] = React.useState("");
 
   // Fetch avatar_url dari profiles
   React.useEffect(() => {
@@ -95,6 +96,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.addEventListener("avatar-updated", onAvatarUpdated);
     return () => window.removeEventListener("avatar-updated", onAvatarUpdated);
   }, []);
+
+  // Listen perubahan nama tampilan
+  React.useEffect(() => {
+    setLiveDisplayName(store.getDisplayName());
+    function onNameUpdated(e: Event) {
+      const name = (e as CustomEvent).detail as string;
+      setLiveDisplayName(name);
+    }
+    window.addEventListener("displayname-updated", onNameUpdated);
+    return () => window.removeEventListener("displayname-updated", onNameUpdated);
+  }, [store]);
 
   // Restore collapse desktop
   React.useEffect(() => {
@@ -139,7 +151,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isGuest = !user;
   const displayName = isGuest
     ? "Pengunjung"
-    : store.getDisplayName() ||
+    : liveDisplayName ||
+      store.getDisplayName() ||
       String(
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
       );

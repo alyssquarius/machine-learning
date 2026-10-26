@@ -49,6 +49,7 @@ export default function ProfilPage() {
     setLoading(true);
     try {
       store.setDisplayName(displayName.trim());
+      window.dispatchEvent(new CustomEvent("displayname-updated", { detail: displayName.trim() }));
       toast("Profil diperbarui.");
     } finally {
       setLoading(false);

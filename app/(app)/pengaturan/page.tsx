@@ -76,12 +76,14 @@ export default function PengaturanPage() {
       const name = v.trim().slice(0, 40);
       if (!name) {
         store.setDisplayName("");
+        window.dispatchEvent(new CustomEvent("displayname-updated", { detail: "" }));
         toast("Nama tampilan dikembalikan ke nama akun.");
         flash();
         return;
       }
       if (name.length < 2) return;
       store.setDisplayName(name);
+      window.dispatchEvent(new CustomEvent("displayname-updated", { detail: name }));
       flash();
     }, 600);
   }
@@ -91,6 +93,7 @@ export default function PengaturanPage() {
     const name = displayName.trim().slice(0, 40);
     if (!name) {
       store.setDisplayName("");
+      window.dispatchEvent(new CustomEvent("displayname-updated", { detail: "" }));
       toast("Nama tampilan dikembalikan ke nama akun.");
       flash();
       return;
@@ -100,6 +103,7 @@ export default function PengaturanPage() {
       return;
     }
     store.setDisplayName(name);
+    window.dispatchEvent(new CustomEvent("displayname-updated", { detail: name }));
     toast(`Nama tampilan disimpan: ${name}.`);
     flash();
   }
@@ -196,6 +200,7 @@ export default function PengaturanPage() {
               onClick={() => {
                 store.setDisplayName("");
                 setDisplayName("");
+                window.dispatchEvent(new CustomEvent("displayname-updated", { detail: "" }));
                 toast("Nama tampilan dikembalikan ke nama akun.");
                 flash();
               }}
