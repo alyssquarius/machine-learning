@@ -213,6 +213,28 @@ export function CarCard({
           </div>
         )}
 
+        {/* Info Pembeli jika mobil berstatus Terjual */}
+        {sell && car.status === "done" && car.purchase && (
+          <div
+            onClick={() => onDetail?.(car.id)}
+            className="mt-2.5 cursor-pointer rounded-xl border border-blue-200/80 bg-blue-50/80 p-2.5 text-xs transition hover:bg-blue-100/80 dark:border-blue-900/40 dark:bg-blue-950/40 dark:hover:bg-blue-900/40"
+          >
+            <div className="flex items-center justify-between font-bold text-blue-950 dark:text-blue-200">
+              <span className="truncate">🎉 Terjual ke: {car.purchase.name}</span>
+              <span className="shrink-0 text-[10px] font-mono text-blue-600 dark:text-blue-400">#{car.purchase.invoiceNumber}</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-blue-800 dark:text-blue-300">
+              <span>WA Pembeli: <b>{car.purchase.phone}</b></span>
+              <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold dark:bg-blue-900/60">
+                {car.purchase.paymentType === "booking" ? "Tanda Jadi" : car.purchase.method === "kredit" ? "Kredit" : "Tunai"}
+              </span>
+            </div>
+            <p className="mt-1 text-[10px] font-semibold text-blue-600 underline underline-offset-2 dark:text-blue-400">
+              📄 Klik untuk buka nota resmi transaksi
+            </p>
+          </div>
+        )}
+
         <div className="mt-3 flex gap-2">
           {sell ? (
             <>

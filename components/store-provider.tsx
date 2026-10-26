@@ -48,6 +48,8 @@ export interface Car {
   badge: string;
   image: string;
   description: string;
+  sellerId?: string;
+  sellerName?: string;
   sellerPhone?: string;
   createdAt: number;
   offers: Offer[];
@@ -162,6 +164,8 @@ function normalizeCars(arr: unknown): Car[] {
       o.interest = Math.max(0, Math.min(100, Number(o.interest) || 0));
       o.badge = String(o.badge || "").slice(0, 24);
       o.image = typeof o.image === "string" ? o.image : "";
+      o.sellerId = typeof o.sellerId === "string" ? o.sellerId : "";
+      o.sellerName = typeof o.sellerName === "string" ? o.sellerName.slice(0, 60) : "";
       o.sellerPhone = typeof o.sellerPhone === "string" ? o.sellerPhone.slice(0, 30) : "";
       o.description =
         typeof o.description === "string" ? o.description.slice(0, 500) : "";
@@ -355,9 +359,25 @@ export function StoreProvider({
       // Sinkronkan mobil ke katalog bersama agar tampil di katalog pembeli
       try {
         const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
-        const currentOwnerIds = new Set(next.cars.map((c) => c.id));
+        const sharedMap = new Map(currentShared.map((c) => [c.id, c]));
+
+        // Lindungi status & purchase data dari katalog bersama agar tidak tertimpa data lokal usang
+        const mergedCars = next.cars.map((c) => {
+          const sc = sharedMap.get(c.id);
+          if (sc && sc.purchase && !c.purchase) {
+            return {
+              ...c,
+              status: sc.status,
+              badge: sc.badge || (sc.status === "done" ? "Terjual" : c.badge),
+              purchase: sc.purchase,
+            };
+          }
+          return c;
+        });
+
+        const currentOwnerIds = new Set(mergedCars.map((c) => c.id));
         const otherCars = currentShared.filter((c) => !currentOwnerIds.has(c.id));
-        const updatedShared = [...next.cars, ...otherCars];
+        const updatedShared = [...mergedCars, ...otherCars];
         save(LS_SHARED_CARS, updatedShared);
       } catch {
         /* abaikan */
@@ -372,15 +392,72 @@ export function StoreProvider({
     (ownerId: string) => {
       const k = (b: string) => (ownerId ? `${b}_${ownerId}` : b);
       let cars = normalizeCars(load(k(LS_CARS), []));
+      let hist = normalizeHist(load(k(LS_HIST), []));
 
       // Gabungkan dengan katalog mobil bersama (shared marketplace)
       try {
         const sharedCars = normalizeCars(load(LS_SHARED_CARS, []));
+        const sharedMap = new Map(sharedCars.map((c) => [c.id, c]));
+
+        // Sinkronkan mobil lokal penjual jika sudah dibeli oleh pembeli lain di shared marketplace
+        let localCarsChanged = false;
+        cars = cars.map((localCar) => {
+          const sc = sharedMap.get(localCar.id);
+          if (sc) {
+            if (sc.purchase && (!localCar.purchase || localCar.status !== sc.status)) {
+              localCarsChanged = true;
+              return {
+                ...localCar,
+                status: sc.status,
+                badge: sc.badge || (sc.status === "done" ? "Terjual" : localCar.badge),
+                purchase: sc.purchase,
+              };
+            }
+          }
+          return localCar;
+        });
+
+        if (localCarsChanged) {
+          save(k(LS_CARS), cars);
+        }
+
         const seen = new Set(cars.map((c) => c.id));
         for (const sc of sharedCars) {
           if (!seen.has(sc.id)) {
             cars.push(sc);
             seen.add(sc.id);
+          }
+        }
+
+        // Cek jika ada mobil milik penjual ini yang sudah dibeli pembeli tapi belum masuk notifikasi riwayat
+        if (ownerId) {
+          let histChanged = false;
+          cars.forEach((c) => {
+            if ((c.sellerId === ownerId || seen.has(c.id)) && c.purchase && c.status === "done") {
+              const p = c.purchase;
+              const alreadyNotified = hist.some(
+                (h) => h.carId === c.id && h.text.includes(p.invoiceNumber)
+              );
+              if (!alreadyNotified) {
+                hist.unshift({
+                  id: uid("h"),
+                  type: "beli",
+                  text:
+                    p.paymentType === "booking"
+                      ? `🎉 <b>PESANAN MASUK:</b> Mobil <b>${esc(c.title)}</b> dibooking oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). Tanda Jadi: Rp ${(p.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`
+                      : p.method === "kredit"
+                      ? `🎉 <b>PENGAJUAN KREDIT:</b> Mobil <b>${esc(c.title)}</b> diajukan kredit oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). DP: Rp ${p.dp.toLocaleString("id-ID")}, Tenor: ${p.tenor} bln. Invoice <b>#${p.invoiceNumber}</b>.`
+                      : `🎉 <b>MOBIL TERJUAL:</b> Mobil <b>${esc(c.title)}</b> dibeli tunai oleh <b>${esc(p.name)}</b> (WA: ${p.phone}) seharga Rp ${c.price.toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`,
+                  ts: p.ts || Date.now(),
+                  carId: c.id,
+                });
+                histChanged = true;
+              }
+            }
+          });
+          if (histChanged) {
+            hist = hist.slice(0, 60);
+            save(k(LS_HIST), hist);
           }
         }
       } catch {
@@ -389,7 +466,6 @@ export function StoreProvider({
 
       let favs = load<string[]>(k(LS_FAVS), []);
       if (!Array.isArray(favs)) favs = [];
-      const hist = normalizeHist(load(k(LS_HIST), []));
       const settings = normalizeSettings(load(k(LS_SET), {}));
       favs = favs.filter((id) => cars.some((c) => c.id === id));
       return { cars, favs, hist, settings };
@@ -401,6 +477,29 @@ export function StoreProvider({
   React.useEffect(() => {
     setSnap(loadForOwner(""));
     setReady(true);
+  }, [loadForOwner]);
+
+  // Sinkronisasi realtime lintas tab / sesi (StorageEvent & CustomEvent)
+  React.useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (
+        e.key === LS_SHARED_CARS ||
+        e.key === "abc_order_broadcast" ||
+        (e.key && (e.key.startsWith(LS_CARS) || e.key.startsWith(LS_HIST)))
+      ) {
+        setSnap(loadForOwner(ownerRef.current));
+      }
+    };
+    const handleOrderEvent = () => {
+      setSnap(loadForOwner(ownerRef.current));
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("order-created", handleOrderEvent);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("order-created", handleOrderEvent);
+    };
   }, [loadForOwner]);
 
   const api: StoreApi = React.useMemo(() => {
@@ -669,6 +768,8 @@ export function StoreProvider({
           badge: status === "running" ? "Dijual" : "Baru",
           image: imageFor(category, data.image),
           description: String(data.description || "").trim().slice(0, 500),
+          sellerId: String(data.sellerId || ownerRef.current || "").trim(),
+          sellerName: String(data.sellerName || cur().settings.displayName || "").trim().slice(0, 60),
           sellerPhone: String(data.sellerPhone || "").trim(),
           createdAt: Date.now(),
           offers: [],
@@ -845,6 +946,7 @@ export function StoreProvider({
             ? `Kredit — DP Rp ${purchaseData.dp.toLocaleString("id-ID")}, ${purchaseData.tenor}× Rp ${purchaseData.installment.toLocaleString("id-ID")}/bln`
             : `Tunai Penuh (Rp ${car.price.toLocaleString("id-ID")})`;
 
+        // 1. Catat riwayat di akun pembeli
         s.hist.unshift({
           id: uid("h"),
           type: "beli",
@@ -853,7 +955,91 @@ export function StoreProvider({
           carId: car.id,
         });
         s.hist = s.hist.slice(0, 60);
+
+        // 2. Sinkronkan langsung ke katalog mobil bersama (LS_SHARED_CARS)
+        try {
+          const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
+          const idx = currentShared.findIndex((c) => c.id === car.id);
+          if (idx !== -1) {
+            currentShared[idx].status = "done";
+            currentShared[idx].badge = "Terjual";
+            currentShared[idx].purchase = purchaseData;
+          } else {
+            currentShared.unshift(car);
+          }
+          save(LS_SHARED_CARS, currentShared);
+        } catch {
+          /* abaikan */
+        }
+
+        // Teks notifikasi khusus untuk akun Penjual pemilik mobil
+        const sellerNotifText =
+          purchaseData.paymentType === "booking"
+            ? `🎉 <b>PESANAN MASUK!</b> Mobil <b>${esc(car.title)}</b> dibooking oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). Tanda Jadi: Rp ${(purchaseData.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`
+            : method === "kredit"
+            ? `🎉 <b>PENGAJUAN KREDIT!</b> Mobil <b>${esc(car.title)}</b> diajukan kredit oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). DP: Rp ${purchaseData.dp.toLocaleString("id-ID")}, Tenor: ${purchaseData.tenor} bln. Invoice <b>#${invoiceNumber}</b>.`
+            : `🎉 <b>MOBIL TERJUAL!</b> Mobil <b>${esc(car.title)}</b> berhasil dibeli tunai oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}) seharga Rp ${car.price.toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`;
+
+        // 3. Masukkan transaksi & notifikasi ke SEMUA akun Penjual pemilik mobil (cross-account)
+        try {
+          const currentScopedKey = scoped(LS_CARS);
+          const targetSellerId = car.sellerId;
+
+          if (typeof window !== "undefined" && window.localStorage) {
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (!k || !k.startsWith(LS_CARS)) continue;
+              if (k === currentScopedKey) continue; // Akun pembeli saat ini disimpan oleh persist(s)
+
+              const isMatchedSeller = targetSellerId && k === `${LS_CARS}_${targetSellerId}`;
+              const sellerCars = normalizeCars(load(k, []));
+              const cIdx = sellerCars.findIndex((sc) => sc.id === car.id);
+
+              if (isMatchedSeller || cIdx !== -1) {
+                if (cIdx !== -1) {
+                  sellerCars[cIdx].status = "done";
+                  sellerCars[cIdx].badge = "Terjual";
+                  sellerCars[cIdx].purchase = purchaseData;
+                  save(k, sellerCars);
+                }
+
+                // Masukkan notifikasi ke riwayat akun penjual tersebut
+                const sellerOwnerId = k.replace(`${LS_CARS}_`, "");
+                const histKey = sellerOwnerId ? `${LS_HIST}_${sellerOwnerId}` : LS_HIST;
+                const sellerHist = normalizeHist(load(histKey, []));
+                sellerHist.unshift({
+                  id: uid("h"),
+                  type: "beli",
+                  text: sellerNotifText,
+                  ts: now,
+                  carId: car.id,
+                });
+                save(histKey, sellerHist.slice(0, 60));
+              }
+            }
+          }
+        } catch {
+          /* abaikan */
+        }
+
+        // 4. Simpan perubahan akun pembeli saat ini
         persist(s);
+
+        // 5. Siarkan event realtime lintas tab / jendela
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.setItem(
+              "abc_order_broadcast",
+              JSON.stringify({ carId: car.id, sellerId: car.sellerId, invoiceNumber, ts: now })
+            );
+            window.dispatchEvent(
+              new CustomEvent("order-created", { detail: { car, purchase: purchaseData } })
+            );
+          }
+        } catch {
+          /* abaikan */
+        }
+
         return purchaseData;
       },
       log(type, text, silent, carId) {

@@ -137,6 +137,8 @@ export function SellModal({
         description,
         sellerPhone: phone,
         status: listingStatus,
+        sellerId: store.owner() || "",
+        sellerName: store.getDisplayName() || "",
       });
       toast(
         listingStatus === "running"
