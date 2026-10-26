@@ -293,6 +293,8 @@ export function AvatarUpload({
 
       setPreview(dataUrl);
       onUploaded(dataUrl);
+      // Broadcast agar AppShell dan komponen lain ikut update
+      window.dispatchEvent(new CustomEvent("avatar-updated", { detail: dataUrl }));
       toast("Foto profil berhasil diperbarui.");
     } catch (err) {
       console.error("Avatar upload failed:", err);
@@ -323,6 +325,8 @@ export function AvatarUpload({
 
       setPreview("");
       onUploaded("");
+      // Broadcast agar AppShell dan komponen lain ikut update
+      window.dispatchEvent(new CustomEvent("avatar-updated", { detail: "" }));
       toast("Foto profil dihapus.");
     } catch {
       toast("Gagal menghapus foto.");

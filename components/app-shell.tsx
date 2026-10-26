@@ -86,6 +86,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     })();
   }, [user]);
 
+  // Listen perubahan avatar dari AvatarUpload
+  React.useEffect(() => {
+    function onAvatarUpdated(e: Event) {
+      const url = (e as CustomEvent).detail as string;
+      setProfileAvatarUrl(url || "");
+    }
+    window.addEventListener("avatar-updated", onAvatarUpdated);
+    return () => window.removeEventListener("avatar-updated", onAvatarUpdated);
+  }, []);
+
   // Restore collapse desktop
   React.useEffect(() => {
     try {
