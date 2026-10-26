@@ -20,6 +20,7 @@ export interface RoleContextType {
   logout: () => Promise<void>;
   hasPermission: (permission: keyof Permission) => boolean;
   refreshRole: () => Promise<void>;
+  switchRole: (newRole: Role) => Promise<boolean>;
 }
 
 const RoleContext = React.createContext<RoleContextType | null>(null);
@@ -137,8 +138,36 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setRole("guest");
-      router.replace("/login");
-      router.refresh();
+      // Selalu navigasi penuh kembali ke /login
+      window.location.href = "/login";
+    }
+  }
+
+  async function switchRole(newRole: Role): Promise<boolean> {
+    if (!user) return false;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          role: newRole,
+          updated_at: new Date().toISOString(),
+        });
+      if (error) {
+        console.warn("Switch role error:", error.message);
+      }
+      try {
+        localStorage.setItem(`abc_role_${user.id}`, newRole);
+      } catch {
+        /* abaikan */
+      }
+      setRole(newRole);
+      window.dispatchEvent(new CustomEvent("role-updated", { detail: newRole }));
+      return true;
+    } catch (err) {
+      console.error("switchRole failed:", err);
+      return false;
     }
   }
 
@@ -168,6 +197,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       logout,
       hasPermission: (perm) => checkPermission(role, perm),
       refreshRole,
+      switchRole,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [user, role, permissions, authChecked],
