@@ -94,6 +94,7 @@ export function imageFor(category: string, explicit?: string): string {
 // ---------- Penyimpanan per-akun ----------
 
 const LS_CARS = "abc_cars_v3";
+const LS_SHARED_CARS = "abc_cars_shared_v2";
 const LS_FAVS = "abc_favs_v2";
 const LS_HIST = "abc_hist_v2";
 const LS_SET = "abc_settings_v2";
@@ -153,7 +154,8 @@ function normalizeCars(arr: unknown): Car[] {
       o.status = STATUSES.includes(o.status) ? o.status : "queued";
       o.interest = Math.max(0, Math.min(100, Number(o.interest) || 0));
       o.badge = String(o.badge || "").slice(0, 24);
-      o.image = typeof o.image === "string" ? o.image.slice(0, 500) : "";
+      o.image = typeof o.image === "string" ? o.image : "";
+      o.sellerPhone = typeof o.sellerPhone === "string" ? o.sellerPhone.slice(0, 30) : "";
       o.description =
         typeof o.description === "string" ? o.description.slice(0, 500) : "";
       o.createdAt = Number(o.createdAt) > 0 ? Number(o.createdAt) : Date.now();
@@ -320,6 +322,18 @@ export function StoreProvider({
       save(scoped(LS_FAVS), next.favs);
       save(scoped(LS_HIST), next.hist.slice(0, 60));
       save(scoped(LS_SET), next.settings);
+
+      // Sinkronkan mobil ke katalog bersama agar tampil di katalog pembeli
+      try {
+        const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
+        const currentOwnerIds = new Set(next.cars.map((c) => c.id));
+        const otherCars = currentShared.filter((c) => !currentOwnerIds.has(c.id));
+        const updatedShared = [...next.cars, ...otherCars];
+        save(LS_SHARED_CARS, updatedShared);
+      } catch {
+        /* abaikan */
+      }
+
       setSnap({ ...next, cars: [...next.cars] });
     },
     [scoped]
@@ -329,6 +343,21 @@ export function StoreProvider({
     (ownerId: string) => {
       const k = (b: string) => (ownerId ? `${b}_${ownerId}` : b);
       let cars = normalizeCars(load(k(LS_CARS), []));
+
+      // Gabungkan dengan katalog mobil bersama (shared marketplace)
+      try {
+        const sharedCars = normalizeCars(load(LS_SHARED_CARS, []));
+        const seen = new Set(cars.map((c) => c.id));
+        for (const sc of sharedCars) {
+          if (!seen.has(sc.id)) {
+            cars.push(sc);
+            seen.add(sc.id);
+          }
+        }
+      } catch {
+        /* abaikan */
+      }
+
       let favs = load<string[]>(k(LS_FAVS), []);
       if (!Array.isArray(favs)) favs = [];
       const hist = normalizeHist(load(k(LS_HIST), []));
@@ -594,6 +623,8 @@ export function StoreProvider({
         const category = cleanCategory(data.category, "SUV");
         const maxYear = new Date().getFullYear();
         const yearNum = Math.min(maxYear, Math.max(1990, Number(data.year) || maxYear));
+        const status: CarStatus =
+          data.status && STATUSES.includes(data.status) ? data.status : "running";
         const car: Car = {
           id: uid("c"),
           title: String(data.title || "").trim().slice(0, 80),
@@ -602,11 +633,12 @@ export function StoreProvider({
           km: Math.max(0, Number(data.km) || 0),
           location: String(data.location || "-").slice(0, 60) || "-",
           category,
-          status: "queued",
+          status,
           interest: 50,
-          badge: "Baru",
+          badge: status === "running" ? "Dijual" : "Baru",
           image: imageFor(category, data.image),
           description: String(data.description || "").trim().slice(0, 500),
+          sellerPhone: String(data.sellerPhone || "").trim(),
           createdAt: Date.now(),
           offers: [],
         };
@@ -614,7 +646,10 @@ export function StoreProvider({
         s.hist.unshift({
           id: uid("h"),
           type: "jual",
-          text: `Mobil baru <b>${esc(car.title)}</b> ditambahkan, menunggu verifikasi`,
+          text:
+            status === "running"
+              ? `Mobil baru <b>${esc(car.title)}</b> berhasil ditayangkan di katalog pembeli`
+              : `Mobil baru <b>${esc(car.title)}</b> ditambahkan, menunggu verifikasi`,
           ts: Date.now(),
           carId: null,
         });
@@ -665,6 +700,12 @@ export function StoreProvider({
         if (!car) return false;
         s.cars = s.cars.filter((c) => c.id !== id);
         s.favs = s.favs.filter((f) => f !== id);
+        try {
+          const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
+          save(LS_SHARED_CARS, currentShared.filter((c) => c.id !== id));
+        } catch {
+          /* abaikan */
+        }
         s.hist.unshift({
           id: uid("h"),
           type: "hapus",
@@ -682,6 +723,7 @@ export function StoreProvider({
         const car = s.cars.find((c) => c.id === id);
         if (!car) return null;
         car.status = status;
+        if (status === "running") car.badge = "Dijual";
         const label =
           ({ done: "terjual", running: "ditayangkan", queued: "menunggu verifikasi", failed: "ditolak" } as Record<string, string>)[status] || status;
         s.hist.unshift({
@@ -711,6 +753,13 @@ export function StoreProvider({
         car.km = Math.max(0, Number(data.km) || 0);
         car.location = String(data.location || "").trim().slice(0, 60) || "-";
         car.category = cleanCategory(data.category, car.category as never);
+        if (data.status && STATUSES.includes(data.status)) {
+          car.status = data.status;
+          car.badge = car.status === "running" ? "Dijual" : "Baru";
+        }
+        if (data.sellerPhone !== undefined) {
+          car.sellerPhone = String(data.sellerPhone || "").trim();
+        }
         if (Object.prototype.hasOwnProperty.call(data, "image")) {
           const img = safeImageUrl(data.image);
           if (img) car.image = img;

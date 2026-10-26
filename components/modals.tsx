@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { CATEGORIES, CITY_GROUPS, INDONESIA_CITIES } from "@/lib/cities";
-import { useStore, type Car } from "@/components/store-provider";
+import { useStore, type Car, type CarStatus } from "@/components/store-provider";
 import { useToast } from "@/components/toast";
 import { useRole } from "@/components/role-provider";
 import { fmtRp, timeAgo } from "@/lib/format";
@@ -73,6 +73,7 @@ export function SellModal({
   const [kmDisplay, setKmDisplay] = React.useState(editing?.km?.toLocaleString("id-ID") || "");
   const [sellerPhone, setSellerPhone] = React.useState(editing?.sellerPhone || "");
   const [carImage, setCarImage] = React.useState(editing?.image || "");
+  const [listingStatus, setListingStatus] = React.useState<CarStatus>(editing?.status || "running");
   const maxYear = new Date().getFullYear();
 
   function formatNumber(val: string): string {
@@ -105,12 +106,42 @@ export function SellModal({
 
     setErr("");
     if (editing) {
-      const ok = store.edit(editing.id, { title, price, year, km, location, category, image, description, sellerPhone: phone });
+      const ok = store.edit(editing.id, {
+        title,
+        price,
+        year,
+        km,
+        location,
+        category,
+        image,
+        description,
+        sellerPhone: phone,
+        status: listingStatus,
+      });
       if (!ok) return setErr("Gagal menyimpan. Periksa kembali isian.");
-      toast("Listing diperbarui.");
+      toast(
+        listingStatus === "running"
+          ? "Listing diperbarui dan aktif ditayangkan di katalog pembeli!"
+          : "Listing diperbarui."
+      );
     } else {
-      store.add({ title, price, year, km, location, category, image, description, sellerPhone: phone });
-      toast("Listing ditambahkan, menunggu verifikasi.");
+      store.add({
+        title,
+        price,
+        year,
+        km,
+        location,
+        category,
+        image,
+        description,
+        sellerPhone: phone,
+        status: listingStatus,
+      });
+      toast(
+        listingStatus === "running"
+          ? "Listing berhasil ditayangkan ke katalog pembeli!"
+          : "Listing ditambahkan, menunggu verifikasi."
+      );
     }
     onClose(true);
   }
@@ -123,7 +154,9 @@ export function SellModal({
             {editing ? "Edit Listing" : "Tambah Listing"}
           </h3>
           <p className="text-xs text-gray-500 dark:text-zinc-400">
-            {editing ? "Perbarui data mobilmu." : 'Listing baru masuk sebagai "Menunggu" verifikasi.'}
+            {editing
+              ? "Perbarui informasi dan status penayangan mobil."
+              : "Isi data mobil dan tentukan apakah langsung ditayangkan ke pembeli."}
           </p>
         </div>
         <button onClick={() => onClose()} className="rounded-lg border border-gray-200 p-2 transition hover:bg-gray-100 active:scale-97 dark:border-zinc-800 dark:hover:bg-zinc-800">
@@ -203,6 +236,42 @@ export function SellModal({
         </div>
         <div>
           <CarImageUpload value={carImage} onChange={setCarImage} />
+        </div>
+        <div className="rounded-2xl border border-gray-200/90 bg-gray-50/80 p-3.5 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-800/40">
+          <label className="mb-2 block text-xs font-semibold text-gray-800 dark:text-zinc-200">
+            Status Penayangan Mobil
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setListingStatus("running")}
+              className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-semibold transition-all ${
+                listingStatus === "running"
+                  ? "bg-black text-white shadow-xs dark:bg-white dark:text-zinc-950"
+                  : "bg-white text-gray-600 border border-gray-200 hover:text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Tayang ke Pembeli
+            </button>
+            <button
+              type="button"
+              onClick={() => setListingStatus("queued")}
+              className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-semibold transition-all ${
+                listingStatus === "queued"
+                  ? "bg-black text-white shadow-xs dark:bg-white dark:text-zinc-950"
+                  : "bg-white text-gray-600 border border-gray-200 hover:text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              Simpan Draf (Menunggu)
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] text-gray-500 dark:text-zinc-400">
+            {listingStatus === "running"
+              ? "✓ Mobil langsung aktif muncul di halaman Beli Mobil dan dapat dicari serta dibeli oleh calon pembeli."
+              : "Mobil disimpan sebagai draf/menunggu verifikasi dan tidak terlihat oleh pembeli sampai ditayangkan."}
+          </p>
         </div>
         <div>
           <label className={labelCls}>Deskripsi</label>

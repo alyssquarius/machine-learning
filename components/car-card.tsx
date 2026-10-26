@@ -186,6 +186,33 @@ export function CarCard({
           </div>
         )}
 
+        {/* Indikator status penayangan untuk penjual */}
+        {sell && car.status === "running" && (
+          <div className="mt-2.5 flex items-center justify-between rounded-xl border border-emerald-200/60 bg-emerald-50/80 px-3 py-1.5 dark:border-emerald-800/40 dark:bg-emerald-950/30">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Tayang di katalog pembeli
+            </div>
+            <button
+              onClick={() =>
+                act(
+                  () => store.setStatus(car.id, "queued"),
+                  "Listing ditarik ke draf.",
+                )
+              }
+              className="text-[10px] font-semibold text-gray-500 underline hover:text-black dark:text-zinc-400 dark:hover:text-white"
+            >
+              Tarik
+            </button>
+          </div>
+        )}
+        {sell && car.status === "queued" && (
+          <div className="mt-2.5 flex items-center gap-1.5 rounded-xl border border-amber-200/60 bg-amber-50/80 px-3 py-1.5 text-[11px] font-medium text-amber-700 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-400">
+            <span className="h-2 w-2 rounded-full bg-amber-500" />
+            Draf / Menunggu ditayangkan
+          </div>
+        )}
+
         <div className="mt-3 flex gap-2">
           {sell ? (
             <>
@@ -194,12 +221,12 @@ export function CarCard({
                   onClick={() =>
                     act(
                       () => store.setStatus(car.id, "running"),
-                      "Listing ditayangkan.",
+                      "Listing berhasil ditayangkan ke katalog pembeli!",
                     )
                   }
-                  className="flex-1 rounded-lg bg-black py-2 text-xs font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+                  className="flex-1 rounded-full bg-emerald-600 py-2 px-3 text-xs font-semibold text-white transition hover:bg-emerald-500 active:scale-95 shadow-xs"
                 >
-                  Tayangkan
+                  🚀 Tayangkan ke Pembeli
                 </button>
               ) : null}
               {car.status === "running" ? (
@@ -210,7 +237,7 @@ export function CarCard({
                       "Ditandai terjual.",
                     )
                   }
-                  className="flex-1 rounded-lg bg-black py-2 text-xs font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+                  className="flex-1 rounded-full bg-black py-2 px-3 text-xs font-semibold text-white transition hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
                 >
                   Tandai Terjual
                 </button>
@@ -220,10 +247,10 @@ export function CarCard({
                   onClick={() =>
                     act(
                       () => store.setStatus(car.id, "running"),
-                      "Listing ditayangkan lagi.",
+                      "Listing ditayangkan lagi ke katalog pembeli.",
                     )
                   }
-                  className="flex-1 rounded-lg border border-gray-300 py-2 text-xs font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+                  className="flex-1 rounded-full border border-gray-300 py-2 px-3 text-xs font-semibold text-black transition hover:bg-gray-100 active:scale-95 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
                 >
                   Jual Lagi
                 </button>
