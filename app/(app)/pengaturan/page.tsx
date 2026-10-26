@@ -84,6 +84,14 @@ export default function PengaturanPage() {
         // 2. Fetch avatar dari profiles
         try {
           const supabase = createClient();
+
+          // Bersihkan jika sempat menyimpan base64 di user_metadata
+          const rawMeta = String(u.user_metadata?.avatar_url || "");
+          if (rawMeta.startsWith("data:")) {
+            supabase.auth.updateUser({ data: { avatar_url: null } }).catch(() => {});
+          }
+          const safeMeta = rawMeta.startsWith("data:") ? "" : rawMeta;
+
           const { data: profile } = await supabase
             .from("profiles")
             .select("avatar_url")
@@ -100,12 +108,14 @@ export default function PengaturanPage() {
           } else if (profile && profile.avatar_url === null) {
             setAvatarUrl("");
           } else if (!isCleared) {
-            setAvatarUrl(u.user_metadata?.avatar_url || "");
+            setAvatarUrl(safeMeta);
           }
         } catch {
+          const rawMeta = String(u.user_metadata?.avatar_url || "");
+          const safeMeta = rawMeta.startsWith("data:") ? "" : rawMeta;
           const isCleared = localStorage.getItem(`abc_avatar_cleared_${u.id}`) === "true";
           if (!isCleared && !localStorage.getItem(`abc_avatar_${u.id}`)) {
-            setAvatarUrl(u.user_metadata?.avatar_url || "");
+            setAvatarUrl(safeMeta);
           }
         }
       });

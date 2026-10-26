@@ -286,16 +286,21 @@ export function AvatarUpload({
 
       const supabase = createClient();
 
-      // 2. Simpan ke auth user_metadata di Supabase Auth (selalu berhasil & timpa google avatar)
+      // 2. Bersihkan user_metadata.avatar_url di Supabase Auth jika sebelumnya ada
+      // PENTING: JANGAN simpan base64 dataUrl ke auth user_metadata karena akan masuk ke JWT session
+      // dan membuat HTTP cookie membengkak hingga puluhan KB, menyebabkan HTTP/2 Frame Size Error (Safari -1000).
       try {
-        await supabase.auth.updateUser({
-          data: { avatar_url: dataUrl },
-        });
+        const { data: authUser } = await supabase.auth.getUser();
+        if (authUser?.user?.user_metadata?.avatar_url) {
+          await supabase.auth.updateUser({
+            data: { avatar_url: null },
+          });
+        }
       } catch (authErr) {
-        console.warn("auth.updateUser avatar error:", authErr);
+        console.warn("auth avatar cleanup error:", authErr);
       }
 
-      // 3. Upsert ke tabel profiles di Supabase (gunakan upsert agar tidak hilang jika row belum ada)
+      // 3. Upsert ke tabel profiles di Supabase (disimpan di PostgreSQL, aman tanpa membebani cookie)
       try {
         const { error: upsertErr } = await supabase
           .from("profiles")
@@ -348,7 +353,7 @@ export function AvatarUpload({
       const supabase = createClient();
       try {
         await supabase.auth.updateUser({
-          data: { avatar_url: "" },
+          data: { avatar_url: null },
         });
       } catch {
         /* abaikan */

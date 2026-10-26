@@ -84,6 +84,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const supabase = createClient();
+
+        // Auto-sanitize jika user_metadata sempat terisi base64 data: url
+        // Ini memastikan JWT session di cookie langsung kembali ramping (<1KB)
+        if (String(user?.user_metadata?.avatar_url || "").startsWith("data:")) {
+          supabase.auth.updateUser({ data: { avatar_url: null } }).catch(() => {});
+        }
+
         const { data } = await supabase
           .from("profiles")
           .select("avatar_url")
@@ -179,7 +186,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       );
   const email = user?.email || "";
   const isCleared = typeof window !== "undefined" && user?.id ? localStorage.getItem(`abc_avatar_cleared_${user.id}`) === "true" : false;
-  const avatarUrl = profileAvatarUrl || (isCleared ? "" : String(user?.user_metadata?.avatar_url || ""));
+  const rawMetaAvatar = String(user?.user_metadata?.avatar_url || "");
+  const safeMetaAvatar = rawMetaAvatar.startsWith("data:") ? "" : rawMetaAvatar;
+  const avatarUrl = profileAvatarUrl || (isCleared ? "" : safeMetaAvatar);
   const initial = isGuest
     ? "G"
     : (displayName || "U").trim().charAt(0).toUpperCase() || "U";
