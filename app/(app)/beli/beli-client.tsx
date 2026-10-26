@@ -328,9 +328,9 @@ export default function BeliClient() {
               <button
                 key={p.id}
                 onClick={() => applyPreset(p.id)}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                className={`filter-pill rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                   preset === p.id
-                    ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                    ? "border-zinc-950 bg-zinc-950 text-white shadow-xs dark:border-white dark:bg-white dark:text-zinc-950"
                     : "border-gray-300 text-gray-600 hover:border-gray-400 hover:text-black dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white"
                 }`}
               >

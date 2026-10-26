@@ -96,7 +96,7 @@ function KpiCard({
   const fmt = (n: number, d = 0) =>
     n.toLocaleString("id-ID", { minimumFractionDigits: d, maximumFractionDigits: d });
   return (
-    <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800/60">
+    <div className="kpi-card-hover relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-xs transition hover:bg-gray-50/80 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800/60">
       <span className={`absolute inset-y-0 left-0 w-1 ${bar}`} aria-hidden="true" />
       <div className="flex items-center justify-between gap-3">
         <p className="min-w-0 truncate text-sm font-medium text-gray-500 dark:text-zinc-400">{label}</p>

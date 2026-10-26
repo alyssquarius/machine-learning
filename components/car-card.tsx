@@ -114,7 +114,7 @@ export function CarCard({
             className="absolute left-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm backdrop-blur-sm transition hover:bg-white active:scale-97 dark:bg-zinc-900/90 dark:text-zinc-200 dark:hover:bg-zinc-900"
           >
             <svg
-              className={`h-5 w-5 ${isFav ? "fill-red-500 text-red-500" : "fill-none text-current"}`}
+              className={`h-5 w-5 transition-transform ${isFav ? "fill-red-500 text-red-500 animate-heart-pop scale-110" : "fill-none text-current"}`}
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth="2"

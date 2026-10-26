@@ -44,45 +44,238 @@ html.dark .text-gray-600 {
   color: #a1a1aa !important;
 }
 
-/* ---------- ANIMASI PROFESIONAL & INTERAKSI ---------- */
+/* ---------- ANIMASI PROFESIONAL & INTERAKSI MIKRO ---------- */
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes zoomIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ripple-grow {
+  0% {
+    transform: scale(0);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-zoom-in {
-  animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: zoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Efek klik tombol profesional (tactile press feedback) */
-button:not(:disabled), a:not([role="link"]) {
-  transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+.animate-heart-pop {
+  animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-button:not(:disabled):active, .btn-press:active {
-  transform: scale(0.97);
+/* ---------- EFEK WATER RIPPLE PADA CLICK ---------- */
+
+.click-ripple-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scale(0);
+  animation: ripple-grow 0.52s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+  z-index: 20;
 }
 
-/* Efek card mobil hover */
+.ripple-light {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 60%, transparent 100%);
+}
+
+.ripple-dark {
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.05) 60%, transparent 100%);
+}
+
+/* ---------- TACTILE FEEDBACK: TOMBOL & ELEMEN INTERAKTIF ---------- */
+
+button:not(:disabled),
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+.interactive-click {
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.15s ease,
+              opacity 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Tombol ditekan (Tactile Micro-press Spring) */
+button:not(:disabled):active,
+a:active,
+[role="button"]:active,
+.btn-press:active {
+  transform: scale(0.965) translateY(0.5px) !important;
+}
+
+/* Tombol ikon (lingkaran/persegi kecil) feedback lebih responsif */
+button.rounded-full:not(:disabled):active,
+button:has(> svg):not(:disabled):active {
+  transform: scale(0.92) !important;
+}
+
+/* Focus visible yang elegan */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* ---------- KARTU MOBIL & KPI INTERAKTIF ---------- */
+
 .car-card-hover {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.car-card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+  will-change: transform, box-shadow;
 }
 
-/* Utilitas Tailwind kustom */
+.car-card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 36px -10px rgba(0, 0, 0, 0.1), 0 6px 14px -3px rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.16);
+}
+
+html.dark .car-card-hover:hover {
+  box-shadow: 0 18px 36px -10px rgba(0, 0, 0, 0.45), 0 6px 14px -3px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.car-card-hover:active {
+  transform: scale(0.988) translateY(-1px);
+  box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Kartu KPI Dashboard */
+.kpi-card-hover {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+}
+
+.kpi-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
+html.dark .kpi-card-hover:hover {
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.kpi-card-hover:active {
+  transform: scale(0.985);
+}
+
+/* ---------- PILL FILTER & TABS ---------- */
+
+.filter-pill {
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.18s ease,
+              border-color 0.18s ease,
+              color 0.18s ease;
+}
+
+.filter-pill:hover {
+  transform: translateY(-1px);
+}
+
+.filter-pill:active {
+  transform: scale(0.94) !important;
+}
+
+/* ---------- FORM & INPUT POLISH ---------- */
+
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.07);
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+}
+
+/* Checkbox & Radio click feedback */
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+  transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input[type="checkbox"]:active,
+input[type="radio"]:active {
+  transform: scale(0.85);
+}
+
+/* Range slider custom track & thumb */
+input[type="range"] {
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.22);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.38);
+  box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- SIDEBAR NAVIGATION ITEM ---------- */
+
 @layer utilities {
   .nav-item {
     border-left: 3px solid transparent;
@@ -92,7 +285,10 @@ button:not(:disabled):active, .btn-press:active {
   .nav-item:hover {
     background-color: rgb(243 244 246);
     color: rgb(17 24 39);
-    transform: translateX(2px);
+    transform: translateX(3px);
+  }
+  .nav-item:active {
+    transform: scale(0.97) translateX(1px);
   }
   .dark .nav-item {
     color: rgb(161 161 170);
@@ -117,12 +313,33 @@ button:not(:disabled):active, .btn-press:active {
 
 /* Foto diredupkan sedikit di dark mode agar tidak terlalu menyilaukan. */
 html.dark img {
-  filter: brightness(0.9) contrast(0.98);
+  filter: brightness(0.92) contrast(0.98);
+}
+
+/* Custom sleek scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
 }
 
 html.dark ::-webkit-scrollbar-thumb {
   background: #3a3a43;
 }
+
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #52525c;
 }
