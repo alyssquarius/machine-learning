@@ -24,21 +24,49 @@ export default function ProfilPage() {
         setUser(data.user);
         setDisplayName(store.getDisplayName() || data.user.user_metadata?.full_name || "");
 
-        // Ambil avatar_url dari profiles (prioritas), fallback ke user_metadata
+        // Cek cache localStorage terlebih dahulu
+        try {
+          const cached = localStorage.getItem(`abc_avatar_${data.user.id}`);
+          if (cached) {
+            setAvatarUrl(cached);
+          }
+        } catch {}
+
+        // Ambil avatar_url dari profiles (prioritas)
         try {
           const { data: profile } = await supabase
             .from("profiles")
             .select("avatar_url")
             .eq("id", data.user.id)
             .single();
-          setAvatarUrl(
-            profile?.avatar_url || data.user.user_metadata?.avatar_url || ""
-          );
+
+          const isCleared = localStorage.getItem(`abc_avatar_cleared_${data.user.id}`) === "true";
+          if (profile?.avatar_url) {
+            setAvatarUrl(profile.avatar_url);
+            try {
+              localStorage.setItem(`abc_avatar_${data.user.id}`, profile.avatar_url);
+              localStorage.removeItem(`abc_avatar_cleared_${data.user.id}`);
+            } catch {}
+          } else if (profile && profile.avatar_url === null) {
+            setAvatarUrl("");
+          } else if (!isCleared) {
+            setAvatarUrl(data.user.user_metadata?.avatar_url || "");
+          }
         } catch {
-          setAvatarUrl(data.user.user_metadata?.avatar_url || "");
+          const isCleared = localStorage.getItem(`abc_avatar_cleared_${data.user.id}`) === "true";
+          if (!isCleared && !localStorage.getItem(`abc_avatar_${data.user.id}`)) {
+            setAvatarUrl(data.user.user_metadata?.avatar_url || "");
+          }
         }
       }
     });
+
+    const onAvatarUpdated = (e: Event) => {
+      const url = (e as CustomEvent).detail as string;
+      setAvatarUrl(url || "");
+    };
+    window.addEventListener("avatar-updated", onAvatarUpdated);
+    return () => window.removeEventListener("avatar-updated", onAvatarUpdated);
   }, [store]);
 
   async function onSave() {

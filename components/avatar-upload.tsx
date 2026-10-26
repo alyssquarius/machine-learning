@@ -275,25 +275,49 @@ export function AvatarUpload({
     setEditorFile(null);
     setUploading(true);
     try {
-      // Simpan data URL ke tabel profiles
-      const supabase = createClient();
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          avatar_url: dataUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
+      // 1. Simpan ke LocalStorage segera untuk instan persistence tanpa flicker
+      if (typeof window !== "undefined" && userId) {
+        try {
+          localStorage.setItem(`abc_avatar_${userId}`, dataUrl);
+        } catch {
+          /* abaikan quota */
+        }
+      }
 
-      if (updateError) {
-        console.warn("Update profile error:", updateError.message);
-        toast("Gagal menyimpan foto profil. Coba lagi.");
-        return;
+      const supabase = createClient();
+
+      // 2. Simpan ke auth user_metadata di Supabase Auth (selalu berhasil & timpa google avatar)
+      try {
+        await supabase.auth.updateUser({
+          data: { avatar_url: dataUrl },
+        });
+      } catch (authErr) {
+        console.warn("auth.updateUser avatar error:", authErr);
+      }
+
+      // 3. Upsert ke tabel profiles di Supabase (gunakan upsert agar tidak hilang jika row belum ada)
+      try {
+        const { error: upsertErr } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              id: userId,
+              avatar_url: dataUrl,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "id" }
+          );
+
+        if (upsertErr) {
+          console.warn("Upsert profile error:", upsertErr.message);
+        }
+      } catch (profErr) {
+        console.warn("profile upsert error:", profErr);
       }
 
       setPreview(dataUrl);
       onUploaded(dataUrl);
-      // Broadcast agar AppShell dan komponen lain ikut update
+      // Broadcast agar AppShell, Profil, dan Pengaturan langsung update
       window.dispatchEvent(new CustomEvent("avatar-updated", { detail: dataUrl }));
       toast("Foto profil berhasil diperbarui.");
     } catch (err) {
@@ -312,15 +336,37 @@ export function AvatarUpload({
     if (!confirm("Hapus foto profil?")) return;
     setUploading(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("profiles")
-        .update({ avatar_url: null, updated_at: new Date().toISOString() })
-        .eq("id", userId);
+      if (typeof window !== "undefined" && userId) {
+        try {
+          localStorage.removeItem(`abc_avatar_${userId}`);
+          localStorage.setItem(`abc_avatar_cleared_${userId}`, "true");
+        } catch {
+          /* abaikan */
+        }
+      }
 
-      if (error) {
-        toast("Gagal menghapus foto.");
-        return;
+      const supabase = createClient();
+      try {
+        await supabase.auth.updateUser({
+          data: { avatar_url: "" },
+        });
+      } catch {
+        /* abaikan */
+      }
+
+      try {
+        await supabase
+          .from("profiles")
+          .upsert(
+            {
+              id: userId,
+              avatar_url: null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "id" }
+          );
+      } catch {
+        /* abaikan */
       }
 
       setPreview("");

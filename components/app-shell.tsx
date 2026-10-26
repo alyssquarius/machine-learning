@@ -72,6 +72,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setProfileAvatarUrl("");
       return;
     }
+
+    // Cek cache localStorage terlebih dahulu (bebas latency & flicker)
+    try {
+      const cached = localStorage.getItem(`abc_avatar_${user.id}`);
+      if (cached) {
+        setProfileAvatarUrl(cached);
+      }
+    } catch {}
+
     (async () => {
       try {
         const supabase = createClient();
@@ -80,7 +89,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           .select("avatar_url")
           .eq("id", user.id)
           .single();
-        if (data?.avatar_url) setProfileAvatarUrl(data.avatar_url);
+        if (data?.avatar_url) {
+          setProfileAvatarUrl(data.avatar_url);
+          try {
+            localStorage.setItem(`abc_avatar_${user.id}`, data.avatar_url);
+            localStorage.removeItem(`abc_avatar_cleared_${user.id}`);
+          } catch {}
+        } else if (data && data.avatar_url === null) {
+          setProfileAvatarUrl("");
+          try {
+            localStorage.removeItem(`abc_avatar_${user.id}`);
+            localStorage.setItem(`abc_avatar_cleared_${user.id}`, "true");
+          } catch {}
+        }
       } catch {
         /* abaikan */
       }
@@ -157,7 +178,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
       );
   const email = user?.email || "";
-  const avatarUrl = profileAvatarUrl || String(user?.user_metadata?.avatar_url || "");
+  const isCleared = typeof window !== "undefined" && user?.id ? localStorage.getItem(`abc_avatar_cleared_${user.id}`) === "true" : false;
+  const avatarUrl = profileAvatarUrl || (isCleared ? "" : String(user?.user_metadata?.avatar_url || ""));
   const initial = isGuest
     ? "G"
     : (displayName || "U").trim().charAt(0).toUpperCase() || "U";

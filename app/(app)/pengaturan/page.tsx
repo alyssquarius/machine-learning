@@ -10,6 +10,7 @@ import { useRole } from "@/components/role-provider";
 import { RoleBadge } from "@/components/role-badge";
 import { getAdminWhatsApp, setAdminWhatsApp } from "@/lib/config";
 import { WhatsAppIcon } from "@/components/icons";
+import { AvatarUpload } from "@/components/avatar-upload";
 
 function SavedBadge({ show }: { show: boolean }) {
   if (!show) return null;
@@ -33,7 +34,7 @@ export default function PengaturanPage() {
   const { theme, setTheme } = useTheme();
 
   const [saved, setSaved] = React.useState(false);
-  const [user, setUser] = React.useState({ name: "User", email: "user@example.com" });
+  const [user, setUser] = React.useState({ name: "User", email: "user@example.com", id: "" });
   const [displayName, setDisplayName] = React.useState("");
   const [avatarUrl, setAvatarUrl] = React.useState("");
   const [target, setTarget] = React.useState("10");
@@ -63,13 +64,24 @@ export default function PengaturanPage() {
         setUser({
           name: dn || String(u.user_metadata?.full_name || u.email?.split("@")[0] || "User"),
           email: u.email || "",
+          id: u.id,
         });
+
+        // 1. Cek cache localStorage terlebih dahulu untuk instan render
+        try {
+          const cached = localStorage.getItem(`abc_avatar_${u.id}`);
+          if (cached) {
+            setAvatarUrl(cached);
+          }
+        } catch {}
+
         if (u.user_metadata?.whatsapp) {
           const userWa = String(u.user_metadata.whatsapp);
           setAdminWa(userWa);
           setAdminWaDisplay(userWa.startsWith("62") ? userWa.slice(2) : userWa);
         }
-        // Fetch avatar dari profiles
+
+        // 2. Fetch avatar dari profiles
         try {
           const supabase = createClient();
           const { data: profile } = await supabase
@@ -77,13 +89,33 @@ export default function PengaturanPage() {
             .select("avatar_url")
             .eq("id", u.id)
             .single();
-          setAvatarUrl(
-            profile?.avatar_url || u.user_metadata?.avatar_url || ""
-          );
+
+          const isCleared = localStorage.getItem(`abc_avatar_cleared_${u.id}`) === "true";
+          if (profile?.avatar_url) {
+            setAvatarUrl(profile.avatar_url);
+            try {
+              localStorage.setItem(`abc_avatar_${u.id}`, profile.avatar_url);
+              localStorage.removeItem(`abc_avatar_cleared_${u.id}`);
+            } catch {}
+          } else if (profile && profile.avatar_url === null) {
+            setAvatarUrl("");
+          } else if (!isCleared) {
+            setAvatarUrl(u.user_metadata?.avatar_url || "");
+          }
         } catch {
-          setAvatarUrl(u.user_metadata?.avatar_url || "");
+          const isCleared = localStorage.getItem(`abc_avatar_cleared_${u.id}`) === "true";
+          if (!isCleared && !localStorage.getItem(`abc_avatar_${u.id}`)) {
+            setAvatarUrl(u.user_metadata?.avatar_url || "");
+          }
         }
       });
+
+    const onAvatarUpdated = (e: Event) => {
+      const url = (e as CustomEvent).detail as string;
+      setAvatarUrl(url || "");
+    };
+    window.addEventListener("avatar-updated", onAvatarUpdated);
+    return () => window.removeEventListener("avatar-updated", onAvatarUpdated);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.ready]);
 
@@ -379,19 +411,20 @@ export default function PengaturanPage() {
             Nama sapaan yang muncul di header dan dashboard.
           </p>
 
-          <div className="mb-5 flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-800/40">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-black ring-2 ring-gray-200 dark:bg-white dark:ring-zinc-700">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-lg font-bold text-white dark:text-zinc-950">
-                  {avatarInitial}
-                </span>
-              )}
-            </div>
+          <div className="mb-5 flex items-center gap-4 rounded-xl border border-gray-200 bg-gray-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-800/40">
+            <AvatarUpload
+              userId={user.id}
+              currentUrl={avatarUrl}
+              fallbackInitial={avatarInitial}
+              onUploaded={(newUrl) => setAvatarUrl(newUrl)}
+              size={56}
+            />
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-black dark:text-white">{displayName || user.name}</p>
               <p className="truncate text-xs text-gray-500 dark:text-zinc-400">{user.email}</p>
+              <p className="mt-1 text-[11px] font-medium text-blue-600 dark:text-blue-400">
+                Klik ikon kamera untuk mengganti foto profil
+              </p>
             </div>
             <button
               type="button"
@@ -404,7 +437,7 @@ export default function PengaturanPage() {
               }}
               className="shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
             >
-              Reset
+              Reset Nama
             </button>
           </div>
 
