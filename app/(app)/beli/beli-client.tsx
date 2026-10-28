@@ -353,7 +353,7 @@ export default function BeliClient() {
       )}
       <div className="catalog-results-heading mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="eyebrow !mb-1">KATALOG KENDARAAN</p>
+          <p className="eyebrow mb-1!">KATALOG KENDARAAN</p>
           <h2 className="text-base font-semibold">{list.length} mobil tersedia</h2>
         </div>
         <Link href="/simulasi" className="button-secondary">
@@ -705,7 +705,7 @@ export default function BeliClient() {
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="text-sm font-semibold">Belum menemukan yang cocok?</h2>
-            <p className="page-description !mt-1">
+            <p className="page-description mt-1!">
               Ceritakan kebutuhan dan anggaranmu kepada admin. Pesan dapat kamu tinjau sebelum
               dikirim.
             </p>
