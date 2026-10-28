@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useStore } from "@/components/store-provider";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import { useRole } from "@/components/role-provider";
 import { useToast } from "@/components/toast";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
 import { config } from "@/lib/config";
@@ -12,71 +12,64 @@ import { AvatarUpload } from "@/components/avatar-upload";
 export default function ProfilPage() {
   const store = useStore();
   const { toast } = useToast();
-  const [user, setUser] = React.useState<User | null>(null);
+  const { user } = useRole();
+  const [profileError, setProfileError] = React.useState("");
   const [displayName, setDisplayName] = React.useState("");
   const [avatarUrl, setAvatarUrl] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (data.user) {
-        setUser(data.user);
-        setDisplayName(store.getDisplayName() || data.user.user_metadata?.full_name || "");
+    if (!user || !store.ready) return;
+    let cancelled = false;
+    const userId = user.id;
+    setProfileError("");
+    setDisplayName(store.getDisplayName() || user.user_metadata?.full_name || "");
+    const metadataAvatar = String(user.user_metadata?.avatar_url || "");
+    let cachedAvatar = "";
+    let cleared = false;
+    try {
+      cachedAvatar = localStorage.getItem(`abc_avatar_${userId}`) || "";
+      cleared = localStorage.getItem(`abc_avatar_cleared_${userId}`) === "true";
+    } catch {
+      // Safari may disallow storage; the database remains available.
+    }
+    setAvatarUrl(cachedAvatar || (!cleared && !metadataAvatar.startsWith("data:") ? metadataAvatar : ""));
 
-        // Cek cache localStorage terlebih dahulu
-        try {
-          const cached = localStorage.getItem(`abc_avatar_${data.user.id}`);
-          if (cached) {
-            setAvatarUrl(cached);
-          }
-        } catch {}
-
-        // Ambil avatar_url dari profiles (prioritas)
-        try {
-          // Bersihkan jika sempat menyimpan base64 di user_metadata
-          const rawMeta = String(data.user.user_metadata?.avatar_url || "");
-          if (rawMeta.startsWith("data:")) {
-            supabase.auth.updateUser({ data: { avatar_url: null } }).catch(() => {});
-          }
-          const safeMeta = rawMeta.startsWith("data:") ? "" : rawMeta;
-
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("avatar_url")
-            .eq("id", data.user.id)
-            .single();
-
-          const isCleared = localStorage.getItem(`abc_avatar_cleared_${data.user.id}`) === "true";
-          if (profile?.avatar_url) {
-            setAvatarUrl(profile.avatar_url);
-            try {
-              localStorage.setItem(`abc_avatar_${data.user.id}`, profile.avatar_url);
-              localStorage.removeItem(`abc_avatar_cleared_${data.user.id}`);
-            } catch {}
-          } else if (profile && profile.avatar_url === null) {
-            setAvatarUrl("");
-          } else if (!isCleared) {
-            setAvatarUrl(safeMeta);
-          }
-        } catch {
-          const rawMeta = String(data.user.user_metadata?.avatar_url || "");
-          const safeMeta = rawMeta.startsWith("data:") ? "" : rawMeta;
-          const isCleared = localStorage.getItem(`abc_avatar_cleared_${data.user.id}`) === "true";
-          if (!isCleared && !localStorage.getItem(`abc_avatar_${data.user.id}`)) {
-            setAvatarUrl(safeMeta);
+    void (async () => {
+      try {
+        const { data: profile, error } = await createClient().from("profiles")
+          .select("avatar_url").eq("id", userId).maybeSingle();
+        if (cancelled) return;
+        if (error) throw error;
+        if (profile) {
+          const avatar = profile.avatar_url || "";
+          setAvatarUrl(avatar);
+          try {
+            if (avatar) {
+              localStorage.setItem(`abc_avatar_${userId}`, avatar);
+              localStorage.removeItem(`abc_avatar_cleared_${userId}`);
+            } else {
+              localStorage.removeItem(`abc_avatar_${userId}`);
+              localStorage.setItem(`abc_avatar_cleared_${userId}`, "true");
+            }
+          } catch {
+            // Cache is optional.
           }
         }
+      } catch {
+        if (!cancelled) setProfileError("Foto profil belum dapat dimuat. Silakan muat ulang halaman untuk mencoba lagi.");
       }
-    });
+    })();
+    return () => { cancelled = true; };
+    // Store snapshots change while typing/saving; load only when the account changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, store.ready]);
 
-    const onAvatarUpdated = (e: Event) => {
-      const url = (e as CustomEvent).detail as string;
-      setAvatarUrl(url || "");
-    };
+  React.useEffect(() => {
+    const onAvatarUpdated = (event: Event) => setAvatarUrl((event as CustomEvent<string>).detail || "");
     window.addEventListener("avatar-updated", onAvatarUpdated);
     return () => window.removeEventListener("avatar-updated", onAvatarUpdated);
-  }, [store]);
+  }, []);
 
   async function onSave() {
     if (!displayName.trim()) {
@@ -106,6 +99,10 @@ export default function ProfilPage() {
           Kelola informasi profil dan preferensi tampilan.
         </p>
       </div>
+
+      {profileError ? (
+        <p role="alert" className="mb-4 rounded-lg border border-amber-300 p-3 text-sm text-amber-800 dark:border-amber-700 dark:text-amber-300">{profileError}</p>
+      ) : null}
 
       <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
         {/* Foto Profil */}
@@ -140,10 +137,12 @@ export default function ProfilPage() {
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-zinc-300">
+            <label htmlFor="profile-name" className="mb-1 block text-sm font-medium text-gray-700 dark:text-zinc-300">
               Nama Tampilan
             </label>
             <input
+              id="profile-name"
+              maxLength={40}
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}

@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { NextRequest } from "next/server.js";
 
 const moduleURL = (source) => `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
+const hygieneURL = moduleURL(stripTypeScriptTypes(await readFile(new URL("../lib/supabase/session-hygiene.ts", import.meta.url), "utf8")));
 const configURL = moduleURL(stripTypeScriptTypes(await readFile(new URL("../lib/supabase/config.ts", import.meta.url), "utf8")));
 async function loadModule(path, replacements) {
   let source = await readFile(new URL(path, import.meta.url), "utf8");
@@ -15,11 +16,13 @@ const { updateSession } = await loadModule("../lib/supabase/middleware.ts", [
   ['import { createServerClient } from "@supabase/ssr";', 'const createServerClient = (...args) => globalThis.authFixture.createServerClient(...args);'],
   ['"next/server"', JSON.stringify(import.meta.resolve("next/server.js"))],
   ['"./config"', JSON.stringify(configURL)],
+  ['"./session-hygiene"', JSON.stringify(hygieneURL)],
 ]);
 const { GET } = await loadModule("../app/auth/callback/route.ts", [
   ['import { createClient } from "@/lib/supabase/server";', 'const createClient = async () => globalThis.authFixture.client;'],
   ['"next/server"', JSON.stringify(import.meta.resolve("next/server.js"))],
   ['"@/lib/supabase/config"', JSON.stringify(configURL)],
+  ['"@/lib/supabase/session-hygiene"', JSON.stringify(hygieneURL)],
 ]);
 const { getSupabaseConfig } = await import(configURL);
 const saved = { url: process.env.NEXT_PUBLIC_SUPABASE_URL, key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY };
@@ -35,6 +38,7 @@ function fixture({ user = null, role = "buyer", fail = false, sessionError = nul
         if (fail) throw new Error("Auth unavailable");
         return { data: { user } };
       },
+      async getSession() { return { data: { session: { access_token: "normal-token" } }, error: null }; },
       async exchangeCodeForSession() { return { error: sessionError }; },
       async updateUser() { return { error: null }; },
     },
@@ -119,4 +123,27 @@ test.after(() => {
     if (value === undefined) delete process.env[name]; else process.env[name] = value;
   }
   delete globalThis.authFixture;
+});
+
+test("profile response preserves obsolete cookie deletions across update and refresh", async () => {
+  const legacyUser = { ...user, user_metadata: { avatar_url: "data:image/png;base64,legacy" } };
+  const state = fixture({ user: legacyUser });
+  const client = globalThis.authFixture.client;
+  client.auth.getSession = async () => ({ data: { session: { access_token: "legacy-token" } }, error: null });
+  client.auth.updateUser = async () => {
+    state.options.cookies.setAll([{ name: "sb-old-token.0", value: "", options: { maxAge: 0, path: "/" } }]);
+    return { error: null };
+  };
+  client.auth.refreshSession = async () => {
+    state.options.cookies.setAll([
+      { name: "sb-old-token.1", value: "", options: { maxAge: 0, path: "/" } },
+      { name: "sb-test-auth-token", value: "compact", options: { path: "/" } },
+    ]);
+    return { data: { user, session: { access_token: "compact-token" } }, error: null };
+  };
+  const response = await updateSession(request("/profil"));
+  assert.equal(response.status, 200);
+  assert.equal(response.cookies.get("sb-old-token.0")?.maxAge, 0);
+  assert.equal(response.cookies.get("sb-old-token.1")?.maxAge, 0);
+  assert.equal(response.cookies.get("sb-test-auth-token")?.value, "compact");
 });

@@ -1,5 +1,7 @@
 "use client";
 
+import { repairLegacyAvatarSession } from "@/lib/supabase/session-hygiene";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -42,6 +44,8 @@ export default function LoginPage() {
         const { data } = await supabase.auth.getUser();
         if (cancelled) return;
         if (data.user) {
+          await repairLegacyAvatarSession(supabase, data.user);
+          if (cancelled) return;
           const { data: profile } = await supabase
             .from("profiles")
             .select("role")
@@ -84,12 +88,7 @@ export default function LoginPage() {
       // Cek role user untuk redirect yang tepat
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Bersihkan jika user_metadata masih membawa base64 dataUrl lama di Supabase Auth
-        if (String(user?.user_metadata?.avatar_url || "").startsWith("data:")) {
-          try {
-            await supabase.auth.updateUser({ data: { avatar_url: null } });
-          } catch {}
-        }
+        await repairLegacyAvatarSession(supabase, user);
 
         const { data: profile } = await supabase
           .from("profiles")

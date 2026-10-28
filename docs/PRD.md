@@ -1,6 +1,6 @@
 # PRD AutoBuyCars — Pembaruan stabilitas dan autentikasi
 
-Versi dokumen: 1.1 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
+Versi dokumen: 1.2 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
 Status: implementasi kode lokal; rilis Vercel dan migrasi Supabase belum diterapkan.
 
 ## 1. Ringkasan produk
@@ -109,7 +109,7 @@ Angka dashboard dan status transaksi mengikuti data browser, bukan laporan pemba
 | --- | --- | --- |
 | Build | Production build selesai | `npm run build` |
 | Tipe | Tidak ada error TypeScript | `npm run typecheck` |
-| Auth regression | Guest, role, recovery, cookie redirect, callback invalid, env kosong dan outage sesuai spesifikasi | `npm test`: 11 skenario memakai mock Supabase |
+| Auth regression | Guest, role, recovery, cookie redirect, callback invalid, env kosong dan outage sesuai spesifikasi | `npm test`: 19 skenario, termasuk SDK Supabase SSR dengan transport Auth tiruan |
 | Production saat diagnosis | URL terbuka pada sesi baru | Diuji langsung di Safari Private dan browser terpisah; deployment lama |
 | UI lokal | Katalog dan login dapat ditampilkan | Katalog dan login diuji di browser; tanpa env, katalog tetap terbuka dan pesan layanan akun tampil. Bukan bukti integrasi login Supabase |
 | Migrasi privilege | Client tidak dapat menaikkan role/admin atau verifikasi | Harus diuji staging dan diterapkan pengelola; belum dilakukan |
@@ -127,3 +127,13 @@ Pengujian otomatis memakai mock untuk perilaku routing; tidak membuktikan koneks
 6. Jika perlu rollback frontend, pilih deployment Vercel sebelumnya. Trigger database dinilai terpisah; rollback frontend tidak otomatis membatalkan migrasi database.
 
 Ketergantungan yang belum diverifikasi: konfigurasi Auth/email/OAuth produksi, schema/RLS aktual, domain/nomor WhatsApp operasional, dan akun uji untuk validasi end-to-end.
+
+## 12. Tindak lanjut error Profil Saya di Safari Private
+
+Screenshot lanjutan memperlihatkan `/profil` gagal juga pada Safari Private setelah aktivitas akun. Keberhasilan katalog sebagai guest tidak membuktikan sesi terautentikasi sehat.
+
+Pemeriksaan kode SDK yang terpasang menemukan `updateUser()` hanya menyimpan objek user dan mempertahankan access token lama. Cleanup avatar sebelumnya belum memanggil `refreshSession()`, sehingga JWT lama masih dapat memuat base64 walaupun metadata pengguna sudah bersih. Ini celah yang direproduksi pada pengujian SDK; hubungan langsung terhadap request Safari pengguna tetap membutuhkan pengujian sesi nyata.
+
+Pembaruan tambahan: cleanup terpusat memeriksa metadata user dan JWT lama, memperbarui metadata hanya bila diperlukan, kemudian menunggu JWT baru sebelum navigasi. Error cleanup tidak diabaikan. Cookie penghapusan chunk lama dipertahankan meskipun ada beberapa pembaruan cookie dalam satu request. Pembacaan profil/avatar tidak lagi menulis metadata Auth. Halaman profil memakai user dari provider, memuat data saat akun berubah, menangani storage yang diblokir, dan menampilkan pesan bila foto gagal dimuat.
+
+Kriteria tambahan: sesi uji berisi avatar inline menghasilkan cookie yang lebih kecil dan tanpa chunk usang; metadata user bersih tetapi JWT lama masih besar tetap direfresh; sesi sehat tidak menyebabkan update atau refresh tambahan; callback bersamaan berbagi satu proses perbaikan. Pengujian profil dengan akun nyata pada deployment baru masih diperlukan.

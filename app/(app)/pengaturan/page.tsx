@@ -85,11 +85,7 @@ export default function PengaturanPage() {
         try {
           const supabase = createClient();
 
-          // Bersihkan jika sempat menyimpan base64 di user_metadata
           const rawMeta = String(u.user_metadata?.avatar_url || "");
-          if (rawMeta.startsWith("data:")) {
-            supabase.auth.updateUser({ data: { avatar_url: null } }).catch(() => {});
-          }
           const safeMeta = rawMeta.startsWith("data:") ? "" : rawMeta;
 
           const { data: profile } = await supabase

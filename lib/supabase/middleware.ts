@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { repairLegacyAvatarSession } from "./session-hygiene";
 import { getSupabaseConfig } from "./config";
 
 export async function updateSession(request: NextRequest) {
@@ -32,7 +33,9 @@ export async function updateSession(request: NextRequest) {
       getAll: () => request.cookies.getAll(),
       setAll(cookies) {
         cookies.forEach(({ name, value }) => request.cookies.set(name, value));
+        const previousCookies = response.cookies.getAll();
         response = NextResponse.next({ request });
+        previousCookies.forEach((cookie) => response.cookies.set(cookie));
         cookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
@@ -42,6 +45,7 @@ export async function updateSession(request: NextRequest) {
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
+    if (user) user = await repairLegacyAvatarSession(supabase, user);
   } catch {
     // Public catalogue stays available during an authentication outage.
     return protectedPage ? redirect("/login") : response;

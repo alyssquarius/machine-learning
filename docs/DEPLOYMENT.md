@@ -76,8 +76,18 @@ Migrasi belum diterapkan atau diuji terhadap database pengguna. Uji staging: buy
 ## Hasil validasi kode lokal
 
 - `npm run typecheck`: lulus.
-- `npm test`: 11 skenario lulus dengan mock Supabase.
+- `npm test`: 19 skenario lulus, termasuk SDK SSR nyata dengan transport Auth tiruan.
 - `npm run build`: lulus, termasuk build dengan kedua env Supabase kosong.
 - Browser lokal: katalog dan form login tersedia dengan konfigurasi; tanpa konfigurasi, katalog tetap terbuka dan halaman akun menampilkan informasi layanan.
 - `git diff --check`: tidak ada whitespace error.
 - Belum diuji: login/Google/recovery nyata, database staging, migrasi SQL, serta deployment versi baru.
+
+## Temuan lanjutan: Profil Saya gagal pada Safari Private
+
+Screenshot lanjutan menunjukkan error `/profil` juga terjadi pada sesi Private. Penjelasan awal bahwa masalah hanya pada profil Safari biasa belum cukup. Request HTTP tanpa login ke `/profil` mengembalikan 307 ke `/login`, sehingga URL tersebut sendiri valid.
+
+SDK Auth yang terpasang mempertahankan JWT lama setelah `updateUser()`. Karena itu, mengubah `avatar_url` menjadi null saja belum menghapus base64 dari access token yang sudah terbit. Helper `lib/supabase/session-hygiene.ts` kini menunggu refresh token setelah cleanup, termasuk saat metadata user sudah bersih tetapi JWT masih berisi avatar lama. Pengujian dengan SDK SSR nyata dan transport tiruan membuktikan cookie terfragmentasi berubah menjadi satu cookie kecil setelah perbaikan.
+
+Halaman profil juga tidak lagi melakukan request Auth dan penulisan metadata berulang ketika snapshot store berubah. Cookie deletion dari pembaruan bertahap tetap dikirim agar chunk lama tidak tertinggal.
+
+Perubahan tambahan ini belum dideploy. Setelah deployment, uji login dan Profil Saya pada sesi baru. Jangan menghapus seluruh data situs tanpa backup; jika browser sudah menolak request karena cookie lama, cleanup dalam aplikasi mungkin tidak sempat dijalankan. Belum ada pengambilan network trace dari sesi Safari yang gagal.

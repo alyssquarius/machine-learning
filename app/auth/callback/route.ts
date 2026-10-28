@@ -1,3 +1,4 @@
+import { repairLegacyAvatarSession } from "@/lib/supabase/session-hygiene";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
@@ -18,12 +19,7 @@ export async function GET(request: Request) {
         } = await supabase.auth.getUser();
 
         if (user) {
-          // Bersihkan jika user_metadata masih membawa base64 dataUrl lama di Supabase Auth
-          if (String(user?.user_metadata?.avatar_url || "").startsWith("data:")) {
-            try {
-              await supabase.auth.updateUser({ data: { avatar_url: null } });
-            } catch {}
-          }
+          await repairLegacyAvatarSession(supabase, user);
 
           // Create a new profile without overwriting an existing dealer/admin role.
           const { data: profile } = await supabase.from("profiles")

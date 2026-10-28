@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { repairLegacyAvatarSession } from "@/lib/supabase/session-hygiene";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/toast";
 
@@ -286,19 +287,10 @@ export function AvatarUpload({
 
       const supabase = createClient();
 
-      // 2. Bersihkan user_metadata.avatar_url di Supabase Auth jika sebelumnya ada
-      // PENTING: JANGAN simpan base64 dataUrl ke auth user_metadata karena akan masuk ke JWT session
-      // dan membuat HTTP cookie membengkak hingga puluhan KB, menyebabkan HTTP/2 Frame Size Error (Safari -1000).
-      try {
-        const { data: authUser } = await supabase.auth.getUser();
-        if (authUser?.user?.user_metadata?.avatar_url) {
-          await supabase.auth.updateUser({
-            data: { avatar_url: null },
-          });
-        }
-      } catch (authErr) {
-        console.warn("auth avatar cleanup error:", authErr);
-      }
+      // Legacy metadata cleanup must also reissue its JWT before navigating.
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (authUser.user) await repairLegacyAvatarSession(supabase, authUser.user);
 
       // 3. Upsert ke tabel profiles di Supabase (disimpan di PostgreSQL, aman tanpa membebani cookie)
       try {
@@ -351,13 +343,9 @@ export function AvatarUpload({
       }
 
       const supabase = createClient();
-      try {
-        await supabase.auth.updateUser({
-          data: { avatar_url: null },
-        });
-      } catch {
-        /* abaikan */
-      }
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (authUser.user) await repairLegacyAvatarSession(supabase, authUser.user);
 
       try {
         await supabase

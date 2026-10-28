@@ -4,6 +4,7 @@ import * as React from "react";
 import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { repairLegacyAvatarSession } from "@/lib/supabase/session-hygiene";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import {
   type Role,
@@ -60,7 +61,9 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
         const session = data.user ? { user: data.user } : null;
         if (session?.user) {
-          setUser(session.user);
+          const verifiedUser = await repairLegacyAvatarSession(supabase, session.user);
+          if (cancelled) return;
+          setUser(verifiedUser);
           store.setOwner(session.user.id);
           const r = await fetchUserRole(session.user.id);
           if (!cancelled) setRole(r);
