@@ -266,14 +266,14 @@ export default function PengaturanPage() {
   const targetBtn = (on: boolean) =>
     `rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
       on
-        ? "border-zinc-950 bg-zinc-950 text-white shadow-xs dark:border-white dark:bg-white dark:text-zinc-950"
+        ? "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200"
         : "border-gray-300 text-black hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
     }`;
 
   const themeBtn = (on: boolean) =>
     `inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
       on
-        ? "border-zinc-950 bg-zinc-950 text-white shadow-xs dark:border-white dark:bg-white dark:text-zinc-950"
+        ? "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200"
         : "border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800"
     }`;
 
@@ -396,7 +396,7 @@ export default function PengaturanPage() {
       )}
 
       {/* GRID PENGATURAN LAINNYA */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         {/* KARTU PROFIL TAMPILAN */}
         <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-base font-bold text-black dark:text-white">Profil & Tampilan</h2>
@@ -404,21 +404,23 @@ export default function PengaturanPage() {
             Nama sapaan yang muncul di header dan dashboard.
           </p>
 
-          <div className="mb-5 flex items-center gap-4 rounded-xl border border-gray-200 bg-gray-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-800/40">
-            <AvatarUpload
-              userId={user.id}
-              currentUrl={avatarUrl}
-              fallbackInitial={avatarInitial}
-              onUploaded={(newUrl) => setAvatarUrl(newUrl)}
-              size={56}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-black dark:text-white">{displayName || user.name}</p>
-              <p className="truncate text-xs text-gray-500 dark:text-zinc-400">{user.email}</p>
-              <p className="mt-1 text-[11px] font-medium text-blue-600 dark:text-blue-400">
-                Klik ikon kamera untuk mengganti foto profil
-              </p>
+          <div className="settings-account mb-5">
+            <div className="settings-identity">
+              <p className="font-semibold">{displayName || user.name}</p>
+              <p className="text-xs text-gray-500 dark:text-zinc-400">{user.email}</p>
             </div>
+            <div className="settings-avatar">
+              <AvatarUpload
+                userId={user.id}
+                currentUrl={avatarUrl}
+                fallbackInitial={avatarInitial}
+                onUploaded={(newUrl) => setAvatarUrl(newUrl)}
+                size={56}
+              />
+            </div>
+          </div>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <label htmlFor="settings-display-name" className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Nama Tampilan</label>
             <button
               type="button"
               onClick={() => {
@@ -433,18 +435,15 @@ export default function PengaturanPage() {
               Reset Nama
             </button>
           </div>
-
-          <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-            Nama Tampilan
-          </label>
           <div className="flex gap-2">
             <input
+              id="settings-display-name"
               value={displayName}
               onChange={(e) => onDisplayName(e.target.value.slice(0, 40))}
               maxLength={40}
               placeholder="cth: Budi Santoso"
               autoComplete="nickname"
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-white"
+              className="min-w-0 w-full flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-white"
             />
             <button
               type="button"
@@ -495,7 +494,7 @@ export default function PengaturanPage() {
                 min={1}
                 max={100}
                 inputMode="numeric"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:focus:border-white"
+                className="min-w-0 w-full flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:focus:border-white"
               />
               <button
                 type="button"
@@ -520,7 +519,7 @@ export default function PengaturanPage() {
             Pilih mode terang, gelap, atau ikuti preferensi sistem perangkat.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-2" role="radiogroup" aria-label="Pilih tema">
+          <div className="settings-theme-options" role="radiogroup" aria-label="Pilih tema">
             <button
               type="button"
               onClick={() => setTheme("light")}

@@ -221,3 +221,15 @@ html.dark .app-content :is(.surface,.filter-bar) { background:var(--panel); bord
 .surface,.workspace-sidebar,.workspace-header,.hero-panel { transition:background-color .2s,border-color .2s; }
 .auth-hero .hero-eyebrow { color:#bae6fd; }
 @media(max-width:639px) { .profile-layout>aside { display:contents; }.profile-layout>aside>section:first-child { order:1; }.profile-layout>div { order:2; }.profile-layout>aside>section:nth-child(2) { order:3; } }
+
+/* Settings: account information never competes with upload controls for width. */
+.settings-account { min-width:0; padding:18px; border:1px solid var(--line); border-radius:10px; background:var(--canvas); }
+.settings-identity { min-width:0; margin-bottom:16px; }.settings-identity p { overflow-wrap:anywhere; }.settings-identity p+p { margin-top:5px; line-height:1.6; }
+.settings-avatar>div { min-width:0; align-items:flex-start; flex-wrap:wrap; gap:14px; }
+.settings-avatar>div>div:first-child { flex-shrink:0; }
+.settings-avatar>div>div:nth-child(2) { min-width:0; flex:1; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:6px; }
+.settings-avatar button { white-space:nowrap; font-size:12px; padding:8px 11px; }
+.settings-avatar p { flex-basis:100%; line-height:1.7; margin-top:4px; font-size:10px; }
+.settings-theme-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; }
+.settings-theme-options button { min-width:0; white-space:nowrap; padding:11px 10px; font-size:12px; border-radius:9px; }
+@media(max-width:379px) { .settings-account { padding:14px; }.settings-avatar>div { flex-direction:column; } }
