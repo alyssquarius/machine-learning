@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { WhatsAppIcon } from "./icons";
-import { useRole } from "@/components/role-provider";
 import { getAdminWhatsApp } from "@/lib/config";
 
 interface WhatsAppContactProps {
@@ -28,7 +26,7 @@ export function WhatsAppContact({
     if (!cleanPhone.startsWith("62") && cleanPhone.length > 0) {
       cleanPhone = "62" + cleanPhone;
     }
-    
+
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
@@ -45,4 +43,6 @@ export function WhatsAppContact({
   );
 }
 
-export function ChatFloatingButton() { return null; }
+export function ChatFloatingButton() {
+  return null;
+}

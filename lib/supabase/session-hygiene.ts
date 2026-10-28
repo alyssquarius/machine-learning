@@ -36,8 +36,11 @@ export async function repairLegacyAvatarSession(client: SupabaseClient, user: Us
     // before any navigation or response can carry its old base64 metadata.
     const { data: refreshed, error: refreshError } = await client.auth.refreshSession();
     if (refreshError) throw refreshError;
-    if (!refreshed.session || !refreshed.user ||
-        tokenHasInlineAvatar(refreshed.session.access_token)) {
+    if (
+      !refreshed.session ||
+      !refreshed.user ||
+      tokenHasInlineAvatar(refreshed.session.access_token)
+    ) {
       throw new Error("Sesi belum berhasil diperbarui. Silakan masuk kembali.");
     }
     return refreshed.user;

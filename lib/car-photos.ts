@@ -1,4 +1,4 @@
-import { safeImageUrl } from './format';
+import { safeImageUrl } from "./format";
 
 export const MAX_CAR_PHOTOS = 10;
 export function carPhotos(car: { images?: unknown; image?: unknown }): string[] {

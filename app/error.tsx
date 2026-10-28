@@ -11,9 +11,7 @@ export default function Error({
 }) {
   return (
     <div className="py-16 text-center">
-      <h2 className="text-xl font-bold text-black dark:text-white">
-        Terjadi kesalahan
-      </h2>
+      <h2 className="text-xl font-bold text-black dark:text-white">Terjadi kesalahan</h2>
       <p className="mx-auto mb-6 mt-2 max-w-sm text-sm text-gray-500 dark:text-zinc-400">
         {error.message || "Coba muat ulang halaman."}
       </p>

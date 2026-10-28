@@ -20,10 +20,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "ockjqpieaelthsebbxqx.supabase.co" },
     ],
-    // Allow all domains (untuk development/demo)
-    // Di production, sebaiknya whitelist domain spesifik
     dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
+    contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };

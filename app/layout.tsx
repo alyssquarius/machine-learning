@@ -17,16 +17,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body
-        className="font-sans bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 antialiased"
-      >
+      <body className="font-sans bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 antialiased">
         <ThemeProvider>
           <StoreProvider>
             <RoleProvider>

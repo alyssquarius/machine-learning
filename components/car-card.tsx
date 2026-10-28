@@ -21,8 +21,7 @@ const STATUS_CLS: Record<string, string> = {
   done: "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950",
   running: "bg-emerald-50 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100",
   queued: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-  failed:
-    "border border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400",
+  failed: "border border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400",
 };
 
 function CarImage({ car, big = false }: { car: Car; big?: boolean }) {
@@ -64,8 +63,6 @@ export function CarCard({
   sell = false,
   onDetail,
   onEdit,
-  onBuy,
-  onOffer,
 }: {
   car: Car;
   sell?: boolean;
@@ -99,9 +96,21 @@ export function CarCard({
   }
 
   return (
-    <div className={`surface car-card-hover animate-fade-in overflow-hidden ${!sell ? "buyer-car-card" : ""}`}>
+    <div
+      className={`surface car-card-hover animate-fade-in overflow-hidden ${!sell ? "buyer-car-card" : ""}`}
+    >
       <div className="relative">
-        <button type="button" className="group relative block w-full text-left" aria-label={`Lihat foto dan detail ${car.title}`} onClick={() => onDetail?.(car.id)}><CarImage car={car} /><span className="absolute bottom-3 right-3 rounded-lg bg-white/95 px-3 py-1.5 text-xs font-semibold text-sky-800 shadow-sm">Lihat detail →</span></button>
+        <button
+          type="button"
+          className="group relative block w-full text-left"
+          aria-label={`Lihat foto dan detail ${car.title}`}
+          onClick={() => onDetail?.(car.id)}
+        >
+          <CarImage car={car} />
+          <span className="absolute bottom-3 right-3 rounded-lg bg-white/95 px-3 py-1.5 text-xs font-semibold text-sky-800 shadow-sm">
+            Lihat detail →
+          </span>
+        </button>
         {!sell && (
           <button
             onClick={(e) => {
@@ -136,59 +145,78 @@ export function CarCard({
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="min-w-0 text-base font-semibold leading-snug text-slate-950 dark:text-white"><button type="button" onClick={() => onDetail?.(car.id)} className="text-left hover:text-sky-700 dark:hover:text-sky-300" aria-label={`Buka detail ${car.title}`}>{car.title}</button></h3>
+          <h3 className="min-w-0 text-base font-semibold leading-snug text-slate-950 dark:text-white">
+            <button
+              type="button"
+              onClick={() => onDetail?.(car.id)}
+              className="text-left hover:text-sky-700 dark:hover:text-sky-300"
+              aria-label={`Buka detail ${car.title}`}
+            >
+              {car.title}
+            </button>
+          </h3>
           <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-zinc-400">
             {car.year}
           </span>
         </div>
-        <p className="mt-2 text-lg font-bold text-black dark:text-white">
-          {fmtRp(car.price)}
-        </p>
+        <p className="mt-2 text-lg font-bold text-black dark:text-white">{fmtRp(car.price)}</p>
         <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
           {car.km ? `${car.km.toLocaleString("id-ID")} km` : "Km tidak tersedia"} •{" "}
           {car.location || "Indonesia"}
         </p>
-        {sell ? <div className="card-feature-row"><span>{car.category}</span><span>{car.year}</span><span>{car.km.toLocaleString("id-ID")} km</span></div> : <span className="mt-2 inline-block text-xs text-slate-500">{car.category}</span>}
+        {sell ? (
+          <div className="card-feature-row">
+            <span>{car.category}</span>
+            <span>{car.year}</span>
+            <span>{car.km.toLocaleString("id-ID")} km</span>
+          </div>
+        ) : (
+          <span className="mt-2 inline-block text-xs text-slate-500">{car.category}</span>
+        )}
         {best ? (
           <p className="mt-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
             Tawaran tertinggi {fmtRp(best.amount)}
           </p>
         ) : null}
-        {!car.isDemo && <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-          <svg
-            className="h-3.5 w-3.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-            />
-          </svg>
-          {car.interest || 0}% diminati<span>•</span>
-          <span>{timeAgo(car.createdAt)}</span>
-        </div>}
-
-        {/* Tombol Kontak WhatsApp langsung pada listing */}
+        {!car.isDemo && (
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+            <svg
+              className="h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+            {car.interest || 0}% diminati<span>•</span>
+            <span>{timeAgo(car.createdAt)}</span>
+          </div>
+        )}
         {!sell && (
           <div className="mt-3">
-            {car.isDemo ? <p className="rounded-lg bg-sky-50 px-3 py-2 text-center text-xs text-sky-800 dark:bg-sky-950/50 dark:text-sky-200">Data demo · Tidak untuk dijual</p> : <WhatsAppContact
-              phoneNumber={car.sellerPhone || undefined}
-              message={`Halo, saya tertarik dengan mobil ${car.title} seharga ${fmtRp(car.price)} di AutoBuyCars.`}
-              className="w-full justify-center py-2 text-xs font-semibold"
-            >
-              Hubungi Penjual
-            </WhatsAppContact>}
+            {car.isDemo ? (
+              <p className="rounded-lg bg-sky-50 px-3 py-2 text-center text-xs text-sky-800 dark:bg-sky-950/50 dark:text-sky-200">
+                Data demo · Tidak untuk dijual
+              </p>
+            ) : (
+              <WhatsAppContact
+                phoneNumber={car.sellerPhone || undefined}
+                message={`Halo, saya tertarik dengan mobil ${car.title} seharga ${fmtRp(car.price)} di AutoBuyCars.`}
+                className="w-full justify-center py-2 text-xs font-semibold"
+              >
+                Hubungi Penjual
+              </WhatsAppContact>
+            )}
           </div>
         )}
 
         <DemoPhotoCredit car={car} />
-
-        {/* Indikator status penayangan untuk penjual */}
         {sell && car.status === "running" && (
           <div className="mt-2.5 flex items-center justify-between rounded-xl border border-emerald-200/60 bg-emerald-50/80 px-3 py-1.5 dark:border-emerald-800/40 dark:bg-emerald-950/30">
             <div className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
@@ -197,10 +225,7 @@ export function CarCard({
             </div>
             <button
               onClick={() =>
-                act(
-                  () => store.setStatus(car.id, "queued"),
-                  "Listing ditarik ke draf.",
-                )
+                act(() => store.setStatus(car.id, "queued"), "Listing ditarik ke draf.")
               }
               className="text-[10px] font-semibold text-gray-500 underline hover:text-black dark:text-zinc-400 dark:hover:text-white"
             >
@@ -214,8 +239,6 @@ export function CarCard({
             Draf / Menunggu ditayangkan
           </div>
         )}
-
-        {/* Info Pembeli jika mobil berstatus Terjual */}
         {sell && car.status === "done" && car.purchase && (
           <div
             onClick={() => onDetail?.(car.id)}
@@ -223,17 +246,35 @@ export function CarCard({
           >
             <div className="flex items-center justify-between font-bold text-blue-950 dark:text-blue-200">
               <span className="truncate">Terjual ke: {car.purchase.name}</span>
-              <span className="shrink-0 text-[10px] font-mono text-blue-600 dark:text-blue-400">#{car.purchase.invoiceNumber}</span>
+              <span className="shrink-0 text-[10px] font-mono text-blue-600 dark:text-blue-400">
+                #{car.purchase.invoiceNumber}
+              </span>
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-blue-800 dark:text-blue-300">
-              <span>WA Pembeli: <b>{car.purchase.phone}</b></span>
+              <span>
+                WA Pembeli: <b>{car.purchase.phone}</b>
+              </span>
               <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold dark:bg-blue-900/60">
-                {car.purchase.paymentType === "booking" ? "Tanda Jadi" : car.purchase.method === "kredit" ? "Kredit" : "Tunai"}
+                {car.purchase.paymentType === "booking"
+                  ? "Tanda Jadi"
+                  : car.purchase.method === "kredit"
+                    ? "Kredit"
+                    : "Tunai"}
               </span>
             </div>
             <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-600 dark:text-blue-400">
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="h-3 w-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               <span>Klik untuk buka nota resmi transaksi</span>
             </p>
@@ -253,20 +294,25 @@ export function CarCard({
                   }
                   className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-600 py-2 px-3 text-xs font-semibold text-white transition hover:bg-emerald-500 active:scale-95 shadow-xs"
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 10l7-7m0 0l7 7m-7-7v18"
+                    />
                   </svg>
                   <span>Tayangkan ke Pembeli</span>
                 </button>
               ) : null}
               {car.status === "running" ? (
                 <button
-                  onClick={() =>
-                    act(
-                      () => store.setStatus(car.id, "done"),
-                      "Ditandai terjual.",
-                    )
-                  }
+                  onClick={() => act(() => store.setStatus(car.id, "done"), "Ditandai terjual.")}
                   className="flex-1 rounded-full bg-black py-2 px-3 text-xs font-semibold text-white transition hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
                 >
                   Tandai Terjual
@@ -293,9 +339,7 @@ export function CarCard({
                 <Icon name="edit" className="h-4 w-4" />
               </button>
               <button
-                onClick={() =>
-                  act(() => store.duplicate(car.id), "Listing diduplikat.")
-                }
+                onClick={() => act(() => store.duplicate(car.id), "Listing diduplikat.")}
                 title="Duplikat"
                 className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
               >
@@ -307,11 +351,7 @@ export function CarCard({
                   strokeWidth="2"
                   aria-hidden="true"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8 8h10v12H8zM6 16V4h10"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 8h10v12H8zM6 16V4h10" />
                 </svg>
               </button>
               <button
@@ -360,9 +400,7 @@ export function EmptyState({
         </svg>
       </div>
       <p className="font-semibold text-black dark:text-white">{title}</p>
-      <p className="mb-5 mt-1 text-sm text-gray-500 dark:text-zinc-400">
-        {subtitle}
-      </p>
+      <p className="mb-5 mt-1 text-sm text-gray-500 dark:text-zinc-400">{subtitle}</p>
       {action}
     </div>
   );

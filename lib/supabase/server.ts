@@ -6,25 +6,19 @@ export async function createClient() {
   const config = getSupabaseConfig();
   if (!config) throw new Error("Layanan akun belum dikonfigurasi.");
   const cookieStore = await cookies();
-  return createServerClient(
-    config.url,
-    config.key,
-    {
-      cookies: {
-        encode: "tokens-only",
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Dipanggil dari Server Component — abaikan.
-          }
-        },
+  return createServerClient(config.url, config.key, {
+    cookies: {
+      encode: "tokens-only",
+      getAll() {
+        return cookieStore.getAll();
       },
-    }
-  );
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        } catch {
+          // Dipanggil dari Server Component — abaikan.
+        }
+      },
+    },
+  });
 }

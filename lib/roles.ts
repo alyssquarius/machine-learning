@@ -1,7 +1,3 @@
-/**
- * Sistem Role untuk AutoBuyCars
- */
-
 export const ROLES = {
   ADMIN: "admin",
   BUYER: "buyer",
@@ -11,7 +7,6 @@ export const ROLES = {
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
 export interface Permission {
-  // Listing Management
   canCreateListing: boolean;
   canEditOwnListing: boolean;
   canEditAnyListing: boolean;
@@ -20,7 +15,6 @@ export interface Permission {
   canApproveListing: boolean;
   canRejectListing: boolean;
 
-  // Transaction
   canMakeOffer: boolean;
   canAcceptOffer: boolean;
   canRejectOffer: boolean;
@@ -28,29 +22,24 @@ export interface Permission {
   canViewOwnTransactions: boolean;
   canViewAllTransactions: boolean;
 
-  // User Management
   canViewUsers: boolean;
   canEditUsers: boolean;
   canBanUsers: boolean;
   canVerifyDealer: boolean;
 
-  // Analytics & Reports
   canViewOwnAnalytics: boolean;
   canViewAllAnalytics: boolean;
   canExportData: boolean;
 
-  // Communication
   canContactSeller: boolean;
   canReceiveOffers: boolean;
   canSendMessages: boolean;
 
-  // System
   canAccessDashboard: boolean;
   canChangeSettings: boolean;
 }
 
 export const ROLE_PERMISSIONS: Record<Role, Permission> = {
-  // ADMIN - Full access ke seluruh sistem
   admin: {
     canCreateListing: true,
     canEditOwnListing: true,
@@ -79,7 +68,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission> = {
     canChangeSettings: true,
   },
 
-  // BUYER - User biasa yang ingin beli mobil
   buyer: {
     canCreateListing: false, // Buyer tidak bisa jual
     canEditOwnListing: false,
@@ -108,7 +96,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission> = {
     canChangeSettings: false,
   },
 
-  // GUEST - Belum login, hanya bisa lihat
   guest: {
     canCreateListing: false,
     canEditOwnListing: false,
@@ -138,27 +125,15 @@ export const ROLE_PERMISSIONS: Record<Role, Permission> = {
   },
 };
 
-/**
- * Get permissions for a role
- */
 export function getPermissions(role: Role): Permission {
   return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.guest;
 }
 
-/**
- * Check if role has specific permission
- */
-export function hasPermission(
-  role: Role,
-  permission: keyof Permission,
-): boolean {
+export function hasPermission(role: Role, permission: keyof Permission): boolean {
   const perms = getPermissions(role);
   return perms[permission];
 }
 
-/**
- * Check if user can perform action
- */
 export function canPerformAction(
   userRole: Role,
   action: keyof Permission,
@@ -169,9 +144,11 @@ export function canPerformAction(
 ): boolean {
   const perms = getPermissions(userRole);
 
-  // Special case: owner check
   if (action === "canEditOwnListing" || action === "canDeleteOwnListing") {
-    if (options?.isOwner !== true && !(action === "canDeleteOwnListing" ? perms.canDeleteAnyListing : perms.canEditAnyListing)) {
+    if (
+      options?.isOwner !== true &&
+      !(action === "canDeleteOwnListing" ? perms.canDeleteAnyListing : perms.canEditAnyListing)
+    ) {
       return false;
     }
     return perms[action];
@@ -199,9 +176,6 @@ export function canPerformAction(
   return perms[action];
 }
 
-/**
- * Get role display name
- */
 export function getRoleDisplayName(role: Role): string {
   const names: Record<Role, string> = {
     admin: "Administrator",
@@ -211,9 +185,6 @@ export function getRoleDisplayName(role: Role): string {
   return names[role] || "Unknown";
 }
 
-/**
- * Get role description
- */
 export function getRoleDescription(role: Role): string {
   const descriptions: Record<Role, string> = {
     admin: "Akses penuh ke seluruh sistem, dapat mengelola user dan listing",
@@ -223,9 +194,6 @@ export function getRoleDescription(role: Role): string {
   return descriptions[role] || "";
 }
 
-/**
- * Get available role transitions (untuk upgrade/downgrade role)
- */
 export function getAvailableRoleTransitions(currentRole: Role): Role[] {
   // Guest -> Buyer (register)
   // Admin tidak bisa diubah (harus dari database)

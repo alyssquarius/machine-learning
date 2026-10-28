@@ -10,14 +10,14 @@ export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
-  
+
   const [code, setCode] = React.useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState(false);
   const [resendLoading, setResendLoading] = React.useState(false);
   const [resendSuccess, setResendSuccess] = React.useState(false);
-  
+
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
   React.useEffect(() => {
@@ -26,11 +26,11 @@ export default function VerifyEmailPage() {
 
   function handleChange(index: number, value: string) {
     if (value && !/^\d$/.test(value)) return;
-    
+
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
-    
+
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -46,12 +46,12 @@ export default function VerifyEmailPage() {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").trim();
     const digits = pastedData.replace(/\D/g, "").slice(0, 6).split("");
-    
+
     const newCode = [...code];
     digits.forEach((digit, idx) => {
       if (idx < 6) newCode[idx] = digit;
     });
-    
+
     setCode(newCode);
     const lastFilledIndex = Math.min(digits.length - 1, 5);
     inputRefs.current[lastFilledIndex]?.focus();
@@ -59,39 +59,42 @@ export default function VerifyEmailPage() {
 
   async function handleVerify() {
     const otp = code.join("");
-    
+
     if (otp.length !== 6) {
       setError("Kode verifikasi harus 6 digit");
       return;
     }
-    
+
     setError("");
     setLoading(true);
-    
+
     try {
       const supabase = createClient();
-      
+
       const { data, error: verifyError } = await supabase.auth.verifyOtp({
         email,
         token: otp,
         type: "signup",
       });
-      
+
       if (verifyError) {
         setError("Kode verifikasi salah atau sudah kadaluarsa");
         setLoading(false);
         return;
       }
-      
+
       if (data.session) {
         try {
           if (data.user) {
             const supabase = createClient();
-            await supabase.from("profiles").upsert({
-              id: data.user.id,
-              role: "buyer",
-              updated_at: new Date().toISOString(),
-            }, { onConflict: "id", ignoreDuplicates: true });
+            await supabase.from("profiles").upsert(
+              {
+                id: data.user.id,
+                role: "buyer",
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "id", ignoreDuplicates: true },
+            );
           }
         } catch {
           /* abaikan */
@@ -112,25 +115,25 @@ export default function VerifyEmailPage() {
       setError("Email tidak ditemukan");
       return;
     }
-    
+
     setResendLoading(true);
     setResendSuccess(false);
     setError("");
-    
+
     try {
       const supabase = createClient();
-      
+
       const { error: resendError } = await supabase.auth.resend({
         type: "signup",
         email,
       });
-      
+
       if (resendError) {
         setError("Gagal mengirim ulang kode. Silakan coba lagi.");
         setResendLoading(false);
         return;
       }
-      
+
       setResendSuccess(true);
       setResendLoading(false);
       setTimeout(() => setResendSuccess(false), 3000);
@@ -145,8 +148,18 @@ export default function VerifyEmailPage() {
       <AuthShell title="Verifikasi Berhasil!" subtitle="Akun Anda telah diaktifkan">
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-            <svg className="h-10 w-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            <svg
+              className="h-10 w-10 text-green-600 dark:text-green-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
           <p className="text-lg text-gray-700 dark:text-zinc-300">
@@ -160,14 +173,18 @@ export default function VerifyEmailPage() {
   return (
     <AuthShell
       title="Verifikasi Email"
-      subtitle={email ? `Masukkan 6 digit kode yang dikirim ke ${email}` : "Masukkan kode verifikasi dari email Anda"}
+      subtitle={
+        email
+          ? `Masukkan 6 digit kode yang dikirim ke ${email}`
+          : "Masukkan kode verifikasi dari email Anda"
+      }
     >
       {error && (
         <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
           {error}
         </div>
       )}
-      
+
       {resendSuccess && (
         <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-400">
           Kode verifikasi baru telah dikirim!
@@ -179,7 +196,9 @@ export default function VerifyEmailPage() {
           {code.map((digit, index) => (
             <input
               key={index}
-              ref={(el) => { inputRefs.current[index] = el; }}
+              ref={(el) => {
+                inputRefs.current[index] = el;
+              }}
               type="text"
               inputMode="numeric"
               maxLength={1}
@@ -190,7 +209,7 @@ export default function VerifyEmailPage() {
             />
           ))}
         </div>
-        
+
         <p className="text-center text-sm text-gray-500 dark:text-zinc-400">
           Cek inbox atau folder spam email Anda
         </p>
@@ -222,7 +241,7 @@ export default function VerifyEmailPage() {
             {resendLoading ? "Mengirim..." : "Kirim ulang"}
           </button>
         </p>
-        
+
         <Link
           href="/login"
           className="mt-4 inline-block text-sm text-gray-500 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-300"

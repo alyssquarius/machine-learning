@@ -19,20 +19,63 @@ export default function FavoritPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="PILIHAN PERSONAL" title="Favorit" description={`${list.length} mobil tersimpan untuk kamu pertimbangkan.`} actions={<><Link href="/beli" className="button-primary">Jelajahi katalog<Icon name="arrow" className="h-4 w-4" /></Link>{list.length ? <button className="button-secondary" onClick={() => { if (confirm("Hapus semua mobil dari favorit?")) { store.clearFavs(); toast("Daftar favorit sudah dikosongkan."); } }}>Kosongkan favorit</button> : null}</>} />
+      <PageHeader
+        eyebrow="PILIHAN PERSONAL"
+        title="Favorit"
+        description={`${list.length} mobil tersimpan untuk kamu pertimbangkan.`}
+        actions={
+          <>
+            <Link href="/beli" className="button-primary">
+              Jelajahi katalog
+              <Icon name="arrow" className="h-4 w-4" />
+            </Link>
+            {list.length ? (
+              <button
+                className="button-secondary"
+                onClick={() => {
+                  if (confirm("Hapus semua mobil dari favorit?")) {
+                    store.clearFavs();
+                    toast("Daftar favorit sudah dikosongkan.");
+                  }
+                }}
+              >
+                Kosongkan favorit
+              </button>
+            ) : null}
+          </>
+        }
+      />
 
       {list.length === 0 ? (
-        <div className="surface"><EmptyState icon="heart" title="Beri tempat untuk pilihan favoritmu." description="Ketuk ikon hati pada mobil yang menarik perhatianmu. Semua pilihanmu akan tersimpan rapi di sini." action={{href:"/beli",label:"Temukan pilihan pertamamu"}} /></div>
+        <div className="surface">
+          <EmptyState
+            icon="heart"
+            title="Beri tempat untuk pilihan favoritmu."
+            description="Ketuk ikon hati pada mobil yang menarik perhatianmu. Semua pilihanmu akan tersimpan rapi di sini."
+            action={{ href: "/beli", label: "Temukan pilihan pertamamu" }}
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => (
-            <CarCard key={c.id} car={c} onDetail={setDetailId} onBuy={setBuyId} onOffer={setOfferId} />
+            <CarCard
+              key={c.id}
+              car={c}
+              onDetail={setDetailId}
+              onBuy={setBuyId}
+              onOffer={setOfferId}
+            />
           ))}
         </div>
       )}
 
       {detailId ? (
-        <DetailModal carId={detailId} onClose={() => setDetailId(null)} onBuy={setBuyId} onOffer={setOfferId} />
+        <DetailModal
+          carId={detailId}
+          onClose={() => setDetailId(null)}
+          onBuy={setBuyId}
+          onOffer={setOfferId}
+        />
       ) : null}
       {offerId ? <OfferModal carId={offerId} onClose={() => setOfferId(null)} /> : null}
       {buyId ? <CheckoutModal carId={buyId} onClose={() => setBuyId(null)} /> : null}

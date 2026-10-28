@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
         return;
       }
       setSuccess(
-        "Jika email terdaftar, tautan untuk mengatur ulang password sudah dikirim. Cek kotak masuk atau folder spam."
+        "Jika email terdaftar, tautan untuk mengatur ulang password sudah dikirim. Cek kotak masuk atau folder spam.",
       );
     } catch (err) {
       setError(friendlyError(err));
@@ -44,7 +44,10 @@ export default function ForgotPasswordPage() {
     <AuthShell title="Lupa Password?" subtitle="Masukkan email dan kami kirimkan tautan reset.">
       <form onSubmit={onSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-zinc-300">
+          <label
+            htmlFor="email"
+            className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-zinc-300"
+          >
             Email
           </label>
           <input
@@ -58,12 +61,18 @@ export default function ForgotPasswordPage() {
           />
         </div>
         {error ? (
-          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+          <div
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400"
+          >
             {error}
           </div>
         ) : null}
         {success ? (
-          <div role="alert" className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-400">
+          <div
+            role="alert"
+            className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-400"
+          >
             {success}
           </div>
         ) : null}

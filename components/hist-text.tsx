@@ -1,10 +1,6 @@
 type Props = { text: string; className?: string };
 
-/**
- * Render aman untuk teks riwayat/notifikasi.
- * Store hanya menyimpan tag <b>...</b> (sudah di-escape),
- * jadi kita parse manual tanpa dangerouslySetInnerHTML.
- */
+// Parse only <b> markers so stored history never renders arbitrary HTML.
 export function HistText({ text, className }: Props) {
   const parts = String(text ?? "").split(/(<b>.*?<\/b>)/g);
   return (

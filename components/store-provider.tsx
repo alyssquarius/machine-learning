@@ -7,8 +7,6 @@ import { carPhotos } from "@/lib/car-photos";
 import { safeImageUrl } from "@/lib/format";
 import { seedDemoCatalog } from "@/lib/demo-cars";
 
-// ---------- Tipe ----------
-
 export type CarStatus = "done" | "running" | "queued" | "failed";
 export type OfferStatus = "pending" | "accepted" | "rejected";
 
@@ -88,8 +86,6 @@ export interface Stats {
   activeValue: number;
 }
 
-// ---------- Foto fallback per kategori ----------
-
 const W = (n: string) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(n)}?width=800`;
 
@@ -107,8 +103,6 @@ export function imageFor(category: string, explicit?: string): string {
   if (url) return url;
   return CATEGORY_IMAGES[category] || CATEGORY_IMAGES.Lainnya;
 }
-
-// ---------- Penyimpanan per-akun ----------
 
 const LS_CARS = "abc_cars_v3";
 const LS_SHARED_CARS = "abc_cars_shared_v2";
@@ -163,8 +157,12 @@ function normalizeCars(arr: unknown): Car[] {
       const o: Car = { ...(c as Car) };
       o.isDemo = o.isDemo === true;
       o.title = String(o.title || "Mobil").slice(0, 80);
-      o.brand = String(o.brand || "").trim().slice(0,40);
-      o.model = String(o.model || "").trim().slice(0,60);
+      o.brand = String(o.brand || "")
+        .trim()
+        .slice(0, 40);
+      o.model = String(o.model || "")
+        .trim()
+        .slice(0, 60);
       o.price = Math.max(0, Number(o.price) || 0);
       const my = new Date().getFullYear();
       o.year = Math.min(my, Math.max(1990, Number(o.year) || my));
@@ -179,8 +177,7 @@ function normalizeCars(arr: unknown): Car[] {
       o.sellerId = typeof o.sellerId === "string" ? o.sellerId : "";
       o.sellerName = typeof o.sellerName === "string" ? o.sellerName.slice(0, 60) : "";
       o.sellerPhone = typeof o.sellerPhone === "string" ? o.sellerPhone.slice(0, 30) : "";
-      o.description =
-        typeof o.description === "string" ? o.description.slice(0, 500) : "";
+      o.description = typeof o.description === "string" ? o.description.slice(0, 500) : "";
       o.createdAt = Number(o.createdAt) > 0 ? Number(o.createdAt) : Date.now();
       o.offers = Array.isArray(o.offers)
         ? (o.offers as Offer[])
@@ -190,9 +187,7 @@ function normalizeCars(arr: unknown): Car[] {
               amount: Math.max(0, Number(x.amount) || 0),
               note: String(x.note || "").slice(0, 140),
               ts: Number(x.ts) > 0 ? Number(x.ts) : Date.now(),
-              status: (["pending", "accepted", "rejected"] as OfferStatus[]).includes(
-                x.status
-              )
+              status: (["pending", "accepted", "rejected"] as OfferStatus[]).includes(x.status)
                 ? x.status
                 : "pending",
             }))
@@ -206,7 +201,9 @@ function normalizeCars(arr: unknown): Car[] {
             : "tunai",
           paymentType: p.paymentType === "booking" ? "booking" : "full",
           bookingFee: Math.max(0, Number(p.bookingFee) || 0),
-          deliveryMethod: (["showroom", "home_delivery", "cod"] as const).includes(p.deliveryMethod as "showroom")
+          deliveryMethod: (["showroom", "home_delivery", "cod"] as const).includes(
+            p.deliveryMethod as "showroom",
+          )
             ? (p.deliveryMethod as Purchase["deliveryMethod"])
             : "showroom",
           address: String(p.address || "").slice(0, 200),
@@ -256,10 +253,7 @@ interface Snapshot {
   settings: Settings;
 }
 
-const uid = (p: string) =>
-  `${p}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4)}`;
-
-// ---------- Context ----------
+const uid = (p: string) => `${p}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4)}`;
 
 interface StoreApi {
   ready: boolean;
@@ -311,7 +305,7 @@ interface StoreApi {
       installment?: number;
       name?: string;
       phone?: string;
-    }
+    },
   ): Purchase | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log(type: string, text: string, silent?: boolean, carId?: string | null): void;
@@ -341,11 +335,7 @@ export function useStoreOptional(): StoreApi | null {
   return React.useContext(StoreCtx);
 }
 
-export function StoreProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function StoreProvider({ children }: { children: React.ReactNode }) {
   const ownerRef = React.useRef("");
   const roleRef = React.useRef<Role>("guest");
   const [snap, setSnap] = React.useState<Snapshot>({
@@ -360,7 +350,7 @@ export function StoreProvider({
 
   const scoped = React.useCallback(
     (base: string) => (ownerRef.current ? `${base}_${ownerRef.current}` : base),
-    []
+    [],
   );
 
   const persist = React.useCallback(
@@ -400,87 +390,88 @@ export function StoreProvider({
       snapRef.current = next;
       setSnap({ ...next, cars: [...next.cars] });
     },
-    [scoped]
+    [scoped],
   );
 
-  const loadForOwner = React.useCallback(
-    (ownerId: string) => {
-      try { seedDemoCatalog(localStorage); } catch { /* storage unavailable; preserve existing catalogue */ }
-      const k = (b: string) => (ownerId ? `${b}_${ownerId}` : b);
-      let cars = normalizeCars(load(k(LS_CARS), []));
-      let hist = normalizeHist(load(k(LS_HIST), []));
+  const loadForOwner = React.useCallback((ownerId: string) => {
+    try {
+      seedDemoCatalog(localStorage);
+    } catch {
+      /* storage unavailable; preserve existing catalogue */
+    }
+    const k = (b: string) => (ownerId ? `${b}_${ownerId}` : b);
+    let cars = normalizeCars(load(k(LS_CARS), []));
+    let hist = normalizeHist(load(k(LS_HIST), []));
 
-      // Gabungkan dengan katalog mobil bersama (shared marketplace)
-      try {
-        const sharedCars = normalizeCars(load(LS_SHARED_CARS, []));
-        const sharedMap = new Map(sharedCars.map((c) => [c.id, c]));
+    // Gabungkan dengan katalog mobil bersama (shared marketplace)
+    try {
+      const sharedCars = normalizeCars(load(LS_SHARED_CARS, []));
+      const sharedMap = new Map(sharedCars.map((c) => [c.id, c]));
 
-        // Sinkronkan mobil lokal penjual jika sudah dibeli oleh pembeli lain di shared marketplace
-        let localCarsChanged = false;
-        cars = cars.map((localCar) => {
-          const sc = sharedMap.get(localCar.id);
-          if (sc && JSON.stringify(sc) !== JSON.stringify(localCar)) {
-            localCarsChanged = true;
-            return sc;
-          }
-          return localCar;
-        });
-
-        if (localCarsChanged) {
-          save(k(LS_CARS), cars);
+      // Sinkronkan mobil lokal penjual jika sudah dibeli oleh pembeli lain di shared marketplace
+      let localCarsChanged = false;
+      cars = cars.map((localCar) => {
+        const sc = sharedMap.get(localCar.id);
+        if (sc && JSON.stringify(sc) !== JSON.stringify(localCar)) {
+          localCarsChanged = true;
+          return sc;
         }
+        return localCar;
+      });
 
-        const seen = new Set(cars.map((c) => c.id));
-        for (const sc of sharedCars) {
-          if (!seen.has(sc.id)) {
-            cars.push(sc);
-            seen.add(sc.id);
-          }
-        }
-
-        // Cek jika ada mobil milik penjual ini yang sudah dibeli pembeli tapi belum masuk notifikasi riwayat
-        if (ownerId) {
-          let histChanged = false;
-          cars.forEach((c) => {
-            if (c.sellerId === ownerId && c.purchase && c.status === "done") {
-              const p = c.purchase;
-              const alreadyNotified = hist.some(
-                (h) => h.carId === c.id && h.text.includes(p.invoiceNumber)
-              );
-              if (!alreadyNotified) {
-                hist.unshift({
-                  id: uid("h"),
-                  type: "beli",
-                  text:
-                    p.paymentType === "booking"
-                      ? `<b>PESANAN MASUK:</b> Mobil <b>${esc(c.title)}</b> dibooking oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). Tanda Jadi: Rp ${(p.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`
-                      : p.method === "kredit"
-                      ? `<b>PENGAJUAN KREDIT:</b> Mobil <b>${esc(c.title)}</b> diajukan kredit oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). DP: Rp ${p.dp.toLocaleString("id-ID")}, Tenor: ${p.tenor} bln. Invoice <b>#${p.invoiceNumber}</b>.`
-                      : `<b>MOBIL TERJUAL:</b> Mobil <b>${esc(c.title)}</b> dibeli tunai oleh <b>${esc(p.name)}</b> (WA: ${p.phone}) seharga Rp ${c.price.toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`,
-                  ts: p.ts || Date.now(),
-                  carId: c.id,
-                });
-                histChanged = true;
-              }
-            }
-          });
-          if (histChanged) {
-            hist = hist.slice(0, 60);
-            save(k(LS_HIST), hist);
-          }
-        }
-      } catch {
-        /* abaikan */
+      if (localCarsChanged) {
+        save(k(LS_CARS), cars);
       }
 
-      let favs = load<string[]>(k(LS_FAVS), []);
-      if (!Array.isArray(favs)) favs = [];
-      const settings = normalizeSettings(load(k(LS_SET), {}));
-      favs = favs.filter((id) => cars.some((c) => c.id === id));
-      return { cars, favs, hist, settings };
-    },
-    []
-  );
+      const seen = new Set(cars.map((c) => c.id));
+      for (const sc of sharedCars) {
+        if (!seen.has(sc.id)) {
+          cars.push(sc);
+          seen.add(sc.id);
+        }
+      }
+
+      // Cek jika ada mobil milik penjual ini yang sudah dibeli pembeli tapi belum masuk notifikasi riwayat
+      if (ownerId) {
+        let histChanged = false;
+        cars.forEach((c) => {
+          if (c.sellerId === ownerId && c.purchase && c.status === "done") {
+            const p = c.purchase;
+            const alreadyNotified = hist.some(
+              (h) => h.carId === c.id && h.text.includes(p.invoiceNumber),
+            );
+            if (!alreadyNotified) {
+              hist.unshift({
+                id: uid("h"),
+                type: "beli",
+                text:
+                  p.paymentType === "booking"
+                    ? `<b>PESANAN MASUK:</b> Mobil <b>${esc(c.title)}</b> dibooking oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). Tanda Jadi: Rp ${(p.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`
+                    : p.method === "kredit"
+                      ? `<b>PENGAJUAN KREDIT:</b> Mobil <b>${esc(c.title)}</b> diajukan kredit oleh <b>${esc(p.name)}</b> (WA: ${p.phone}). DP: Rp ${p.dp.toLocaleString("id-ID")}, Tenor: ${p.tenor} bln. Invoice <b>#${p.invoiceNumber}</b>.`
+                      : `<b>MOBIL TERJUAL:</b> Mobil <b>${esc(c.title)}</b> dibeli tunai oleh <b>${esc(p.name)}</b> (WA: ${p.phone}) seharga Rp ${c.price.toLocaleString("id-ID")}. Invoice <b>#${p.invoiceNumber}</b>.`,
+                ts: p.ts || Date.now(),
+                carId: c.id,
+              });
+              histChanged = true;
+            }
+          }
+        });
+        if (histChanged) {
+          hist = hist.slice(0, 60);
+          save(k(LS_HIST), hist);
+        }
+      }
+    } catch {
+      /* abaikan */
+    }
+
+    let favs = load<string[]>(k(LS_FAVS), []);
+    if (!Array.isArray(favs)) favs = [];
+    const settings = normalizeSettings(load(k(LS_SET), {}));
+    favs = favs.filter((id) => cars.some((c) => c.id === id));
+    return { cars, favs, hist, settings };
+  }, []);
 
   // Muat data default (tanpa owner) saat mount agar SSR aman.
   React.useEffect(() => {
@@ -521,9 +512,17 @@ export function StoreProvider({
       snapshot.cars = [...cars.values()];
       return snapshot;
     };
-    const inventory = () => cur().cars.filter((car) => roleRef.current === "admin" || (!!ownerRef.current && car.sellerId === ownerRef.current));
-    const canMutateListing = (car: Car, action: "canEditOwnListing" | "canDeleteOwnListing" | "canAcceptOffer" | "canRejectOffer") =>
-      !!ownerRef.current && canPerformAction(roleRef.current, action, { isOwner: car.sellerId === ownerRef.current });
+    const inventory = () =>
+      cur().cars.filter(
+        (car) =>
+          roleRef.current === "admin" || (!!ownerRef.current && car.sellerId === ownerRef.current),
+      );
+    const canMutateListing = (
+      car: Car,
+      action: "canEditOwnListing" | "canDeleteOwnListing" | "canAcceptOffer" | "canRejectOffer",
+    ) =>
+      !!ownerRef.current &&
+      canPerformAction(roleRef.current, action, { isOwner: car.sellerId === ownerRef.current });
     const mutate = (fn: (s: Snapshot) => Snapshot, opts?: { silentHist?: boolean }) => {
       const next = fn(latestSnapshot());
       void opts;
@@ -536,7 +535,9 @@ export function StoreProvider({
       all() {
         return [...cur().cars].sort((a, b) => b.createdAt - a.createdAt);
       },
-      inventory() { return inventory().sort((a, b) => b.createdAt - a.createdAt); },
+      inventory() {
+        return inventory().sort((a, b) => b.createdAt - a.createdAt);
+      },
       get(id) {
         return cur().cars.find((c) => c.id === id);
       },
@@ -591,8 +592,8 @@ export function StoreProvider({
       },
       pendingOffersCount() {
         return inventory().reduce(
-          (a, c) => a + ((c.offers || []).filter((o) => o.status === "pending").length),
-          0
+          (a, c) => a + (c.offers || []).filter((o) => o.status === "pending").length,
+          0,
         );
       },
       totalRevenue() {
@@ -706,7 +707,8 @@ export function StoreProvider({
       decideOffer(id, offerId, accept) {
         const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
-        if (car && !canMutateListing(car, accept ? "canAcceptOffer" : "canRejectOffer")) return null;
+        if (car && !canMutateListing(car, accept ? "canAcceptOffer" : "canRejectOffer"))
+          return null;
         if (!car || !car.offers) return null;
         if (car.status === "done") return null;
         const offer = car.offers.find((o) => o.id === offerId);
@@ -782,9 +784,15 @@ export function StoreProvider({
           data.status && STATUSES.includes(data.status) ? data.status : "running";
         const car: Car = {
           id: uid("c"),
-          title: String(data.title || "").trim().slice(0, 80),
-          brand: String(data.brand || "").trim().slice(0,40),
-          model: String(data.model || "").trim().slice(0,60),
+          title: String(data.title || "")
+            .trim()
+            .slice(0, 80),
+          brand: String(data.brand || "")
+            .trim()
+            .slice(0, 40),
+          model: String(data.model || "")
+            .trim()
+            .slice(0, 60),
           price: Math.max(0, Number(data.price) || 0),
           year: yearNum,
           km: Math.max(0, Number(data.km) || 0),
@@ -795,9 +803,13 @@ export function StoreProvider({
           badge: status === "running" ? "Dijual" : "Baru",
           image: carPhotos(data)[0] || imageFor(category, data.image),
           images: carPhotos(data),
-          description: String(data.description || "").trim().slice(0, 500),
+          description: String(data.description || "")
+            .trim()
+            .slice(0, 500),
           sellerId: ownerRef.current,
-          sellerName: String(data.sellerName || cur().settings.displayName || "").trim().slice(0, 60),
+          sellerName: String(data.sellerName || cur().settings.displayName || "")
+            .trim()
+            .slice(0, 60),
           sellerPhone: String(data.sellerPhone || "").trim(),
           createdAt: Date.now(),
           offers: [],
@@ -823,13 +835,29 @@ export function StoreProvider({
         if (car && !canMutateListing(car, "canEditOwnListing")) return null;
         if (!car) return null;
         if (car.purchase && patch.status && patch.status !== "done") return null;
-        const allowed = ["brand", "model", "title", "price", "year", "km", "location", "category", "status", "badge", "image", "images", "description", "interest"];
+        const allowed = [
+          "brand",
+          "model",
+          "title",
+          "price",
+          "year",
+          "km",
+          "location",
+          "category",
+          "status",
+          "badge",
+          "image",
+          "images",
+          "description",
+          "interest",
+        ];
         const clean: Partial<Car> = {};
         Object.keys(patch || {}).forEach((k) => {
-          if (allowed.includes(k)) (clean as Record<string, unknown>)[k] = (patch as Record<string, unknown>)[k];
+          if (allowed.includes(k))
+            (clean as Record<string, unknown>)[k] = (patch as Record<string, unknown>)[k];
         });
-        if (typeof clean.brand === "string") clean.brand = clean.brand.trim().slice(0,40);
-        if (typeof clean.model === "string") clean.model = clean.model.trim().slice(0,60);
+        if (typeof clean.brand === "string") clean.brand = clean.brand.trim().slice(0, 40);
+        if (typeof clean.model === "string") clean.model = clean.model.trim().slice(0, 60);
         if (typeof clean.title === "string") clean.title = clean.title.trim().slice(0, 80);
         if (clean.price != null) clean.price = Math.max(0, Number(clean.price) || 0);
         if (clean.year != null) {
@@ -854,7 +882,10 @@ export function StoreProvider({
         if (clean.status != null && !STATUSES.includes(clean.status)) delete clean.status;
         if (clean.interest != null)
           clean.interest = Math.max(0, Math.min(100, Number(clean.interest) || 0));
-        if (Array.isArray(clean.images)) { clean.images = carPhotos({images:clean.images}); clean.image = clean.images[0] || imageFor(clean.category || car.category); }
+        if (Array.isArray(clean.images)) {
+          clean.images = carPhotos({ images: clean.images });
+          clean.image = clean.images[0] || imageFor(clean.category || car.category);
+        }
         Object.assign(car, clean);
         persist(s);
         return car;
@@ -868,7 +899,10 @@ export function StoreProvider({
         s.favs = s.favs.filter((f) => f !== id);
         try {
           const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
-          save(LS_SHARED_CARS, currentShared.filter((c) => c.id !== id));
+          save(
+            LS_SHARED_CARS,
+            currentShared.filter((c) => c.id !== id),
+          );
         } catch {
           /* abaikan */
         }
@@ -893,7 +927,14 @@ export function StoreProvider({
         car.status = status;
         if (status === "running") car.badge = "Dijual";
         const label =
-          ({ done: "terjual", running: "ditayangkan", queued: "menunggu verifikasi", failed: "ditolak" } as Record<string, string>)[status] || status;
+          (
+            {
+              done: "terjual",
+              running: "ditayangkan",
+              queued: "menunggu verifikasi",
+              failed: "ditolak",
+            } as Record<string, string>
+          )[status] || status;
         s.hist.unshift({
           id: uid("h"),
           type: "status",
@@ -911,19 +952,30 @@ export function StoreProvider({
         if (car && !canMutateListing(car, "canEditOwnListing")) return null;
         if (!car) return null;
         if (car.purchase && data.status && data.status !== "done") return null;
-        const title = String(data.title || "").trim().slice(0, 80);
+        const title = String(data.title || "")
+          .trim()
+          .slice(0, 80);
         const price = Number(data.price) || 0;
         const year = Number(data.year) || car.year;
         const maxYear = new Date().getFullYear();
         if (title.length < 4 || !price || price < 1000000 || !year || year < 1990 || year > maxYear)
           return null;
         car.title = title;
-        if (data.brand !== undefined) car.brand = String(data.brand || "").trim().slice(0,40);
-        if (data.model !== undefined) car.model = String(data.model || "").trim().slice(0,60);
+        if (data.brand !== undefined)
+          car.brand = String(data.brand || "")
+            .trim()
+            .slice(0, 40);
+        if (data.model !== undefined)
+          car.model = String(data.model || "")
+            .trim()
+            .slice(0, 60);
         car.price = price;
         car.year = year;
         car.km = Math.max(0, Number(data.km) || 0);
-        car.location = String(data.location || "").trim().slice(0, 60) || "-";
+        car.location =
+          String(data.location || "")
+            .trim()
+            .slice(0, 60) || "-";
         car.category = cleanCategory(data.category, car.category as never);
         if (data.status && STATUSES.includes(data.status)) {
           car.status = data.status;
@@ -936,8 +988,13 @@ export function StoreProvider({
           const img = safeImageUrl(data.image);
           if (img) car.image = img;
         }
-        if (Array.isArray(data.images)) { car.images = carPhotos({images:data.images}); car.image = car.images[0] || imageFor(car.category); }
-        car.description = String(data.description || "").trim().slice(0, 500);
+        if (Array.isArray(data.images)) {
+          car.images = carPhotos({ images: data.images });
+          car.image = car.images[0] || imageFor(car.category);
+        }
+        car.description = String(data.description || "")
+          .trim()
+          .slice(0, 500);
         s.hist.unshift({
           id: uid("h"),
           type: "jual",
@@ -968,14 +1025,22 @@ export function StoreProvider({
           paymentType: opts.paymentType === "booking" ? "booking" : "full",
           bookingFee: Math.max(0, Number(opts.bookingFee) || 0),
           deliveryMethod: opts.deliveryMethod || "showroom",
-          address: String(opts.address || "").trim().slice(0, 200),
-          note: String(opts.note || "").trim().slice(0, 300),
+          address: String(opts.address || "")
+            .trim()
+            .slice(0, 200),
+          note: String(opts.note || "")
+            .trim()
+            .slice(0, 300),
           dp: Math.max(0, Number(opts.dp) || 0),
           tenor: Math.max(0, Number(opts.tenor) || 0),
           rate: Math.max(0, Number(opts.rate) || 0),
           installment: Math.max(0, Number(opts.installment) || 0),
-          name: String(opts.name || "").trim().slice(0, 60),
-          phone: String(opts.phone || "").trim().slice(0, 30),
+          name: String(opts.name || "")
+            .trim()
+            .slice(0, 60),
+          phone: String(opts.phone || "")
+            .trim()
+            .slice(0, 30),
           sellerPhone: String(car.sellerPhone || "").trim(),
           ts: now,
         };
@@ -985,10 +1050,9 @@ export function StoreProvider({
           purchaseData.paymentType === "booking"
             ? `Tanda Jadi (Booking) Rp ${(purchaseData.bookingFee || 0).toLocaleString("id-ID")}`
             : method === "kredit"
-            ? `Kredit — DP Rp ${purchaseData.dp.toLocaleString("id-ID")}, ${purchaseData.tenor}× Rp ${purchaseData.installment.toLocaleString("id-ID")}/bln`
-            : `Tunai Penuh (Rp ${car.price.toLocaleString("id-ID")})`;
+              ? `Kredit — DP Rp ${purchaseData.dp.toLocaleString("id-ID")}, ${purchaseData.tenor}× Rp ${purchaseData.installment.toLocaleString("id-ID")}/bln`
+              : `Tunai Penuh (Rp ${car.price.toLocaleString("id-ID")})`;
 
-        // 1. Catat riwayat di akun pembeli
         s.hist.unshift({
           id: uid("h"),
           type: "beli",
@@ -998,7 +1062,6 @@ export function StoreProvider({
         });
         s.hist = s.hist.slice(0, 60);
 
-        // 2. Sinkronkan langsung ke katalog mobil bersama (LS_SHARED_CARS)
         try {
           const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
           const idx = currentShared.findIndex((c) => c.id === car.id);
@@ -1019,8 +1082,8 @@ export function StoreProvider({
           purchaseData.paymentType === "booking"
             ? `<b>PESANAN MASUK!</b> Mobil <b>${esc(car.title)}</b> dibooking oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). Tanda Jadi: Rp ${(purchaseData.bookingFee || 0).toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`
             : method === "kredit"
-            ? `<b>PENGAJUAN KREDIT!</b> Mobil <b>${esc(car.title)}</b> diajukan kredit oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). DP: Rp ${purchaseData.dp.toLocaleString("id-ID")}, Tenor: ${purchaseData.tenor} bln. Invoice <b>#${invoiceNumber}</b>.`
-            : `<b>MOBIL TERJUAL!</b> Mobil <b>${esc(car.title)}</b> berhasil dibeli tunai oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}) seharga Rp ${car.price.toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`;
+              ? `<b>PENGAJUAN KREDIT!</b> Mobil <b>${esc(car.title)}</b> diajukan kredit oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}). DP: Rp ${purchaseData.dp.toLocaleString("id-ID")}, Tenor: ${purchaseData.tenor} bln. Invoice <b>#${invoiceNumber}</b>.`
+              : `<b>MOBIL TERJUAL!</b> Mobil <b>${esc(car.title)}</b> berhasil dibeli tunai oleh <b>${esc(purchaseData.name)}</b> (WA: ${purchaseData.phone}) seharga Rp ${car.price.toLocaleString("id-ID")}. Invoice <b>#${invoiceNumber}</b>.`;
 
         // 3. Masukkan transaksi & notifikasi ke SEMUA akun Penjual pemilik mobil (cross-account)
         try {
@@ -1045,7 +1108,6 @@ export function StoreProvider({
                   save(k, sellerCars);
                 }
 
-                // Masukkan notifikasi ke riwayat akun penjual tersebut
                 const sellerOwnerId = k.replace(`${LS_CARS}_`, "");
                 const histKey = sellerOwnerId ? `${LS_HIST}_${sellerOwnerId}` : LS_HIST;
                 const sellerHist = normalizeHist(load(histKey, []));
@@ -1064,18 +1126,16 @@ export function StoreProvider({
           /* abaikan */
         }
 
-        // 4. Simpan perubahan akun pembeli saat ini
         persist(s);
 
-        // 5. Siarkan event realtime lintas tab / jendela
         try {
           if (typeof window !== "undefined") {
             localStorage.setItem(
               "abc_order_broadcast",
-              JSON.stringify({ carId: car.id, sellerId: car.sellerId, invoiceNumber, ts: now })
+              JSON.stringify({ carId: car.id, sellerId: car.sellerId, invoiceNumber, ts: now }),
             );
             window.dispatchEvent(
-              new CustomEvent("order-created", { detail: { car, purchase: purchaseData } })
+              new CustomEvent("order-created", { detail: { car, purchase: purchaseData } }),
             );
           }
         } catch {
@@ -1085,10 +1145,25 @@ export function StoreProvider({
         return purchaseData;
       },
       log(type, text, silent, carId) {
-        const allowed = ["beli", "jual", "tawar", "favorit", "status", "verifikasi", "batal", "hapus"];
+        const allowed = [
+          "beli",
+          "jual",
+          "tawar",
+          "favorit",
+          "status",
+          "verifikasi",
+          "batal",
+          "hapus",
+        ];
         const t = (allowed.includes(type) ? type : "status") as HistEntry["type"];
         mutate((s) => {
-          s.hist.unshift({ id: uid("h"), type: t, text: String(text ?? ""), ts: Date.now(), carId: carId || null });
+          s.hist.unshift({
+            id: uid("h"),
+            type: t,
+            text: String(text ?? ""),
+            ts: Date.now(),
+            carId: carId || null,
+          });
           s.hist = s.hist.slice(0, 60);
           return s;
         });
@@ -1105,7 +1180,7 @@ export function StoreProvider({
       setWidgetHidden(id, hidden) {
         mutate((s) => {
           const list = new Set(
-            Array.isArray(s.settings.hiddenWidgets) ? s.settings.hiddenWidgets : []
+            Array.isArray(s.settings.hiddenWidgets) ? s.settings.hiddenWidgets : [],
           );
           if (hidden) list.add(id);
           else list.delete(id);

@@ -23,7 +23,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     timer.current = setTimeout(() => setMsg(null), 4000);
   }, []);
 
-  React.useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  React.useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   return (
     <Ctx.Provider value={{ toast }}>
@@ -36,7 +41,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         >
           <Icon name="bell" className="h-4 w-4 shrink-0 text-emerald-600" />
           <span>{msg}</span>
-          <button type="button" className="icon-button !h-6 !w-6" aria-label="Tutup pemberitahuan" onClick={() => setMsg(null)}><Icon name="x" className="h-3.5 w-3.5" /></button>
+          <button
+            type="button"
+            className="icon-button !h-6 !w-6"
+            aria-label="Tutup pemberitahuan"
+            onClick={() => setMsg(null)}
+          >
+            <Icon name="x" className="h-3.5 w-3.5" />
+          </button>
         </div>
       ) : null}
     </Ctx.Provider>

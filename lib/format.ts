@@ -30,25 +30,17 @@ export function timeAgo(ts: number): string {
 }
 
 export function friendlyError(error: unknown): string {
-  const msg = String(
-    (error as { message?: string } | null)?.message ?? error ?? ""
-  ).toLowerCase();
+  const msg = String((error as { message?: string } | null)?.message ?? error ?? "").toLowerCase();
   if (msg.includes("invalid login credentials")) return "Email atau password salah.";
-  if (msg.includes("email not confirmed"))
-    return "Email belum diverifikasi. Cek kotak masuk Anda.";
+  if (msg.includes("email not confirmed")) return "Email belum diverifikasi. Cek kotak masuk Anda.";
   if (msg.includes("already registered")) return "Email sudah terdaftar. Silakan login.";
   if (msg.includes("rate limit") || msg.includes("too many"))
     return "Terlalu banyak percobaan. Coba lagi beberapa menit lagi.";
-  if (msg.includes("same password"))
-    return "Password baru tidak boleh sama dengan yang lama.";
-  if (msg.includes("password") && msg.includes("characters"))
-    return "Password terlalu pendek.";
+  if (msg.includes("same password")) return "Password baru tidak boleh sama dengan yang lama.";
+  if (msg.includes("password") && msg.includes("characters")) return "Password terlalu pendek.";
   if (msg.includes("failed to fetch") || msg.includes("network"))
     return "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
-  return (
-    (error as { message?: string } | null)?.message ||
-    "Terjadi kesalahan. Silakan coba lagi."
-  );
+  return (error as { message?: string } | null)?.message || "Terjadi kesalahan. Silakan coba lagi.";
 }
 
 export function safeImageUrl(u: unknown): string {

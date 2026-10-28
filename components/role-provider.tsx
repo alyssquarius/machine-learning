@@ -36,7 +36,10 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   async function fetchUserRole(userId: string): Promise<Role> {
     try {
       const { data: profile } = await createClient()
-        .from("profiles").select("role").eq("id", userId).single();
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
       if (profile?.role && ["admin", "buyer"].includes(profile.role)) {
         return profile.role as Role;
       }
@@ -129,7 +132,6 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     try {
       await createClient().auth.signOut();
       store.setOwner("");
-      // Bersihkan cached role
       if (userId) {
         try {
           localStorage.removeItem(`abc_role_${userId}`);
@@ -189,4 +191,3 @@ export function useRole(): RoleContextType {
   }
   return ctx;
 }
-

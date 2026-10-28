@@ -1,8 +1,3 @@
-/**
- * Komponen Badge Role untuk Pembeda Visual
- */
-
-import * as React from "react";
 import { type Role, getRoleDisplayName } from "@/lib/roles";
 
 const ROLE_BADGE_STYLES: Record<Role, { bg: string; text: string; border: string; dot: string }> = {

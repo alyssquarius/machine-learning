@@ -19,9 +19,6 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const AVATAR_PX = 256; // output 256x256
 const EDITOR_SIZE = 300; // ukuran editor canvas (px)
 
-/* ------------------------------------------------------------------ */
-/*  Image Editor Modal — crop, zoom, drag                             */
-/* ------------------------------------------------------------------ */
 interface EditorProps {
   file: File;
   onConfirm: (dataUrl: string) => void;
@@ -36,7 +33,6 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
   const dragging = React.useRef(false);
   const lastPos = React.useRef({ x: 0, y: 0 });
 
-  // Load image
   React.useEffect(() => {
     const image = new Image();
     image.onload = () => setImg(image);
@@ -49,14 +45,12 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
     if (!img) return;
     const fit = EDITOR_SIZE / Math.min(img.width, img.height);
     setScale(fit);
-    // Posisi awal: tengah
     setOffset({
       x: (EDITOR_SIZE - img.width * fit) / 2,
       y: (EDITOR_SIZE - img.height * fit) / 2,
     });
   }, [img]);
 
-  // Render canvas
   React.useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -67,27 +61,17 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
 
     ctx.clearRect(0, 0, EDITOR_SIZE, EDITOR_SIZE);
 
-    // Gambar background kotak-kotak (transparan)
     ctx.fillStyle = "#1a1a1a";
     ctx.fillRect(0, 0, EDITOR_SIZE, EDITOR_SIZE);
 
-    // Gambar foto
-    ctx.drawImage(
-      img,
-      offset.x,
-      offset.y,
-      img.width * scale,
-      img.height * scale
-    );
+    ctx.drawImage(img, offset.x, offset.y, img.width * scale, img.height * scale);
 
-    // Overlay gelap di luar lingkaran
     ctx.globalCompositeOperation = "destination-in";
     ctx.beginPath();
     ctx.arc(EDITOR_SIZE / 2, EDITOR_SIZE / 2, EDITOR_SIZE / 2, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalCompositeOperation = "source-over";
 
-    // Border lingkaran
     ctx.strokeStyle = "rgba(255,255,255,0.4)";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -95,7 +79,6 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
     ctx.stroke();
   }, [img, scale, offset]);
 
-  // Mouse / touch drag
   function startDrag(clientX: number, clientY: number) {
     dragging.current = true;
     lastPos.current = { x: clientX, y: clientY };
@@ -111,7 +94,6 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
     dragging.current = false;
   }
 
-  // Zoom slider
   function handleZoom(e: React.ChangeEvent<HTMLInputElement>) {
     if (!img) return;
     const newScale = parseFloat(e.target.value);
@@ -126,8 +108,7 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
     setScale(newScale);
   }
 
-  // Min/max zoom
-  const minScale = img ? EDITOR_SIZE / Math.max(img.width, img.height) * 0.5 : 0.1;
+  const minScale = img ? (EDITOR_SIZE / Math.max(img.width, img.height)) * 0.5 : 0.1;
   const fitScale = img ? EDITOR_SIZE / Math.min(img.width, img.height) : 1;
   const maxScale = fitScale * 4;
 
@@ -146,7 +127,7 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
       offset.x * ratio,
       offset.y * ratio,
       img.width * scale * ratio,
-      img.height * scale * ratio
+      img.height * scale * ratio,
     );
     const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
     onConfirm(dataUrl);
@@ -158,8 +139,6 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
         <p className="text-xs text-gray-500 dark:text-zinc-400">
           Geser foto untuk mengatur posisi, gunakan slider untuk zoom.
         </p>
-
-        {/* Canvas */}
         <canvas
           ref={canvasRef}
           width={EDITOR_SIZE}
@@ -180,10 +159,14 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
           }}
           onTouchEnd={endDrag}
         />
-
-        {/* Zoom slider */}
         <div className="flex w-full items-center gap-3 px-2">
-          <svg className="h-4 w-4 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="h-4 w-4 shrink-0 text-gray-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <circle cx="11" cy="11" r="7" />
             <path d="M21 21l-4.35-4.35" />
             <path d="M8 11h6" />
@@ -197,14 +180,18 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
             onChange={handleZoom}
             className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-black dark:bg-zinc-700 dark:accent-white"
           />
-          <svg className="h-4 w-4 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="h-4 w-4 shrink-0 text-gray-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <circle cx="11" cy="11" r="7" />
             <path d="M21 21l-4.35-4.35" />
             <path d="M8 11h6M11 8v6" />
           </svg>
         </div>
-
-        {/* Tombol */}
         <div className="flex gap-3">
           <button
             type="button"
@@ -226,9 +213,6 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  AvatarUpload — main component                                     */
-/* ------------------------------------------------------------------ */
 export function AvatarUpload({
   userId,
   currentUrl,
@@ -242,7 +226,6 @@ export function AvatarUpload({
   const [preview, setPreview] = React.useState(currentUrl);
   const [editorFile, setEditorFile] = React.useState<File | null>(null);
 
-  // Sync preview jika currentUrl berubah dari luar
   React.useEffect(() => {
     setPreview(currentUrl);
   }, [currentUrl]);
@@ -251,19 +234,16 @@ export function AvatarUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validasi tipe
     if (!ACCEPTED_TYPES.includes(file.type)) {
       toast("Format file harus JPG, PNG, WebP, atau GIF.");
       return;
     }
 
-    // Validasi ukuran
     if (file.size > MAX_FILE_SIZE) {
       toast("Ukuran file maksimal 5 MB.");
       return;
     }
 
-    // Buka editor
     setEditorFile(file);
 
     // Reset input agar bisa pilih file yang sama
@@ -292,16 +272,14 @@ export function AvatarUpload({
 
       // 3. Upsert ke tabel profiles di Supabase (disimpan di PostgreSQL, aman tanpa membebani cookie)
       try {
-        const { error: upsertErr } = await supabase
-          .from("profiles")
-          .upsert(
-            {
-              id: userId,
-              avatar_url: dataUrl,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "id" }
-          );
+        const { error: upsertErr } = await supabase.from("profiles").upsert(
+          {
+            id: userId,
+            avatar_url: dataUrl,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" },
+        );
 
         if (upsertErr) {
           console.warn("Upsert profile error:", upsertErr.message);
@@ -346,23 +324,20 @@ export function AvatarUpload({
       if (authUser.user) await repairLegacyAvatarSession(supabase, authUser.user);
 
       try {
-        await supabase
-          .from("profiles")
-          .upsert(
-            {
-              id: userId,
-              avatar_url: null,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "id" }
-          );
+        await supabase.from("profiles").upsert(
+          {
+            id: userId,
+            avatar_url: null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" },
+        );
       } catch {
         /* abaikan */
       }
 
       setPreview("");
       onUploaded("");
-      // Broadcast agar AppShell dan komponen lain ikut update
       window.dispatchEvent(new CustomEvent("avatar-updated", { detail: "" }));
       toast("Foto profil dihapus.");
     } catch {
@@ -374,7 +349,6 @@ export function AvatarUpload({
 
   return (
     <>
-      {/* Editor modal */}
       {editorFile && (
         <ImageEditor
           file={editorFile}
@@ -390,11 +364,7 @@ export function AvatarUpload({
             style={{ width: size, height: size }}
           >
             {preview ? (
-              <img
-                src={preview}
-                alt="Foto profil"
-                className="h-full w-full object-cover"
-              />
+              <img src={preview} alt="Foto profil" className="h-full w-full object-cover" />
             ) : (
               <span
                 className="font-bold text-white dark:text-zinc-950"
@@ -409,7 +379,6 @@ export function AvatarUpload({
               </div>
             )}
           </div>
-          {/* Overlay kamera saat hover */}
           <button
             type="button"
             onClick={() => inputRef.current?.click()}

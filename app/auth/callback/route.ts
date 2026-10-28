@@ -22,15 +22,22 @@ export async function GET(request: Request) {
           await repairLegacyAvatarSession(supabase, user);
 
           // Create a new profile without overwriting an existing admin role.
-          const { data: profile } = await supabase.from("profiles")
-            .select("role").eq("id", user.id).maybeSingle();
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .maybeSingle();
           if (!profile) {
-            await supabase.from("profiles").upsert({
-              id: user.id,
-              role: "buyer",
-              display_name: user.user_metadata?.full_name || user.user_metadata?.name || "Pengguna",
-              updated_at: new Date().toISOString(),
-            }, { onConflict: "id", ignoreDuplicates: true });
+            await supabase.from("profiles").upsert(
+              {
+                id: user.id,
+                role: "buyer",
+                display_name:
+                  user.user_metadata?.full_name || user.user_metadata?.name || "Pengguna",
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "id", ignoreDuplicates: true },
+            );
           }
           const destination = ["admin"].includes(profile?.role) ? "/dashboard" : "/beli";
           return NextResponse.redirect(`${origin}${destination}`);

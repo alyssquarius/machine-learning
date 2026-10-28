@@ -33,13 +33,20 @@ function ModalShell({
   wide?: boolean;
   className?: string;
 }) {
-  return <Dialog onClose={onClose} wide={wide} className={className}>{children}</Dialog>;
+  return (
+    <Dialog onClose={onClose} wide={wide} className={className}>
+      {children}
+    </Dialog>
+  );
 }
 
 function FieldError({ msg }: { msg: string }) {
   if (!msg) return null;
   return (
-    <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600 animate-fade-in dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+    <p
+      role="alert"
+      className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600 animate-fade-in dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400"
+    >
       {msg}
     </p>
   );
@@ -47,9 +54,8 @@ function FieldError({ msg }: { msg: string }) {
 
 const inputCls =
   "w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 transition focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:focus:border-white dark:focus:ring-white";
-const labelCls = "mb-1 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300";
-
-// ---------- Modal Jual (tambah / edit) ----------
+const labelCls =
+  "mb-1 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300";
 
 export function SellModal({
   editingId,
@@ -62,7 +68,9 @@ export function SellModal({
   const { toast } = useToast();
   const editing = editingId ? store.get(editingId) : undefined;
   const [err, setErr] = React.useState("");
-  const [priceDisplay, setPriceDisplay] = React.useState(editing?.price?.toLocaleString("id-ID") || "");
+  const [priceDisplay, setPriceDisplay] = React.useState(
+    editing?.price?.toLocaleString("id-ID") || "",
+  );
   const [kmDisplay, setKmDisplay] = React.useState(editing?.km?.toLocaleString("id-ID") || "");
   const [sellerPhone, setSellerPhone] = React.useState(editing?.sellerPhone || "");
   const [images, setImages] = React.useState<string[]>(editing ? carPhotos(editing) : []);
@@ -99,7 +107,8 @@ export function SellModal({
     if (!price || price < 1000000) return setErr("Harga minimal Rp 1.000.000.");
     if (!year || year < 1990 || year > maxYear) return setErr(`Tahun harus 1990–${maxYear}.`);
     if (!location) return setErr("Kota wajib diisi.");
-    if (!phone || phone.replace(/\D/g, "").length < 9) return setErr("Nomor WhatsApp penjual wajib diisi (minimal 9 digit).");
+    if (!phone || phone.replace(/\D/g, "").length < 9)
+      return setErr("Nomor WhatsApp penjual wajib diisi (minimal 9 digit).");
 
     setErr("");
     if (editing) {
@@ -122,7 +131,7 @@ export function SellModal({
       toast(
         listingStatus === "running"
           ? "Listing diperbarui dan aktif ditayangkan di katalog pembeli!"
-          : "Listing diperbarui."
+          : "Listing diperbarui.",
       );
     } else {
       const created = store.add({
@@ -146,7 +155,7 @@ export function SellModal({
       toast(
         listingStatus === "running"
           ? "Listing berhasil ditayangkan ke katalog pembeli!"
-          : "Listing ditambahkan, menunggu verifikasi."
+          : "Listing ditambahkan, menunggu verifikasi.",
       );
     }
     onClose(true);
@@ -154,7 +163,6 @@ export function SellModal({
 
   return (
     <ModalShell onClose={() => onClose()} wide>
-      {/* Sticky Header */}
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#18181b]">
         <div>
           <div className="flex items-center gap-2">
@@ -176,23 +184,65 @@ export function SellModal({
           className="rounded-full border border-gray-200 p-2 text-gray-500 transition hover:bg-gray-100 hover:text-black active:scale-95 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white shrink-0"
           aria-label="Tutup"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2.2"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
       <form onSubmit={onSubmit} className="flex flex-1 flex-col min-h-0">
-        {/* Scrollable Form Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
           <FieldError msg={err} />
           <div>
             <label className={labelCls}>Judul Mobil *</label>
-            <input name="title" defaultValue={editing?.title || ""} placeholder="cth: Toyota Avanza 1.5 G CVT" className={inputCls} />
+            <input
+              name="title"
+              defaultValue={editing?.title || ""}
+              placeholder="cth: Toyota Avanza 1.5 G CVT"
+              className={inputCls}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label htmlFor="listing-brand" className={labelCls}>Merek</label><input id="listing-brand" name="brand" list="listing-brand-options" maxLength={40} defaultValue={editing && vehicleBrand(editing) !== 'Lainnya' ? vehicleBrand(editing) : ''} placeholder="Toyota" className={inputCls}/><datalist id="listing-brand-options">{CAR_BRANDS.map(b=><option key={b} value={b}/>)}</datalist></div>
-            <div><label htmlFor="listing-model" className={labelCls}>Model</label><input id="listing-model" name="model" maxLength={60} defaultValue={editing ? vehicleModel(editing) : ''} placeholder="Avanza" className={inputCls}/></div>
+            <div>
+              <label htmlFor="listing-brand" className={labelCls}>
+                Merek
+              </label>
+              <input
+                id="listing-brand"
+                name="brand"
+                list="listing-brand-options"
+                maxLength={40}
+                defaultValue={
+                  editing && vehicleBrand(editing) !== "Lainnya" ? vehicleBrand(editing) : ""
+                }
+                placeholder="Toyota"
+                className={inputCls}
+              />
+              <datalist id="listing-brand-options">
+                {CAR_BRANDS.map((b) => (
+                  <option key={b} value={b} />
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label htmlFor="listing-model" className={labelCls}>
+                Model
+              </label>
+              <input
+                id="listing-model"
+                name="model"
+                maxLength={60}
+                defaultValue={editing ? vehicleModel(editing) : ""}
+                placeholder="Avanza"
+                className={inputCls}
+              />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -207,7 +257,15 @@ export function SellModal({
             </div>
             <div>
               <label className={labelCls}>Tahun *</label>
-              <input name="year" type="number" min={1990} max={maxYear} defaultValue={editing?.year || ""} placeholder="2022" className={inputCls} />
+              <input
+                name="year"
+                type="number"
+                min={1990}
+                max={maxYear}
+                defaultValue={editing?.year || ""}
+                placeholder="2022"
+                className={inputCls}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -223,7 +281,14 @@ export function SellModal({
             </div>
             <div>
               <label className={labelCls}>Kota *</label>
-              <input name="location" list="sell-location-list" defaultValue={editing?.location || ""} placeholder="Ketik & pilih kota..." autoComplete="off" className={inputCls} />
+              <input
+                name="location"
+                list="sell-location-list"
+                defaultValue={editing?.location || ""}
+                placeholder="Ketik & pilih kota..."
+                autoComplete="off"
+                className={inputCls}
+              />
               <datalist id="sell-location-list">
                 {Object.entries(CITY_GROUPS).map(([prov, cities]) => (
                   <optgroup key={prov} label={prov}>
@@ -232,16 +297,22 @@ export function SellModal({
                     ))}
                   </optgroup>
                 ))}
-                {INDONESIA_CITIES.filter((c) => !Object.values(CITY_GROUPS).flat().includes(c)).map((c) => (
-                  <option key={c} value={c} />
-                ))}
+                {INDONESIA_CITIES.filter((c) => !Object.values(CITY_GROUPS).flat().includes(c)).map(
+                  (c) => (
+                    <option key={c} value={c} />
+                  ),
+                )}
               </datalist>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Kategori</label>
-              <select name="category" defaultValue={editing?.category || "SUV"} className={`${inputCls} appearance-none`}>
+              <select
+                name="category"
+                defaultValue={editing?.category || "SUV"}
+                className={`${inputCls} appearance-none`}
+              >
                 {CATEGORIES.map((c) => (
                   <option key={c}>{c}</option>
                 ))}
@@ -301,11 +372,15 @@ export function SellModal({
           </div>
           <div>
             <label className={labelCls}>Deskripsi</label>
-            <textarea name="description" rows={3} defaultValue={editing?.description || ""} placeholder="Kondisi, servis, pajak..." className={inputCls} />
+            <textarea
+              name="description"
+              rows={3}
+              defaultValue={editing?.description || ""}
+              placeholder="Kondisi, servis, pajak..."
+              className={inputCls}
+            />
           </div>
         </div>
-
-        {/* Sticky Fixed Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-3.5 bg-gray-50/80 dark:border-zinc-800/80 dark:bg-zinc-900/80 shrink-0">
           <button
             type="button"
@@ -319,7 +394,13 @@ export function SellModal({
             disabled={photosBusy}
             className="inline-flex items-center gap-2 rounded-xl bg-black px-6 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-zinc-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             {editing ? "Simpan Perubahan" : "Terbitkan Listing"}
@@ -330,13 +411,9 @@ export function SellModal({
   );
 }
 
-// ---------- Modal Detail ----------
-
 export function DetailModal({
   carId,
   onClose,
-  onBuy,
-  onOffer,
 }: {
   carId: string;
   onClose: () => void;
@@ -371,7 +448,6 @@ export function DetailModal({
 
   return (
     <ModalShell onClose={onClose} wide className="vehicle-detail">
-      {/* Sticky Header */}
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#18181b]">
         <div className="min-w-0 pr-3">
           <div className="flex items-center gap-2">
@@ -391,13 +467,17 @@ export function DetailModal({
           className="rounded-full border border-gray-200 p-2 text-gray-500 transition hover:bg-gray-100 hover:text-black active:scale-95 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white shrink-0"
           aria-label="Tutup"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2.2"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
-
-      {/* Scrollable Content Body */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
         <CarGallery car={c} />
         <DemoPhotoCredit car={c} />
@@ -411,15 +491,39 @@ export function DetailModal({
               {fmtRp(c.price)}
             </p>
           </div>
-          {!c.isDemo && <div className="text-right text-xs text-gray-500 dark:text-zinc-400">
-            <span>{c.interest || 0}% peminat</span>
-            <span className="mx-1.5">•</span>
-            <span>{timeAgo(c.createdAt)}</span>
-          </div>}
+          {!c.isDemo && (
+            <div className="text-right text-xs text-gray-500 dark:text-zinc-400">
+              <span>{c.interest || 0}% peminat</span>
+              <span className="mx-1.5">•</span>
+              <span>{timeAgo(c.createdAt)}</span>
+            </div>
+          )}
         </div>
 
-        <section aria-label="Spesifikasi mobil"><h4 className="mb-3 text-sm font-semibold">Spesifikasi mobil</h4><dl className="vehicle-specs">{[["Tahun",String(c.year)],["Kilometer",c.km > 0 ? `${c.km.toLocaleString("id-ID")} km` : "Belum diisi"],["Lokasi",c.location],["Tipe mobil",c.category]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
-        <Link href={`/simulasi?harga=${c.price}`} onClick={onClose} className="button-secondary w-full"><Icon name="calculator" className="h-4 w-4"/>Hitung cicilan mobil ini</Link>
+        <section aria-label="Spesifikasi mobil">
+          <h4 className="mb-3 text-sm font-semibold">Spesifikasi mobil</h4>
+          <dl className="vehicle-specs">
+            {[
+              ["Tahun", String(c.year)],
+              ["Kilometer", c.km > 0 ? `${c.km.toLocaleString("id-ID")} km` : "Belum diisi"],
+              ["Lokasi", c.location],
+              ["Tipe mobil", c.category],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+        <Link
+          href={`/simulasi?harga=${c.price}`}
+          onClick={onClose}
+          className="button-secondary w-full"
+        >
+          <Icon name="calculator" className="h-4 w-4" />
+          Hitung cicilan mobil ini
+        </Link>
 
         {c.description ? (
           <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
@@ -432,7 +536,17 @@ export function DetailModal({
           </div>
         ) : null}
 
-        {!c.isDemo && <section className="seller-info" aria-label="Informasi penjual"><h4 className="text-sm font-semibold">Informasi penjual</h4><p className="mt-2 text-sm">{c.sellerName || "Penjual mobil"}</p><p className="mt-1 text-xs leading-relaxed text-slate-500">{c.sellerPhone ? "Ketuk Hubungi Penjual untuk membuka WhatsApp. Tanyakan ketersediaan, kondisi mobil, dan jadwal melihat unit langsung." : "Nomor penjual belum tersedia. Kamu bisa meminta bantuan melalui Chat Admin."}</p></section>}
+        {!c.isDemo && (
+          <section className="seller-info" aria-label="Informasi penjual">
+            <h4 className="text-sm font-semibold">Informasi penjual</h4>
+            <p className="mt-2 text-sm">{c.sellerName || "Penjual mobil"}</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              {c.sellerPhone
+                ? "Ketuk Hubungi Penjual untuk membuka WhatsApp. Tanyakan ketersediaan, kondisi mobil, dan jadwal melihat unit langsung."
+                : "Nomor penjual belum tersedia. Kamu bisa meminta bantuan melalui Chat Admin."}
+            </p>
+          </section>
+        )}
 
         {c.purchase ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/40">
@@ -442,16 +556,26 @@ export function DetailModal({
                 {c.purchase.paymentType === "booking"
                   ? "Booking Terkonfirmasi"
                   : c.purchase.method === "kredit"
-                  ? "Pengajuan Kredit"
-                  : "Unit Terjual"}
+                    ? "Pengajuan Kredit"
+                    : "Unit Terjual"}
               </span>
               <button
                 type="button"
                 onClick={() => setShowReceipt(true)}
                 className="inline-flex items-center gap-1.5 rounded-full bg-black px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
               >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 Lihat Nota Resmi
               </button>
@@ -460,8 +584,8 @@ export function DetailModal({
               {c.purchase.method === "kredit"
                 ? `Kredit — DP ${fmtRp(c.purchase.dp)} • ${c.purchase.tenor}× ${fmtRp(c.purchase.installment)}/bln • Pemohon: ${c.purchase.name}`
                 : c.purchase.method === "tawar"
-                ? `Terjual via tawaran ${fmtRp(c.price)} • Pembeli: ${c.purchase.name}`
-                : `Dibeli tunai ${fmtRp(c.price)} • Pembeli: ${c.purchase.name}`}
+                  ? `Terjual via tawaran ${fmtRp(c.price)} • Pembeli: ${c.purchase.name}`
+                  : `Dibeli tunai ${fmtRp(c.price)} • Pembeli: ${c.purchase.name}`}
             </p>
           </div>
         ) : null}
@@ -473,14 +597,23 @@ export function DetailModal({
             </h4>
             <ul className="space-y-2">
               {offers.map((o) => (
-                <li key={o.id} className="flex items-center justify-between gap-2 rounded-xl border border-gray-200 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-900/40">
+                <li
+                  key={o.id}
+                  className="flex items-center justify-between gap-2 rounded-xl border border-gray-200 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-900/40"
+                >
                   <div className="min-w-0">
-                    <p className="font-bold text-black dark:text-white text-sm">{fmtRp(o.amount)}</p>
+                    <p className="font-bold text-black dark:text-white text-sm">
+                      {fmtRp(o.amount)}
+                    </p>
                     <p className="truncate text-gray-500 dark:text-zinc-400 mt-0.5">
-                      {o.note || "—"} • {timeAgo(o.ts)} • <span className="font-semibold uppercase">{o.status}</span>
+                      {o.note || "—"} • {timeAgo(o.ts)} •{" "}
+                      <span className="font-semibold uppercase">{o.status}</span>
                     </p>
                   </div>
-                  {o.status === "pending" && canPerformAction(role, "canAcceptOffer", { isOwner: c.sellerId === store.owner() }) ? (
+                  {o.status === "pending" &&
+                  canPerformAction(role, "canAcceptOffer", {
+                    isOwner: c.sellerId === store.owner(),
+                  }) ? (
                     <div className="flex shrink-0 gap-1.5">
                       <button
                         onClick={() => {
@@ -509,8 +642,6 @@ export function DetailModal({
           </div>
         ) : null}
       </div>
-
-      {/* Sticky Fixed Footer Actions */}
       <div className="detail-actions flex flex-wrap items-center justify-between gap-2.5 border-t border-gray-100 px-6 py-3.5 bg-gray-50/80 dark:border-zinc-800/80 dark:bg-zinc-900/80 shrink-0">
         <div className="detail-action-buttons flex w-full items-center justify-between gap-2">
           <button
@@ -525,28 +656,41 @@ export function DetailModal({
                 : "border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
             }`}
           >
-            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill={on ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            <svg
+              className="h-4 w-4 shrink-0"
+              viewBox="0 0 24 24"
+              fill={on ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
             </svg>
             <span>{on ? "Tersimpan" : "Favorit"}</span>
           </button>
 
-          {c.isDemo || !c.sellerPhone ? <span className="text-xs text-slate-500">{c.isDemo ? "Data demo · Tidak untuk dijual" : "Kontak penjual belum tersedia"}</span> : <WhatsAppContact
-            phoneNumber={c.sellerPhone}
-            message={`Halo, saya tertarik dengan mobil ${c.title} seharga ${fmtRp(c.price)} di AutoBuyCars.`}
-            className="detail-contact rounded-xl px-4 py-3 text-sm font-semibold justify-center"
-          >
-            Hubungi Penjual
-          </WhatsAppContact>}
+          {c.isDemo || !c.sellerPhone ? (
+            <span className="text-xs text-slate-500">
+              {c.isDemo ? "Data demo · Tidak untuk dijual" : "Kontak penjual belum tersedia"}
+            </span>
+          ) : (
+            <WhatsAppContact
+              phoneNumber={c.sellerPhone}
+              message={`Halo, saya tertarik dengan mobil ${c.title} seharga ${fmtRp(c.price)} di AutoBuyCars.`}
+              className="detail-contact rounded-xl px-4 py-3 text-sm font-semibold justify-center"
+            >
+              Hubungi Penjual
+            </WhatsAppContact>
+          )}
         </div>
-
-
       </div>
     </ModalShell>
   );
 }
-
-// ---------- Modal Tawar ----------
 
 export function OfferModal({ carId, onClose }: { carId: string; onClose: () => void }) {
   const store = useStore();
@@ -573,14 +717,14 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
 
     if (!amount || amount < 1000000) return setErr("Tawaran minimal Rp 1.000.000.");
     setErr("");
-    if (!store.makeOffer(carId, amount, note)) return setErr("Penawaran tidak dapat dikirim. Periksa izin akun dan status mobil.");
+    if (!store.makeOffer(carId, amount, note))
+      return setErr("Penawaran tidak dapat dikirim. Periksa izin akun dan status mobil.");
     toast("Penawaran berhasil dikirim ke penjual.");
     onClose();
   }
 
   return (
     <ModalShell onClose={onClose}>
-      {/* Sticky Header */}
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#18181b]">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-black dark:text-white">
@@ -595,7 +739,13 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
           className="rounded-full border border-gray-200 p-2 text-gray-500 transition hover:bg-gray-100 hover:text-black active:scale-95 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white shrink-0"
           aria-label="Tutup"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2.2"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -607,9 +757,12 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Unit Mobil
             </span>
-            <p className="font-bold text-black dark:text-white text-sm mt-0.5">{car.title} ({car.year})</p>
+            <p className="font-bold text-black dark:text-white text-sm mt-0.5">
+              {car.title} ({car.year})
+            </p>
             <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-              Harga Pembukaan: <span className="font-bold text-black dark:text-white">{fmtRp(car.price)}</span>
+              Harga Pembukaan:{" "}
+              <span className="font-bold text-black dark:text-white">{fmtRp(car.price)}</span>
             </p>
           </div>
 
@@ -635,8 +788,6 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
             />
           </div>
         </div>
-
-        {/* Sticky Fixed Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-3.5 bg-gray-50/80 dark:border-zinc-800/80 dark:bg-zinc-900/80 shrink-0">
           <button
             type="button"
@@ -657,15 +808,15 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
   );
 }
 
-// ---------- Modal Checkout (Beli) ----------
-
 export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () => void }) {
   const store = useStore();
   const { toast } = useToast();
   const car = store.get(carId);
   const [method, setMethod] = React.useState<"tunai" | "kredit">("tunai");
   const [paymentType, setPaymentType] = React.useState<"full" | "booking">("booking");
-  const [deliveryMethod, setDeliveryMethod] = React.useState<"showroom" | "home_delivery" | "cod">("showroom");
+  const [deliveryMethod, setDeliveryMethod] = React.useState<"showroom" | "home_delivery" | "cod">(
+    "showroom",
+  );
   const [dpPct, setDpPct] = React.useState(30);
   const [tenor, setTenor] = React.useState(36);
   const [name, setName] = React.useState("");
@@ -683,8 +834,10 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
 
   function onCheckout() {
     if (!name.trim()) return setErr("Nama lengkap pembeli wajib diisi.");
-    if (!phone.trim() || phone.replace(/\D/g, "").length < 9) return setErr("Nomor WhatsApp/Telepon pembeli wajib diisi (minimal 9 digit).");
-    if (deliveryMethod === "home_delivery" && !address.trim()) return setErr("Alamat pengiriman wajib diisi untuk opsi kirim ke rumah.");
+    if (!phone.trim() || phone.replace(/\D/g, "").length < 9)
+      return setErr("Nomor WhatsApp/Telepon pembeli wajib diisi (minimal 9 digit).");
+    if (deliveryMethod === "home_delivery" && !address.trim())
+      return setErr("Alamat pengiriman wajib diisi untuk opsi kirim ke rumah.");
     setErr("");
 
     const purchaseResult = store.buy(c.id, {
@@ -702,14 +855,15 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
       phone: phone.trim(),
     });
 
-    if (!purchaseResult) return setErr("Gagal melakukan pembelian. Mobil mungkin sudah tidak tersedia.");
+    if (!purchaseResult)
+      return setErr("Gagal melakukan pembelian. Mobil mungkin sudah tidak tersedia.");
 
     toast(
       paymentType === "booking"
         ? "Simulasi booking tersimpan. Konfirmasikan ketersediaan unit kepada penjual."
         : method === "kredit"
-        ? "Simulasi kredit tersimpan. Ringkasan siap ditinjau."
-        : "Simulasi pembelian tunai tersimpan. Ringkasan siap ditinjau."
+          ? "Simulasi kredit tersimpan. Ringkasan siap ditinjau."
+          : "Simulasi pembelian tunai tersimpan. Ringkasan siap ditinjau.",
     );
 
     setReceipt({
@@ -720,20 +874,13 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
 
   // Jika pembelian sukses, tampilkan Nota Resmi
   if (receipt) {
-    return (
-      <ReceiptModal
-        car={receipt.car}
-        purchase={receipt.purchase}
-        onClose={onClose}
-      />
-    );
+    return <ReceiptModal car={receipt.car} purchase={receipt.purchase} onClose={onClose} />;
   }
 
   const sellerPhone = c.sellerPhone || getAdminWhatsApp();
 
   return (
     <ModalShell onClose={onClose} wide>
-      {/* Sticky Header */}
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#18181b]">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-black dark:text-white">
@@ -748,23 +895,30 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
           className="rounded-full border border-gray-200 p-2 text-gray-500 transition hover:bg-gray-100 hover:text-black active:scale-95 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white shrink-0"
           aria-label="Tutup"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2.2"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
-
-      {/* Scrollable Form Body */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
-        {/* Ringkasan Mobil & Kontak Penjual */}
         <div className="rounded-2xl border border-gray-200/80 bg-gray-50/80 p-3.5 text-sm dark:border-zinc-800 dark:bg-zinc-900/60">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                 Unit Mobil Dipilih
               </span>
-              <p className="font-extrabold text-black dark:text-white">{c.title} ({c.year})</p>
-              <p className="text-xs text-gray-500 dark:text-zinc-400">{c.category} • {c.location || "Indonesia"}</p>
+              <p className="font-extrabold text-black dark:text-white">
+                {c.title} ({c.year})
+              </p>
+              <p className="text-xs text-gray-500 dark:text-zinc-400">
+                {c.category} • {c.location || "Indonesia"}
+              </p>
             </div>
             <div className="text-right">
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
@@ -785,8 +939,6 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
         </div>
 
         <FieldError msg={err} />
-
-        {/* Pilihan Tipe Pembayaran (Booking Fee vs Pelunasan) */}
         <div>
           <label className={labelCls}>Skema Pembayaran Transaksi</label>
           <div className="grid grid-cols-2 gap-2">
@@ -801,9 +953,13 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold">Tanda Jadi (Booking)</span>
-                <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">Rekomendasi</span>
+                <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
+                  Rekomendasi
+                </span>
               </div>
-              <p className="mt-1 text-[11px] opacity-80">Bayar {fmtRp(bookingFee)} untuk kunci unit saat survei/COD</p>
+              <p className="mt-1 text-[11px] opacity-80">
+                Bayar {fmtRp(bookingFee)} untuk kunci unit saat survei/COD
+              </p>
             </button>
 
             <button
@@ -816,12 +972,12 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
               }`}
             >
               <div className="font-bold">Pelunasan Penuh</div>
-              <p className="mt-1 text-[11px] opacity-80">Pembayaran 100% lunas saat serah terima BPKB & STNK</p>
+              <p className="mt-1 text-[11px] opacity-80">
+                Pembayaran 100% lunas saat serah terima BPKB & STNK
+              </p>
             </button>
           </div>
         </div>
-
-        {/* Metode Pembayaran: Tunai vs Kredit */}
         <div>
           <label className={labelCls}>Metode Pembiayaan</label>
           <div className="grid grid-cols-2 gap-2">
@@ -849,12 +1005,12 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
             </button>
           </div>
         </div>
-
-        {/* Form Simulasi Kredit jika opsi Kredit dipilih */}
         {method === "kredit" && (
           <div className="space-y-3 rounded-2xl border border-gray-200 p-4 dark:border-zinc-800">
             <div>
-              <label className={labelCls}>Uang Muka (DP): {dpPct}% ({fmtRp(calc.dp)})</label>
+              <label className={labelCls}>
+                Uang Muka (DP): {dpPct}% ({fmtRp(calc.dp)})
+              </label>
               <div className="flex gap-2">
                 {[20, 30, 40, 50].map((p) => (
                   <button
@@ -893,13 +1049,15 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
             </div>
             <div className="rounded-xl bg-gray-100 p-3 text-xs dark:bg-zinc-900">
               <p className="font-semibold text-black dark:text-white">Estimasi Angsuran Bulanan:</p>
-              <p className="mt-1 text-base font-extrabold text-blue-600 dark:text-blue-400">{fmtRp(calc.installment)} / bulan</p>
-              <p className="text-[11px] text-gray-500 dark:text-zinc-400">Bunga flat promo 8% / tahun • Pokok hutang {fmtRp(calc.principal)}</p>
+              <p className="mt-1 text-base font-extrabold text-blue-600 dark:text-blue-400">
+                {fmtRp(calc.installment)} / bulan
+              </p>
+              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                Bunga flat promo 8% / tahun • Pokok hutang {fmtRp(calc.principal)}
+              </p>
             </div>
           </div>
         )}
-
-        {/* Metode Serah Terima ala Marketplace */}
         <div>
           <label className={labelCls}>Metode Serah Terima Kendaraan</label>
           <div className="grid grid-cols-3 gap-2">
@@ -924,23 +1082,30 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
             ))}
           </div>
         </div>
-
-        {/* Data Pembeli */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>Nama Lengkap Pembeli *</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="cth: Budi Santoso" className={inputCls} />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="cth: Budi Santoso"
+              className={inputCls}
+            />
           </div>
           <div>
             <label className={labelCls}>No. WhatsApp Pembeli *</label>
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="cth: 081234567890" className={inputCls} />
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="cth: 081234567890"
+              className={inputCls}
+            />
           </div>
         </div>
-
-        {/* Alamat Serah Terima / Domisili */}
         <div>
           <label className={labelCls}>
-            Alamat Domisili / Lokasi Penyerahan {deliveryMethod === "home_delivery" ? "*" : "(Opsional)"}
+            Alamat Domisili / Lokasi Penyerahan{" "}
+            {deliveryMethod === "home_delivery" ? "*" : "(Opsional)"}
           </label>
           <input
             value={address}
@@ -949,8 +1114,6 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
             className={inputCls}
           />
         </div>
-
-        {/* Catatan Pembeli */}
         <div>
           <label className={labelCls}>Catatan Tambahan untuk Penjual (Opsional)</label>
           <input
@@ -960,27 +1123,26 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
             className={inputCls}
           />
         </div>
-
-        {/* Card Garansi */}
         <div className="rounded-2xl border border-gray-100 bg-gray-50/80 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/60">
           <p className="text-xs text-gray-600 dark:text-zinc-400">
-            Ringkasan ini adalah simulasi. Konfirmasikan kondisi kendaraan, ketersediaan, dan pembayaran langsung dengan penjual.
+            Ringkasan ini adalah simulasi. Konfirmasikan kondisi kendaraan, ketersediaan, dan
+            pembayaran langsung dengan penjual.
           </p>
         </div>
       </div>
-
-      {/* Sticky Fixed Footer */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-6 py-3.5 bg-gray-50/80 dark:border-zinc-800/80 dark:bg-zinc-900/80 shrink-0">
         <div>
           <span className="text-[11px] text-gray-500 dark:text-zinc-400 block">
             {paymentType === "booking"
               ? "Tanda Jadi (Booking Unit):"
               : method === "kredit"
-              ? "Uang Muka (DP):"
-              : "Pembayaran Tunai:"}
+                ? "Uang Muka (DP):"
+                : "Pembayaran Tunai:"}
           </span>
           <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">
-            {fmtRp(paymentType === "booking" ? bookingFee : method === "kredit" ? calc.dp : c.price)}
+            {fmtRp(
+              paymentType === "booking" ? bookingFee : method === "kredit" ? calc.dp : c.price,
+            )}
           </span>
         </div>
 
@@ -1001,10 +1163,16 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
               {paymentType === "booking"
                 ? "Konfirmasi & Kunci Unit"
                 : method === "kredit"
-                ? "Ajukan Kredit Sekarang"
-                : "Konfirmasi Pembelian"}
+                  ? "Ajukan Kredit Sekarang"
+                  : "Konfirmasi Pembelian"}
             </span>
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </button>

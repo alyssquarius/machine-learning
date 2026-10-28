@@ -43,14 +43,16 @@ export function resolveHistFilterValue(raw: unknown): string {
   const s = String(raw ?? "").trim();
   if (!s) return "all";
   const hit = HIST_OPTIONS.find(
-    (o) => o.id === s || o.label.toLocaleLowerCase("id") === s.toLocaleLowerCase("id")
+    (o) => o.id === s || o.label.toLocaleLowerCase("id") === s.toLocaleLowerCase("id"),
   );
   if (hit) return hit.id;
   return "q:" + s;
 }
 
 export function resolveBuyYearValue(raw: unknown): string {
-  const digits = String(raw ?? "").replace(/[^\d]/g, "").slice(0, 4);
+  const digits = String(raw ?? "")
+    .replace(/[^\d]/g, "")
+    .slice(0, 4);
   if (!digits) return "all";
   const y = Number(digits);
   const maxYear = new Date().getFullYear();

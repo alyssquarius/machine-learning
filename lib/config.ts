@@ -1,7 +1,3 @@
-/**
- * Konfigurasi aplikasi AutoBuyCars
- */
-
 export const LS_ADMIN_WHATSAPP = "abc_admin_whatsapp";
 
 export const config = {
@@ -16,10 +12,7 @@ export const config = {
   },
 } as const;
 
-/**
- * Mengambil nomor WhatsApp aktif admin / customer service
- * Prioritas: LocalStorage (hasil setting admin) -> default config
- */
+// Nomor tersimpan mengesampingkan nomor customer service bawaan.
 export function getAdminWhatsApp(): string {
   if (typeof window !== "undefined") {
     try {
@@ -34,9 +27,6 @@ export function getAdminWhatsApp(): string {
   return config.whatsapp.phoneNumber;
 }
 
-/**
- * Menyimpan / memperbarui nomor WhatsApp resmi admin
- */
 export function setAdminWhatsApp(phone: string): string {
   let clean = phone.replace(/\D/g, "");
   if (clean.startsWith("0")) {

@@ -20,12 +20,15 @@ Tanpa konfigurasi Supabase, katalog tetap dapat dibuka sebagai pengunjung dan ha
 
 ```bash
 npm run typecheck
+npm run format:check
 npm test
 npm run build
 npm start
 ```
 
 Build menggunakan webpack. Font memakai font sistem sehingga proses build tidak membutuhkan koneksi ke Google Fonts. Pengujian autentikasi menggunakan Node test runner dengan mock Supabase; tidak membutuhkan kredensial nyata.
+
+Jalankan `npm run format` untuk merapikan format kode. Pemeriksaan TypeScript juga menolak import, variabel lokal, dan parameter yang tidak dipakai.
 
 ## Fitur dan batasan
 

@@ -6,10 +6,17 @@ import { getSupabaseConfig } from "./config";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const pathname = request.nextUrl.pathname;
-  const matches = (paths: string[]) => paths.some(
-    (path) => pathname === path || pathname.startsWith(path + "/")
-  );
-  const protectedPage = matches(["/jual", "/dashboard", "/favorit", "/riwayat", "/pengaturan", "/profil", "/chat"]);
+  const matches = (paths: string[]) =>
+    paths.some((path) => pathname === path || pathname.startsWith(path + "/"));
+  const protectedPage = matches([
+    "/jual",
+    "/dashboard",
+    "/favorit",
+    "/riwayat",
+    "/pengaturan",
+    "/profil",
+    "/chat",
+  ]);
   // Recovery and email verification must remain accessible with an active session.
   const signInPage = matches(["/login", "/register"]);
   const config = getSupabaseConfig();
@@ -54,8 +61,11 @@ export async function updateSession(request: NextRequest) {
   if (!user) return protectedPage ? redirect("/login") : response;
 
   if (signInPage || matches(["/dashboard", "/jual"])) {
-    const { data: profile } = await supabase.from("profiles")
-      .select("role").eq("id", user.id).maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
     const seller = ["admin"].includes(profile?.role);
     if (signInPage) return redirect(seller ? "/dashboard" : "/beli");
     if (!seller) return redirect("/beli");
