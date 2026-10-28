@@ -17,6 +17,7 @@ import type { Role } from "@/lib/roles";
 import { useRole } from "@/components/role-provider";
 
 const ALL_NAV = [
+  { href: "/chat", label: "Chat", icon: "chat", roles: ["admin", "dealer", "buyer"] },
   { href: "/profil", label: "Profil Saya", icon: "user", roles: ["admin", "dealer", "buyer"] },
   { href: "/simulasi", label: "Simulasi Kredit", icon: "calculator", roles: ["admin", "dealer", "buyer", "guest"] },
   {
@@ -210,7 +211,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const notifs = store.history().slice(0, 3);
 
   // Filter NAV sesuai role
-  const NAV = ALL_NAV.filter((n) => n.roles.includes(role)).sort((a, b) => ["/dashboard", "/beli", "/jual", "/favorit", "/riwayat", "/simulasi", "/profil", "/pengaturan"].indexOf(a.href) - ["/dashboard", "/beli", "/jual", "/favorit", "/riwayat", "/simulasi", "/profil", "/pengaturan"].indexOf(b.href));
+  const NAV = ALL_NAV.filter((n) => n.roles.includes(role)).sort((a, b) => ["/dashboard", "/beli", "/jual", "/favorit", "/riwayat", "/simulasi", "/chat", "/profil", "/pengaturan"].indexOf(a.href) - ["/dashboard", "/beli", "/jual", "/favorit", "/riwayat", "/simulasi", "/chat", "/profil", "/pengaturan"].indexOf(b.href));
 
   function toggleSidebar() {
     if (window.matchMedia("(min-width: 1024px)").matches) {

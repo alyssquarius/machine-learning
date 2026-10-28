@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -98,11 +97,8 @@ export function CarCard({
 
   return (
     <div className="surface car-card-hover animate-fade-in overflow-hidden">
-      <div
-        className="relative cursor-pointer"
-        onClick={() => onDetail?.(car.id)}
-      >
-        <CarImage car={car} />
+      <div className="relative">
+        <button type="button" className="block w-full text-left" aria-label={`Lihat foto dan detail ${car.title}`} onClick={() => onDetail?.(car.id)}><CarImage car={car} /></button>
         {!sell && (
           <button
             onClick={(e) => {
@@ -154,7 +150,6 @@ export function CarCard({
           {fmtRp(car.price)}
         </p>
         <div className="card-feature-row"><span>{car.category}</span><span>{car.year}</span><span>{car.km.toLocaleString("id-ID")} km</span></div>
-        {!sell ? <Link href={`/simulasi?harga=${car.price}`} className="mb-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400"><Icon name="calculator" className="h-3.5 w-3.5" />Hitung estimasi cicilan →</Link> : null}
         {best ? (
           <p className="mt-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
             Tawaran tertinggi {fmtRp(best.amount)}
@@ -187,7 +182,7 @@ export function CarCard({
               message={`Halo, saya tertarik dengan mobil ${car.title} seharga ${fmtRp(car.price)} di AutoBuyCars.`}
               className="w-full justify-center py-2 text-xs font-semibold"
             >
-              Hubungi Penjual via WhatsApp
+              Hubungi Penjual
             </WhatsAppContact>
           </div>
         )}
@@ -244,7 +239,7 @@ export function CarCard({
           </div>
         )}
 
-        <div className="mt-3 flex gap-2">
+        <div className={sell ? "mt-3 flex gap-2" : "hidden"}>
           {sell ? (
             <>
               {car.status === "queued" ? (
@@ -329,39 +324,8 @@ export function CarCard({
                 <Icon name="trash" className="h-4 w-4" />
               </button>
             </>
-          ) : (
-            <>
-              {car.status === "running" ? (
-                <button
-                  onClick={() => {
-                    if (!requireAuth("membeli mobil")) return;
-                    onBuy?.(car.id);
-                  }}
-                  className="flex-1 rounded-lg bg-black py-2 text-xs font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
-                >
-                  Beli Sekarang
-                </button>
-              ) : null}
-              <button
-                onClick={() => onDetail?.(car.id)}
-                className="flex-1 rounded-lg border border-gray-300 py-2 text-xs font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
-              >
-                Detail
-              </button>
-            </>
-          )}
+          ) : null}
         </div>
-        {!sell && car.status === "running" ? (
-          <button
-            onClick={() => {
-              if (!requireAuth("mengajukan penawaran")) return;
-              onOffer?.(car.id);
-            }}
-            className="mt-2 w-full rounded-lg border border-gray-300 py-2 text-xs font-semibold text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
-          >
-            Ajukan Tawaran
-          </button>
-        ) : null}
       </div>
     </div>
   );

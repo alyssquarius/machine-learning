@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { WhatsAppIcon } from "./icons";
+import { useRole } from "@/components/role-provider";
 import { getAdminWhatsApp } from "@/lib/config";
 
 interface WhatsAppContactProps {
@@ -43,54 +45,8 @@ export function WhatsAppContact({
   );
 }
 
-interface WhatsAppFloatingButtonProps {
-  phoneNumber?: string;
-  message?: string;
-}
-
-export function WhatsAppFloatingButton({
-  phoneNumber,
-  message = "Halo, saya tertarik dengan AutoBuyCars",
-}: WhatsAppFloatingButtonProps) {
-  const [activePhone, setActivePhone] = React.useState<string>(phoneNumber || "6281234567890");
-
-  React.useEffect(() => {
-    setActivePhone(phoneNumber || getAdminWhatsApp());
-
-    const handler = (e: Event) => {
-      const customEvent = e as CustomEvent<string>;
-      if (customEvent.detail) {
-        setActivePhone(customEvent.detail);
-      } else {
-        setActivePhone(getAdminWhatsApp());
-      }
-    };
-
-    window.addEventListener("whatsapp-updated", handler);
-    return () => window.removeEventListener("whatsapp-updated", handler);
-  }, [phoneNumber]);
-
-  const handleClick = () => {
-    let cleanPhone = (activePhone || getAdminWhatsApp()).replace(/\D/g, "");
-    if (cleanPhone.startsWith("0")) {
-      cleanPhone = "62" + cleanPhone.slice(1);
-    }
-    if (!cleanPhone.startsWith("62") && cleanPhone.length > 0) {
-      cleanPhone = "62" + cleanPhone;
-    }
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-  };
-
-  return (
-    <button
-      onClick={handleClick}
-      className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:bg-[#20BA5A] hover:shadow-xl active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
-      aria-label="Hubungi Customer Service via WhatsApp"
-      title="Hubungi Customer Service via WhatsApp"
-    >
-      <WhatsAppIcon className="h-7 w-7" />
-    </button>
-  );
+export function ChatFloatingButton() {
+  const { role, authChecked } = useRole();
+  if (!authChecked || role === "admin") return null;
+  return <Link href={role === "guest" ? "/login" : "/chat"} aria-label="Chat dengan admin" title="Chat Admin" className="fixed bottom-5 right-5 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-white shadow-lg transition hover:bg-sky-700"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-3 2 2-6a8.5 8.5 0 1 1 18-4.5Z"/><path d="M7 10h10M7 14h6"/></svg></Link>;
 }

@@ -9,8 +9,6 @@ import { WIDGETS } from "@/lib/market";
 import { useRole } from "@/components/role-provider";
 import { PageHeader } from "@/components/ui";
 import { RoleBadge } from "@/components/role-badge";
-import { getAdminWhatsApp, setAdminWhatsApp } from "@/lib/config";
-import { WhatsAppIcon } from "@/components/icons";
 import { AvatarUpload } from "@/components/avatar-upload";
 
 function SavedBadge({ show }: { show: boolean }) {
@@ -41,20 +39,12 @@ export default function PengaturanPage() {
   const [target, setTarget] = React.useState("10");
   const [switchingRole, setSwitchingRole] = React.useState(false);
 
-  const [adminWa, setAdminWa] = React.useState("");
-  const [adminWaDisplay, setAdminWaDisplay] = React.useState("");
-  const [savingWa, setSavingWa] = React.useState(false);
-
   const dnTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const tgTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     setDisplayName(store.getDisplayName());
     setTarget(String(store.getTarget()));
-
-    const currentWa = getAdminWhatsApp();
-    setAdminWa(currentWa);
-    setAdminWaDisplay(currentWa.startsWith("62") ? currentWa.slice(2) : currentWa);
 
     createClient()
       .auth.getUser()
@@ -75,12 +65,6 @@ export default function PengaturanPage() {
             setAvatarUrl(cached);
           }
         } catch {}
-
-        if (u.user_metadata?.whatsapp) {
-          const userWa = String(u.user_metadata.whatsapp);
-          setAdminWa(userWa);
-          setAdminWaDisplay(userWa.startsWith("62") ? userWa.slice(2) : userWa);
-        }
 
         // 2. Fetch avatar dari profiles
         try {
@@ -216,45 +200,6 @@ export default function PengaturanPage() {
     flash();
   }
 
-  async function handleSaveAdminWa() {
-    const raw = adminWaDisplay.replace(/\D/g, "");
-    if (raw.length < 8) {
-      toast("Nomor WhatsApp minimal 8 digit.");
-      return;
-    }
-    const cleanNumber = raw.startsWith("62") ? raw : "62" + (raw.startsWith("0") ? raw.slice(1) : raw);
-    setSavingWa(true);
-    try {
-      setAdminWhatsApp(cleanNumber);
-      setAdminWa(cleanNumber);
-      setAdminWaDisplay(cleanNumber.slice(2));
-
-      // Sinkronkan ke auth user_metadata Supabase jika sedang login
-      try {
-        const supabase = createClient();
-        await supabase.auth.updateUser({
-          data: { whatsapp: cleanNumber },
-        });
-      } catch {
-        /* abaikan */
-      }
-
-      toast(`Nomor WhatsApp admin berhasil disimpan: +${cleanNumber}`);
-      flash();
-    } catch {
-      toast("Gagal menyimpan nomor WhatsApp.");
-    } finally {
-      setSavingWa(false);
-    }
-  }
-
-  function handleTestAdminWa() {
-    const raw = adminWaDisplay.replace(/\D/g, "");
-    const cleanNumber = raw ? (raw.startsWith("62") ? raw : "62" + (raw.startsWith("0") ? raw.slice(1) : raw)) : adminWa || "6281234567890";
-    const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent("Halo Admin AutoBuyCars, ini adalah pesan tes integrasi WhatsApp.")}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
-
   const hidden = store.getHiddenWidgets();
   const visible = WIDGETS.filter((w) => !hidden.includes(w.id)).length;
   const s = store.stats();
@@ -330,75 +275,10 @@ export default function PengaturanPage() {
         </div>
       </div>
 
-      {/* SECTION KHUSUS ADMIN: PENGATURAN WHATSAPP CS & TRANSAKSI */}
-      {role === "admin" && (
-        <div className="overflow-hidden rounded-2xl border border-emerald-200/90 bg-emerald-50/40 p-6 backdrop-blur-md shadow-xs dark:border-emerald-900/40 dark:bg-emerald-950/20">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#25D366] text-white shadow-xs">
-                <WhatsAppIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-black dark:text-white">
-                  Nomor WhatsApp Resmi Admin & Customer Service
-                </h2>
-                <p className="mt-0.5 text-xs text-gray-600 dark:text-zinc-400">
-                  Nomor ini digunakan sebagai kontak bantuan live chat pada tombol melayang dan pusat konfirmasi pembeli.
-                </p>
-              </div>
-            </div>
-            <span className="self-start sm:self-auto rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
-              Aktif: +{adminWa || "6281234567890"}
-            </span>
-          </div>
-
-          <div className="mt-5 rounded-xl border border-emerald-200/80 bg-white/90 p-4 dark:border-emerald-900/30 dark:bg-zinc-900/90">
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-              Nomor WhatsApp Penerima
-            </label>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative flex-1">
-                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-xs font-extrabold text-gray-500 dark:text-zinc-400">
-                  +62
-                </span>
-                <input
-                  type="tel"
-                  value={adminWaDisplay}
-                  onChange={(e) => setAdminWaDisplay(e.target.value.replace(/[^\d]/g, ""))}
-                  placeholder="81234567890"
-                  className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-4 py-2.5 text-sm font-semibold text-black placeholder:font-normal placeholder:text-gray-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white dark:focus:border-white"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleSaveAdminWa}
-                  disabled={savingWa}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-zinc-800 active:scale-95 disabled:opacity-50 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
-                >
-                  {savingWa ? "Menyimpan..." : "Simpan Nomor WhatsApp"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleTestAdminWa}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 active:scale-95 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
-                >
-                  Uji Buka Chat
-                </button>
-              </div>
-            </div>
-            <p className="mt-2 text-[11px] text-gray-500 dark:text-zinc-400">
-              Format: Masukkan nomor tanpa tanda tambah atau awalan 0 (contoh: 81234567890). Perubahan langsung aktif di seluruh halaman secara realtime.
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* GRID PENGATURAN LAINNYA */}
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      <div className="settings-grid grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* KARTU PROFIL TAMPILAN */}
-        <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="surface settings-profile p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-base font-bold text-black dark:text-white">Profil & Tampilan</h2>
           <p className="mt-1 mb-4 text-xs text-gray-500 dark:text-zinc-400">
             Nama sapaan yang muncul di header dan dashboard.
@@ -458,9 +338,75 @@ export default function PengaturanPage() {
           </p>
         </div>
 
+        {/* KARTU WIDGET DASHBOARD */}
+        <div className="surface settings-widgets p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="mb-1 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-black dark:text-white">Widget Dashboard</h2>
+              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                Pilih ringkasan yang tampil di dashboard.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              {visible}/{WIDGETS.length} aktif
+            </span>
+          </div>
+
+          <div className="settings-widget-options">
+            {WIDGETS.map((w) => {
+              const shown = !hidden.includes(w.id);
+              return (
+                <label
+                  key={w.id}
+                  className="settings-widget-option"
+                >
+                  <input
+                    type="checkbox"
+                    checked={shown}
+                    onChange={() => {
+                      store.setWidgetHidden(w.id, shown);
+                      flash();
+                    }}
+                    className="h-4 w-4 shrink-0 rounded"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-semibold text-black dark:text-white">{w.label}</span>
+                    <span className="block text-[10px] text-gray-500 dark:text-zinc-400">{w.desc}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                store.showAllWidgets();
+                toast("Semua widget ditampilkan.");
+                flash();
+              }}
+              className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
+            >
+              Tampilkan Semua
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                WIDGETS.forEach((w) => store.setWidgetHidden(w.id, true));
+                toast("Semua widget disembunyikan.");
+                flash();
+              }}
+              className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-black dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+            >
+              Sembunyikan Semua
+            </button>
+          </div>
+        </div>
+
         {/* KARTU TARGET PENJUALAN (Khusus Dealer & Admin) */}
         {role !== "buyer" && (
-          <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="surface settings-target p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
             <h2 className="text-base font-bold text-black dark:text-white">Target Penjualan Bulanan</h2>
             <p className="mt-1 mb-4 text-xs text-gray-500 dark:text-zinc-400">
               Tentukan target penjualan unit mobil untuk monitoring performa.
@@ -513,7 +459,7 @@ export default function PengaturanPage() {
         )}
 
         {/* KARTU TEMA WARNA */}
-        <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="surface settings-theme p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-base font-bold text-black dark:text-white">Tema Tampilan</h2>
           <p className="mt-1 mb-4 text-xs text-gray-500 dark:text-zinc-400">
             Pilih mode terang, gelap, atau ikuti preferensi sistem perangkat.
@@ -559,74 +505,8 @@ export default function PengaturanPage() {
           </div>
         </div>
 
-        {/* KARTU WIDGET DASHBOARD */}
-        <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="mb-1 flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-bold text-black dark:text-white">Widget Dashboard</h2>
-              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                Pilih widget statistik yang ingin ditampilkan pada dashboard.
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-              {visible}/{WIDGETS.length} aktif
-            </span>
-          </div>
-
-          <div className="mt-4 space-y-2">
-            {WIDGETS.map((w) => {
-              const shown = !hidden.includes(w.id);
-              return (
-                <label
-                  key={w.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 p-3 transition hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-800/60"
-                >
-                  <input
-                    type="checkbox"
-                    checked={shown}
-                    onChange={() => {
-                      store.setWidgetHidden(w.id, shown);
-                      flash();
-                    }}
-                    className="h-4 w-4 rounded accent-black dark:accent-white"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-bold text-black dark:text-white">{w.label}</span>
-                    <span className="block text-[11px] text-gray-500 dark:text-zinc-400">{w.desc}</span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                store.showAllWidgets();
-                toast("Semua widget ditampilkan.");
-                flash();
-              }}
-              className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
-            >
-              Tampilkan Semua
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                WIDGETS.forEach((w) => store.setWidgetHidden(w.id, true));
-                toast("Semua widget disembunyikan.");
-                flash();
-              }}
-              className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-black dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
-            >
-              Sembunyikan Semua
-            </button>
-          </div>
-        </div>
-
         {/* KARTU DATA & AKUN (LOGOUT & RESET) */}
-        <div className="surface p-6 shadow-xs lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="surface settings-session p-6 shadow-xs lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-base font-bold text-black dark:text-white">Aksi Akun & Sesi</h2>
           <p className="mt-1 mb-4 text-xs text-gray-500 dark:text-zinc-400">
             Kelola sesi masuk atau bersihkan cache penyimpanan lokal di perangkat ini.

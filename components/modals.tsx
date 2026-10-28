@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { CATEGORIES, CITY_GROUPS, INDONESIA_CITIES } from "@/lib/cities";
@@ -12,6 +11,8 @@ import { checkoutCalc, TENORS } from "@/lib/market";
 import { STATUS_LABEL } from "@/components/car-card";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
 import { Dialog } from "@/components/dialog";
+import { carPhotos } from "@/lib/car-photos";
+import { CarGallery } from "@/components/car-gallery";
 import { CarImageUpload } from "@/components/car-image-upload";
 import { ReceiptModal } from "@/components/invoice-modal";
 import { canPerformAction } from "@/lib/roles";
@@ -60,7 +61,8 @@ export function SellModal({
   const [priceDisplay, setPriceDisplay] = React.useState(editing?.price?.toLocaleString("id-ID") || "");
   const [kmDisplay, setKmDisplay] = React.useState(editing?.km?.toLocaleString("id-ID") || "");
   const [sellerPhone, setSellerPhone] = React.useState(editing?.sellerPhone || "");
-  const [carImage, setCarImage] = React.useState(editing?.image || "");
+  const [images, setImages] = React.useState<string[]>(editing ? carPhotos(editing) : []);
+  const [photosBusy, setPhotosBusy] = React.useState(false);
   const [listingStatus, setListingStatus] = React.useState<CarStatus>(editing?.status || "running");
   const maxYear = new Date().getFullYear();
 
@@ -75,6 +77,7 @@ export function SellModal({
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (photosBusy) return setErr("Tunggu sampai semua foto selesai diunggah.");
     const fd = new FormData(e.currentTarget);
     const title = String(fd.get("title") || "").trim();
     const price = parseNumber(priceDisplay);
@@ -82,7 +85,7 @@ export function SellModal({
     const km = parseNumber(kmDisplay);
     const location = String(fd.get("location") || "").trim();
     const category = String(fd.get("category") || "SUV");
-    const image = carImage.trim() || String(fd.get("image") || "").trim();
+    const image = images[0] || "";
     const description = String(fd.get("description") || "").trim();
     const phone = String(fd.get("sellerPhone") || "").trim();
 
@@ -102,6 +105,7 @@ export function SellModal({
         location,
         category,
         image,
+        images,
         description,
         sellerPhone: phone,
         status: listingStatus,
@@ -121,6 +125,7 @@ export function SellModal({
         location,
         category,
         image,
+        images,
         description,
         sellerPhone: phone,
         status: listingStatus,
@@ -242,7 +247,7 @@ export function SellModal({
           </div>
           <div>
             <label className={labelCls}>Foto Mobil</label>
-            <CarImageUpload value={carImage} onChange={setCarImage} />
+            <CarImageUpload value={images} onChange={setImages} onBusyChange={setPhotosBusy} />
           </div>
           <div className="rounded-2xl border border-gray-200 bg-gray-50/90 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
             <label className="mb-2 block text-xs font-bold text-gray-800 dark:text-zinc-200">
@@ -297,6 +302,7 @@ export function SellModal({
           </button>
           <button
             type="submit"
+            disabled={photosBusy}
             className="inline-flex items-center gap-2 rounded-xl bg-black px-6 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-zinc-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -379,17 +385,7 @@ export function DetailModal({
 
       {/* Scrollable Content Body */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
-        <div className="relative overflow-hidden rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-xs">
-          <Image
-            src={c.image || "/images/car-hero.jpg"}
-            alt={c.title}
-            width={800}
-            height={450}
-            sizes="(max-width: 640px) 100vw, 640px"
-            unoptimized
-            className="h-52 w-full object-cover"
-          />
-        </div>
+        <CarGallery car={c} />
 
         <div className="flex items-baseline justify-between">
           <div>
@@ -520,40 +516,11 @@ export function DetailModal({
             message={`Halo, saya tertarik dengan mobil ${c.title} seharga ${fmtRp(c.price)} di AutoBuyCars.`}
             className="rounded-xl px-3.5 py-2 text-xs font-semibold"
           >
-            WhatsApp
+            Hubungi Penjual
           </WhatsAppContact>
         </div>
 
-        <div className="flex items-center gap-2">
-          {c.status !== "done" ? (
-            <button
-              onClick={() => {
-                if (!requireAuth("mengajukan penawaran")) return;
-                onClose();
-                onOffer(c.id);
-              }}
-              className="rounded-xl border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 active:scale-95 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Ajukan Tawaran
-            </button>
-          ) : null}
 
-          {c.status === "running" ? (
-            <button
-              onClick={() => {
-                if (!requireAuth("membeli mobil")) return;
-                onClose();
-                onBuy(c.id);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-black px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
-            >
-              <span>Beli Sekarang</span>
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
-          ) : null}
-        </div>
       </div>
     </ModalShell>
   );

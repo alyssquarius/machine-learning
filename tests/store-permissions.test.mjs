@@ -9,8 +9,9 @@ const moduleURL = source => `data:text/javascript;base64,${Buffer.from(source).t
 const hooksURL = moduleURL(`export const createContext=()=>({Provider:'provider'});export const useRef=x=>({current:x});export const useState=x=>[typeof x==='function'?x():x,()=>{}];export const useMemo=f=>f();export const useCallback=f=>f;export const useEffect=()=>{};export const createElement=(_tag,props)=>props.value;`);
 let source = await readFile(new URL('../components/store-provider.tsx', import.meta.url), 'utf8');
 source = source.replace('"react"', JSON.stringify(hooksURL));
-for (const name of ['cities', 'format', 'roles']) {
-  const contents = stripTypeScriptTypes(await readFile(new URL(`../lib/${name}.ts`, import.meta.url), 'utf8'));
+for (const name of ['cities', 'format', 'roles', 'car-photos']) {
+  let contents = stripTypeScriptTypes(await readFile(new URL(`../lib/${name}.ts`, import.meta.url), 'utf8'));
+  if(name === 'car-photos') contents = contents.replace("'./format'", JSON.stringify(moduleURL(stripTypeScriptTypes(await readFile(new URL('../lib/format.ts',import.meta.url),'utf8')))));
   source = source.replace(`"@/lib/${name}"`, JSON.stringify(moduleURL(contents)));
 }
 await swc.loadBindings();
@@ -45,3 +46,12 @@ test('buyer favourites retain their count and unrelated accounts do not inherit 
   const s=store();s.setOwner('dealer','dealer');const a=s.add(listing);s.setOwner('buyer','buyer');s.toggleFav(a.id);assert.equal(s.stats().favCount,1);assert.ok(s.buy(a.id,{name:'Test buyer',phone:'0800000000'}));s.setOwner('unrelated','buyer');assert.equal(s.history().filter(h=>h.type==='beli').length,0);
 });
 test.after(()=>{delete globalThis.localStorage;delete globalThis.window;});
+
+test('listing galleries preserve cover, cap at ten and survive edits and duplication',()=>{
+ const s=store();s.setOwner('dealer','dealer');
+ const images=Array.from({length:12},(_,i)=>`https://example.com/car-${i}.jpg`);
+ const c=s.add({...listing,images});assert.equal(c.images.length,10);assert.equal(c.image,images[0]);
+ const edited=s.edit(c.id,{...listing,images:[images[3],images[2]]});assert.deepEqual(edited.images,[images[3],images[2]]);assert.equal(edited.image,images[3]);
+ const copy=s.duplicate(c.id);assert.deepEqual(copy.images,edited.images);
+ const changed=s.update(c.id,{images:['javascript:alert(1)',images[2],images[2],images[1]]});assert.deepEqual(changed.images,[images[2],images[1]]);assert.equal(changed.image,images[2]);
+});

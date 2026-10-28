@@ -99,3 +99,8 @@ Audit akun nyata berikutnya mengonfirmasi bahwa metadata Auth masih berisi avata
 Trigger protect_profile_privileges dan guard_auth_inline_avatar sudah dibuat pada Supabase produksi. Sesi lama Safari diakhiri melalui tombol Keluar dari katalog yang dipulihkan lewat riwayat tab; tidak dilakukan penghapusan data domain yang kini memiliki localStorage.
 
 Perbaikan frontend tambahan dan 32 pengujian role/store ada pada kode lokal dan perlu deployment baru. Lihat [AUDIT.md](AUDIT.md) dan PRD versi 1.3. Pengujian perilaku trigger dengan subtransaksi sudah lulus setelah Mac dibuka: perubahan role admin oleh client, perubahan verified, serta penulisan avatar inline pada Auth semuanya ditolak. Pemeriksaan sesudah pengujian memastikan role tetap admin, verified tetap false, metadata tetap 73 byte, dan foto tetap 53.807 karakter pada profiles.
+
+
+### Chat dan galeri foto
+
+Jalankan migrasi `supabase/migrations/20261028_support_chat.sql` sekali pada proyek baru sebelum memakai /chat. Migrasi tersebut sudah diterapkan pada proyek terhubung saat pembaruan28 Oktober2026. Verifikasi RLS dapat memakai docs/sql/verify-support-chat.sql; skrip membutuhkan profil buyer dan admin yang sudah ada dan me-rollback seluruh pesan uji. Bucket avatars harus public dengan INSERT terbatas pada folder auth.uid(); uploader memakai file JPEG di folder pengguna. Kegagalan Storage ditampilkan sebagai error dan tidak menerbitkan foto palsu. Jangan membuka policy INSERT untuk semua pengguna sebagai jalan pintas. Listing tetap tersimpan di browser; chat memakai database terpusat.

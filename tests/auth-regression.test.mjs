@@ -62,7 +62,7 @@ test("public catalogue remains accessible without authentication", async () => {
   fixture(); assert.equal((await updateSession(request("/beli"))).status, 200);
 });
 test("protected pages redirect guests and keep refreshed cookies", async () => {
-  for (const path of ["/jual", "/dashboard", "/favorit", "/riwayat", "/profil", "/pengaturan"]) {
+  for (const path of ["/jual", "/dashboard", "/favorit", "/riwayat", "/profil", "/pengaturan", "/chat"]) {
     fixture(); const response = await updateSession(request(path));
     assert.equal(response.headers.get("location"), "https://autobuycars.example/login");
     assert.equal(response.cookies.get("sb-test-auth-token")?.value, "refreshed");

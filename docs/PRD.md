@@ -1,6 +1,6 @@
 # PRD AutoBuyCars — Workspace otomotif dan pembaruan pengalaman pengguna
 
-Versi dokumen: 1.5 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
+Versi dokumen: 1.6 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
 Status: perbaikan data akun dan trigger Supabase sudah diterapkan; pembaruan tampilan, simulator dan perbaikan role/store/profil tersedia pada kode dan preview lokal, belum dideploy ke Vercel. Lihat AUDIT.md untuk bukti dan batas pengujian.
 
 ## 1. Ringkasan produk
@@ -190,3 +190,29 @@ Perubahan ini hanya memengaruhi presentasi; aturan akses dan penyimpanan data te
 
 
 Validasi versi1.5: production build dan typecheck lulus; browser lokal memeriksa dashboard terang/gelap pada1440×1000, profil dan katalog pada375×812, filter tambahan serta navigasi profil/simulator. Katalog375 px tidak mengalami overflow horizontal. Perubahan tenor36→60 bulan memperbarui cicilan Rp6.027.778→Rp4.083.333 sesuai formula sebelumnya. Animasi halaman yang diterapkan dikonfirmasi bernama pageEnter. Pengujian ini tidak menerbitkan listing atau melakukan transaksi.
+
+
+Narahubung pembeli: nomor admin tetap menjadi tujuan bantuan pelanggan. Panel nomor WhatsApp di Pengaturan admin dihapus; tombol bantuan WhatsApp melayang dan kartu kontak profil disembunyikan untuk admin, tetapi tetap tersedia bagi pengguna non-admin. Nomor narahubung yang dikonfigurasi tidak dihapus.
+
+
+## 16. Narahubung, chat website dan galeri — versi 1.6
+
+### Perilaku produk
+
+- Kartu katalog menampilkan satu tindakan utama **Hubungi Penjual** melalui WhatsApp listing. Tombol Beli Sekarang, Ajukan Tawaran, Detail dan tautan cicilan di kartu dihapus. Foto tetap dapat diketuk untuk membuka informasi dan galeri; favorit tetap tersedia. Detail juga tidak menampilkan tombol pembelian/penawaran baru. Fungsi riwayat simulasi lama dipertahankan untuk membaca data yang sudah tersimpan.
+- Menu **Chat** membawa pengguna ke /chat. Pembeli dan dealer sebagai pelanggan dapat memulai satu percakapan bantuan per akun; admin mendapat kotak masuk dan dapat membalas. Tombol bantuan melayang dan kartu bantuan profil menuju chat website. Kontak WhatsApp penjual tetap terpisah.
+- Pesan teks tersimpan di Supabase, maksimal2000 karakter; daftar percakapan disegarkan5 detik, pesan percakapan aktif3 detik selama halaman terlihat. Riwayat terbaru50 pesan dapat diperluas. Tidak ada klaim online/terbaca, notifikasi push atau dukungan lampiran pada versi ini. Teks gagal kirim dipertahankan.
+- RLS: hanya pemilik percakapan dan admin yang dapat membaca/mengirim. Pengirim harus sesuai auth.uid(); pesan tidak dapat diedit/dihapus client. Role admin diperiksa dari profiles melalui fungsi database, bukan cache/email.
+- Listing mendukung0–10 foto, dengan foto pertama sebagai sampul. Unggah beberapa JPG/PNG/WebP sekaligus, maksimal15 MB per sumber, optimasi JPEG sebelum unggah ke Storage; dapat juga menambahkan URL HTTPS. Foto dapat dihapus dari galeri atau dijadikan sampul. Tidak ada fallback diam-diam ke base64 ketika unggah gagal.
+- Galeri detail menampilkan thumbnail, tombol sebelumnya/berikutnya dan posisi foto. Listing lama dengan satu field image tetap didukung. Store menormalisasi batas10 pada add/edit/update dan pemuatan data.
+
+### Implementasi dan validasi
+
+Migrasi supabase/migrations/20261028_support_chat.sql telah diterapkan pada proyek Supabase yang terhubung. Pengujian docs/sql/verify-support-chat.sql berhasil untuk buyer baca/kirim, admin baca/balas, penolakan akun luar, pemalsuan sender, pesan2001 karakter dan update pesan. Semua data chat uji di-rollback; tidak ada pesan uji yang ditinggalkan pada akun pembeli.
+
+Typecheck,33 pengujian otomatis dan production build lulus. Pengujian store tambahan memeriksa batas10, sampul, edit, duplikasi, deduplikasi dan URL tidak aman. Browser lokal memeriksa kotak masuk admin tersambung (tanpa error); unggah dua aset repo sekaligus ke Supabase Storage berhasil; pengubahan sampul/penghapusan berhasil; setelah10 foto kontrol penambahan dinonaktifkan. Formulir uji dibatalkan tanpa menerbitkan listing. Dua file uji unggahan berada pada Storage; tidak ada data akun/foto pribadi yang diunggah untuk pengujian ini.
+
+Batas: balas pesan dengan dua akun melalui UI belum diuji karena hanya kredensial admin diberikan; alur database dua peran diuji langsung dengan rollback. Data listing tetap localStorage dan belum sinkron antarperangkat; hanya chat dan file foto yang terpusat. Frontend versi1.6 masih lokal sampai dipush/deploy.
+
+
+Transisi tema: perubahan light/dark kini menginterpolasi latar, teks, border, ikon dan bayangan selama420 ms. Ikon bulan/matahari memakai crossfade dan rotasi ringan. Efek berlaku juga untuk pemilihan tema di Pengaturan dan perubahan preferensi sistem, tanpa mengubah durasi hover biasa. prefers-reduced-motion tetap menonaktifkan transisi. Build dan typecheck lulus.

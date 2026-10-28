@@ -9,7 +9,7 @@ export async function updateSession(request: NextRequest) {
   const matches = (paths: string[]) => paths.some(
     (path) => pathname === path || pathname.startsWith(path + "/")
   );
-  const protectedPage = matches(["/jual", "/dashboard", "/favorit", "/riwayat", "/pengaturan", "/profil"]);
+  const protectedPage = matches(["/jual", "/dashboard", "/favorit", "/riwayat", "/pengaturan", "/profil", "/chat"]);
   // Recovery and email verification must remain accessible with an active session.
   const signInPage = matches(["/login", "/register"]);
   const config = getSupabaseConfig();

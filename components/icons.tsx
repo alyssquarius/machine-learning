@@ -1,6 +1,7 @@
 import * as React from "react";
 
 export const ICON_PATHS: Record<string, string> = {
+  chat: "M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-3 2 2-6a8.5 8.5 0 1 1 18-4.5ZM7 10h10M7 14h6",
   download: "M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4",
   arrow: "M5 12h14m-6-6 6 6-6 6",
   calculator: "M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm1 4h8M8 11h1m6 0h1m-8 4h1m6 0h1m-8 3h1m6 0h1",

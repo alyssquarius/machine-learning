@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cleanCategory } from "@/lib/cities";
 import { canPerformAction, hasPermission, type Role } from "@/lib/roles";
+import { carPhotos } from "@/lib/car-photos";
 import { safeImageUrl } from "@/lib/format";
 
 // ---------- Tipe ----------
@@ -48,6 +49,7 @@ export interface Car {
   interest: number;
   badge: string;
   image: string;
+  images?: string[];
   description: string;
   sellerId?: string;
   sellerName?: string;
@@ -164,7 +166,8 @@ function normalizeCars(arr: unknown): Car[] {
       o.status = STATUSES.includes(o.status) ? o.status : "queued";
       o.interest = Math.max(0, Math.min(100, Number(o.interest) || 0));
       o.badge = String(o.badge || "").slice(0, 24);
-      o.image = typeof o.image === "string" ? o.image : "";
+      o.images = carPhotos(o);
+      o.image = o.images[0] || "";
       o.sellerId = typeof o.sellerId === "string" ? o.sellerId : "";
       o.sellerName = typeof o.sellerName === "string" ? o.sellerName.slice(0, 60) : "";
       o.sellerPhone = typeof o.sellerPhone === "string" ? o.sellerPhone.slice(0, 30) : "";
@@ -779,7 +782,8 @@ export function StoreProvider({
           status,
           interest: 50,
           badge: status === "running" ? "Dijual" : "Baru",
-          image: imageFor(category, data.image),
+          image: carPhotos(data)[0] || imageFor(category, data.image),
+          images: carPhotos(data),
           description: String(data.description || "").trim().slice(0, 500),
           sellerId: ownerRef.current,
           sellerName: String(data.sellerName || cur().settings.displayName || "").trim().slice(0, 60),
@@ -808,7 +812,7 @@ export function StoreProvider({
         if (car && !canMutateListing(car, "canEditOwnListing")) return null;
         if (!car) return null;
         if (car.purchase && patch.status && patch.status !== "done") return null;
-        const allowed = ["title", "price", "year", "km", "location", "category", "status", "badge", "image", "description", "interest"];
+        const allowed = ["title", "price", "year", "km", "location", "category", "status", "badge", "image", "images", "description", "interest"];
         const clean: Partial<Car> = {};
         Object.keys(patch || {}).forEach((k) => {
           if (allowed.includes(k)) (clean as Record<string, unknown>)[k] = (patch as Record<string, unknown>)[k];
@@ -837,6 +841,7 @@ export function StoreProvider({
         if (clean.status != null && !STATUSES.includes(clean.status)) delete clean.status;
         if (clean.interest != null)
           clean.interest = Math.max(0, Math.min(100, Number(clean.interest) || 0));
+        if (Array.isArray(clean.images)) { clean.images = carPhotos({images:clean.images}); clean.image = clean.images[0] || imageFor(clean.category || car.category); }
         Object.assign(car, clean);
         persist(s);
         return car;
@@ -916,6 +921,7 @@ export function StoreProvider({
           const img = safeImageUrl(data.image);
           if (img) car.image = img;
         }
+        if (Array.isArray(data.images)) { car.images = carPhotos({images:data.images}); car.image = car.images[0] || imageFor(car.category); }
         car.description = String(data.description || "").trim().slice(0, 500);
         s.hist.unshift({
           id: uid("h"),
