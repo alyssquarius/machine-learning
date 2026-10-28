@@ -12,12 +12,6 @@ const ROLE_BADGE_STYLES: Record<Role, { bg: string; text: string; border: string
     border: "border-red-200/80 dark:border-red-900/50",
     dot: "bg-red-500",
   },
-  dealer: {
-    bg: "bg-purple-50 dark:bg-purple-950/40",
-    text: "text-purple-700 dark:text-purple-400",
-    border: "border-purple-200/80 dark:border-purple-900/50",
-    dot: "bg-purple-500",
-  },
   buyer: {
     bg: "bg-blue-50/80 dark:bg-blue-950/40",
     text: "text-blue-700 dark:text-blue-300",

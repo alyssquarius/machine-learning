@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         if (user) {
           await repairLegacyAvatarSession(supabase, user);
 
-          // Create a new profile without overwriting an existing dealer/admin role.
+          // Create a new profile without overwriting an existing admin role.
           const { data: profile } = await supabase.from("profiles")
             .select("role").eq("id", user.id).maybeSingle();
           if (!profile) {
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
               updated_at: new Date().toISOString(),
             }, { onConflict: "id", ignoreDuplicates: true });
           }
-          const destination = ["admin", "dealer"].includes(profile?.role) ? "/dashboard" : "/beli";
+          const destination = ["admin"].includes(profile?.role) ? "/dashboard" : "/beli";
           return NextResponse.redirect(`${origin}${destination}`);
         }
       }

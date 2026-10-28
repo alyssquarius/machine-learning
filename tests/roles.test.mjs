@@ -5,10 +5,10 @@ import { test } from 'node:test';
 const source = stripTypeScriptTypes(await readFile(new URL('../lib/roles.ts', import.meta.url), 'utf8'));
 const { getPermissions, canPerformAction } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 
-for (const role of ['admin', 'dealer', 'buyer', 'guest']) {
+for (const role of ['admin', 'buyer', 'guest']) {
   test(`${role}: create listing, dashboard, buy and offer permissions match the role`, () => {
     const p = getPermissions(role);
-    const seller = ['admin', 'dealer'].includes(role);
+    const seller = role === 'admin';
     assert.equal(p.canCreateListing, seller);
     assert.equal(p.canAccessDashboard, seller);
     assert.equal(p.canBuyCar, role !== 'guest');
@@ -19,7 +19,7 @@ test('dealer cannot edit, delete, accept or reject offers on another seller list
   for (const action of ['canEditOwnListing', 'canDeleteOwnListing', 'canAcceptOffer', 'canRejectOffer']) {
     assert.equal(canPerformAction('dealer', action, { isOwner: false }), false);
     assert.equal(canPerformAction('dealer', action), false);
-    assert.equal(canPerformAction('dealer', action, { isOwner: true }), true);
+    assert.equal(canPerformAction('dealer', action, { isOwner: true }), false);
   }
 });
 test('admin can manage listings and offers across owners', () => {

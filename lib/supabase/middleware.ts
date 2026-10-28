@@ -56,7 +56,7 @@ export async function updateSession(request: NextRequest) {
   if (signInPage || matches(["/dashboard", "/jual"])) {
     const { data: profile } = await supabase.from("profiles")
       .select("role").eq("id", user.id).maybeSingle();
-    const seller = ["admin", "dealer"].includes(profile?.role);
+    const seller = ["admin"].includes(profile?.role);
     if (signInPage) return redirect(seller ? "/dashboard" : "/beli");
     if (!seller) return redirect("/beli");
   }

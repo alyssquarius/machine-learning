@@ -4,7 +4,6 @@
 
 export const ROLES = {
   ADMIN: "admin",
-  DEALER: "dealer",
   BUYER: "buyer",
   GUEST: "guest",
 } as const;
@@ -78,35 +77,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission> = {
     canSendMessages: true,
     canAccessDashboard: true,
     canChangeSettings: true,
-  },
-
-  // DEALER - Mode penjual; verifikasi merupakan atribut terpisah.
-  dealer: {
-    canCreateListing: true,
-    canEditOwnListing: true,
-    canEditAnyListing: false,
-    canDeleteOwnListing: true,
-    canDeleteAnyListing: false,
-    canApproveListing: false,
-    canRejectListing: false,
-    canMakeOffer: true, // Dealer juga bisa menawar mobil
-    canAcceptOffer: true, // Bisa terima penawaran untuk listing sendiri
-    canRejectOffer: true,
-    canBuyCar: true, // Dealer bisa beli mobil
-    canViewOwnTransactions: true,
-    canViewAllTransactions: false,
-    canViewUsers: false,
-    canEditUsers: false,
-    canBanUsers: false,
-    canVerifyDealer: false,
-    canViewOwnAnalytics: true,
-    canViewAllAnalytics: false,
-    canExportData: true, // Export data sendiri
-    canContactSeller: true, // Bisa kontak seller lain
-    canReceiveOffers: true,
-    canSendMessages: true,
-    canAccessDashboard: true,
-    canChangeSettings: false,
   },
 
   // BUYER - User biasa yang ingin beli mobil
@@ -211,12 +181,11 @@ export function canPerformAction(
     return perms[action] && (userRole === "admin" || options?.isOwner === true);
   }
 
-  // Special case: role hierarchy (admin > dealer > buyer > guest)
+  // Special case: role hierarchy (admin > buyer > guest)
   if (action === "canEditUsers" || action === "canBanUsers") {
     if (options?.targetRole) {
       const hierarchy: Record<Role, number> = {
         admin: 4,
-        dealer: 3,
         buyer: 2,
         guest: 1,
       };
@@ -236,7 +205,6 @@ export function canPerformAction(
 export function getRoleDisplayName(role: Role): string {
   const names: Record<Role, string> = {
     admin: "Administrator",
-    dealer: "Dealer/Penjual",
     buyer: "Pembeli",
     guest: "Pengunjung",
   };
@@ -249,7 +217,6 @@ export function getRoleDisplayName(role: Role): string {
 export function getRoleDescription(role: Role): string {
   const descriptions: Record<Role, string> = {
     admin: "Akses penuh ke seluruh sistem, dapat mengelola user dan listing",
-    dealer: "Dapat menjual mobil dan mengelola listing sendiri",
     buyer: "Dapat membeli mobil dan membuat penawaran",
     guest: "Hanya dapat melihat listing (belum login)",
   };
@@ -261,14 +228,11 @@ export function getRoleDescription(role: Role): string {
  */
 export function getAvailableRoleTransitions(currentRole: Role): Role[] {
   // Guest -> Buyer (register)
-  // Buyer -> Dealer (mode penjual mandiri; tidak memberikan status verified)
-  // Dealer -> Buyer (downgrade)
   // Admin tidak bisa diubah (harus dari database)
 
   const transitions: Record<Role, Role[]> = {
     guest: ["buyer"],
-    buyer: ["dealer"],
-    dealer: ["buyer"],
+    buyer: [],
     admin: [], // Admin tidak bisa diubah via UI
   };
 

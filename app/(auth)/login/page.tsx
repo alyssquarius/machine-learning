@@ -53,7 +53,7 @@ export default function LoginPage() {
             .single();
           if (cancelled) return;
           const role = profile?.role;
-          if (["admin", "dealer"].includes(role)) {
+          if (["admin"].includes(role)) {
             router.replace("/dashboard");
           } else {
             router.replace("/beli");
@@ -97,7 +97,7 @@ export default function LoginPage() {
           .eq("id", user.id)
           .single();
         const role = profile?.role;
-        if (["admin", "dealer"].includes(role)) {
+        if (["admin"].includes(role)) {
           router.replace("/dashboard");
         } else {
           router.replace("/beli");

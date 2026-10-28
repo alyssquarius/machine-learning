@@ -288,3 +288,7 @@ Lonceng dan menu Chat admin menunjukkan pesan belum dibaca. Toast muncul ketika 
 Chat admin menyediakan pencarian nama, cuplikan pesan terakhir dan label pesan baru. Ponsel menggunakan daftar percakapan lalu ruang balas dengan tombol kembali. Enter mengirim pada perangkat dengan pointer presisi; Shift+Enter membuat baris baru. Ponsel menggunakan tombol kirim. Pesan dianggap dibaca ketika riwayat dimuat dan posisi baca berada di bagian bawah.
 
 Migrasi notifikasi dan fondasi marketplace telah dijalankan pada Supabase. Fondasi marketplace belum dihubungkan ke store; data katalog browser belum diimpor. Uji transaksi rollback untuk notifikasi lulus: inbox privat, unread admin, penanda baca dan penolakan akun luar.
+
+## 24. Penyederhanaan role (v1.14)
+
+Akun terdaftar hanya memakai Admin dan Pembeli; pengunjung tetap dapat melihat katalog. Role Dealer/Penjual dihapus. Akun dealer lama dikonversi menjadi buyer tanpa menghapus akun, profil, chat, maupun listing. Dashboard dan pengelolaan listing hanya untuk Admin. Perubahan role mandiri dihapus. Migrasi database membatasi role profil dan mengganti kebijakan mutasi katalog menjadi khusus Admin; chat tetap tersedia untuk pembeli hasil konversi.

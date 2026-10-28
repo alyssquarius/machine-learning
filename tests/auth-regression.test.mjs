@@ -78,9 +78,9 @@ test("email address alone does not grant admin access", async () => {
   fixture({ user, role: "buyer" });
   assert.equal((await updateSession(request("/dashboard"))).headers.get("location"), "https://autobuycars.example/beli");
 });
-test("dealers land on dashboard and redirects preserve session refresh", async () => {
+test("removed dealer roles land on catalogue and redirects preserve session refresh", async () => {
   fixture({ user, role: "dealer" }); const response = await updateSession(request("/login"));
-  assert.equal(response.headers.get("location"), "https://autobuycars.example/dashboard");
+  assert.equal(response.headers.get("location"), "https://autobuycars.example/beli");
   assert.equal(response.cookies.get("sb-test-auth-token")?.value, "refreshed");
 });
 test("auth outage keeps public pages usable and blocks protected pages", async () => {
@@ -91,10 +91,10 @@ test("auth outage keeps public pages usable and blocks protected pages", async (
 test("OAuth callback bypasses proxy session lookup", async () => {
   fixture({ fail: true }); assert.equal((await updateSession(request("/auth/callback?code=test"))).status, 200);
 });
-test("OAuth preserves existing dealer role instead of replacing it", async () => {
+test("OAuth does not grant dashboard access to obsolete dealer roles", async () => {
   const state = fixture({ user, role: "dealer" });
   const response = await GET(request("/auth/callback?code=test"));
-  assert.equal(response.headers.get("location"), "https://autobuycars.example/dashboard");
+  assert.equal(response.headers.get("location"), "https://autobuycars.example/beli");
   assert.equal(state.writes.length, 0);
 });
 test("new OAuth accounts get buyer profile without overwriting duplicates", async () => {
@@ -146,4 +146,13 @@ test("profile response preserves obsolete cookie deletions across update and ref
   assert.equal(response.cookies.get("sb-old-token.0")?.maxAge, 0);
   assert.equal(response.cookies.get("sb-old-token.1")?.maxAge, 0);
   assert.equal(response.cookies.get("sb-test-auth-token")?.value, "compact");
+});
+
+test('admin keeps dashboard access while legacy dealers cannot enter seller routes',async()=>{
+ fixture({user,role:'admin'});
+ assert.equal((await updateSession(request('/login'))).headers.get('location'),'https://autobuycars.example/dashboard');
+ for(const path of ['/jual','/dashboard']){
+  fixture({user,role:'dealer'});
+  assert.equal((await updateSession(request(path))).headers.get('location'),'https://autobuycars.example/beli');
+ }
 });

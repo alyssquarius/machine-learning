@@ -46,7 +46,7 @@ export default function RegisterPage() {
             .single();
           if (cancelled) return;
           const role = profile?.role;
-          if (["admin", "dealer"].includes(role)) {
+          if (["admin"].includes(role)) {
             router.replace("/dashboard");
           } else {
             router.replace("/beli");

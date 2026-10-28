@@ -63,3 +63,5 @@ Untuk database baru, baca `supabase-setup-avatars.sql`, kemudian migrasi `supaba
 - `docs/`: PRD dan panduan operasional.
 
 Notifikasi chat dalam aplikasi menggunakan migrasi `supabase/migrations/20261029_chat_notifications.sql`. Migrasi notifikasi dan fondasi marketplace sudah diterapkan pada proyek aktif. Inbox diperiksa setiap 5 detik ketika website terlihat, dengan badge, toast dan penanda baca per akun; belum ada push notification saat browser ditutup. Tabel marketplace baru belum menggantikan store lokal.
+
+Role aktif: **Admin dan Pembeli**. Migrasi `20261029_remove_dealer_role.sql` mengonversi dealer lama menjadi buyer, melarang role dealer baru, dan membatasi pengelolaan katalog ke Admin. Akun dan data historis tetap disimpan.

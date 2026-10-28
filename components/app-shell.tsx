@@ -18,44 +18,44 @@ import type { Role } from "@/lib/roles";
 import { useRole } from "@/components/role-provider";
 
 const ALL_NAV = [
-  { href: "/chat", label: "Chat", icon: "chat", roles: ["admin", "dealer", "buyer"] },
-  { href: "/profil", label: "Profil Saya", icon: "user", roles: ["admin", "dealer", "buyer"] },
-  { href: "/simulasi", label: "Simulasi Kredit", icon: "calculator", roles: ["admin", "dealer", "buyer", "guest"] },
+  { href: "/chat", label: "Chat", icon: "chat", roles: ["admin", "buyer"] },
+  { href: "/profil", label: "Profil Saya", icon: "user", roles: ["admin", "buyer"] },
+  { href: "/simulasi", label: "Simulasi Kredit", icon: "calculator", roles: ["admin", "buyer", "guest"] },
   {
     href: "/dashboard",
     label: "Dashboard",
     icon: "home",
-    roles: ["admin", "dealer"],
+    roles: ["admin"],
   },
   {
     href: "/jual",
     label: "Jual Mobil",
     icon: "tag",
-    roles: ["admin", "dealer"],
+    roles: ["admin"],
   },
   {
     href: "/beli",
     label: "Beli Mobil",
     icon: "cart",
-    roles: ["admin", "dealer", "buyer", "guest"],
+    roles: ["admin", "buyer", "guest"],
   },
   {
     href: "/favorit",
     label: "Favorit",
     icon: "heart",
-    roles: ["admin", "dealer", "buyer"],
+    roles: ["admin", "buyer"],
   },
   {
     href: "/riwayat",
     label: "Riwayat",
     icon: "history",
-    roles: ["admin", "dealer", "buyer"],
+    roles: ["admin", "buyer"],
   },
   {
     href: "/pengaturan",
     label: "Pengaturan",
     icon: "cog",
-    roles: ["admin", "dealer", "buyer"],
+    roles: ["admin", "buyer"],
   },
 ];
 
@@ -238,7 +238,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const defaultHref = ["admin", "dealer"].includes(role) ? "/dashboard" : "/beli";
+  const defaultHref = ["admin"].includes(role) ? "/dashboard" : "/beli";
   const activeHref =
     NAV.find((n) => pathname === n.href || pathname.startsWith(n.href + "/"))
       ?.href || defaultHref;
@@ -255,14 +255,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <button type="button" className="absolute right-3 top-[27px] rounded-lg p-1 text-sky-700 dark:text-sky-300 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Tutup navigasi"><Icon name="x" className="h-4 w-4" /></button><div className="sidebar-divider" />
         <p className="sidebar-label brand-text">WORKSPACE</p>
         <nav>{NAV.map(n => <Link key={n.href} href={n.href} title={n.label} aria-current={activeHref === n.href ? "page" : undefined} onClick={() => setMobileOpen(false)} className={`sidebar-link ${activeHref === n.href ? "is-active" : ""}`}><Icon name={n.icon} className="h-[19px] w-[19px] shrink-0" /><span className="nav-label">{n.label}</span>{n.href === "/favorit" && favCount > 0 ? <span className="nav-count">{favCount}</span> : null}{n.href === "/chat" && chat.unread > 0 ? <span className="nav-count">{chat.unread}</span> : null}{activeHref === n.href ? <span className="nav-indicator" /> : null}</Link>)}</nav>
-        <div className="sidebar-bottom brand-text"><div className="sidebar-support"><span className="support-spark">✦</span><h3>Perjalanan dimulai di sini.</h3><p>{isGuest ? "Temukan mobil yang sesuai dengan rencana dan gaya hidupmu." : "Satu tempat untuk setiap langkah perjalanan otomotifmu."}</p><button onClick={() => setHelpOpen(true)}>Kenali fitur <Icon name="arrow" className="h-4 w-4" /></button></div><div className="sidebar-account"><span className="account-dot" /><span>{role === "admin" ? "Workspace Administrator" : role === "dealer" ? "Workspace Penjual" : isGuest ? "Mode Pengunjung" : "Akun Pembeli"}</span></div></div>
+        <div className="sidebar-bottom brand-text"><div className="sidebar-support"><span className="support-spark">✦</span><h3>Perjalanan dimulai di sini.</h3><p>{isGuest ? "Temukan mobil yang sesuai dengan rencana dan gaya hidupmu." : "Satu tempat untuk setiap langkah perjalanan otomotifmu."}</p><button onClick={() => setHelpOpen(true)}>Kenali fitur <Icon name="arrow" className="h-4 w-4" /></button></div><div className="sidebar-account"><span className="account-dot" /><span>{role === "admin" ? "Workspace Administrator" : isGuest ? "Mode Pengunjung" : "Akun Pembeli"}</span></div></div>
       </aside>}
       <div ref={workspaceBodyRef} className="workspace-body" inert={!buyerView && mobileViewport && mobileOpen}>
         <header className="workspace-header">{buyerView ? <div className="buyer-header-main"><Link href="/beli" className="buyer-brand" aria-label="AutoBuyCars — Cari Mobil"><span className="brand-symbol"><CarLogo className="h-6 w-6" /></span><strong>AutoBuyCars<span>.</span></strong></Link><nav className="buyer-top-nav" aria-label="Menu pembeli">{buyerLinks.slice(0,3).map(n=><Link key={n.href} href={n.href} aria-current={pathname===n.href ? "page" : undefined}>{n.label}</Link>)}<Link href="/simulasi" aria-current={pathname==="/simulasi" ? "page" : undefined}>Hitung Cicilan</Link></nav></div> : <div className="flex min-w-0 items-center gap-3"><button type="button" onClick={toggleSidebar} className="icon-button" aria-label="Buka atau tutup navigasi" aria-expanded={mobileViewport ? mobileOpen : !collapsed} aria-controls="sidebar"><Icon name="menu" /></button><div className="header-breadcrumb hidden sm:flex"><span>Workspace</span><span>/</span><strong>{pageTitle}</strong></div></div>}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3"><form className={`header-search hidden ${buyerView ? "" : "md:flex"}`} onSubmit={event => { event.preventDefault(); router.push(`/beli?q=${encodeURIComponent(searchRef.current?.value.trim() || "")}`); }}><Icon name="search" className="h-4 w-4" /><input ref={searchRef} aria-label="Cari mobil di katalog" type="search" placeholder="Cari mobil impianmu..." /><kbd>⌘ K</kbd></form><ThemeToggle className="header-theme" />
             <div className="relative"><button type="button" id="notif-button" aria-label="Buka notifikasi" aria-controls="notif-menu" aria-expanded={notifOpen} className="icon-button relative" onClick={event => { event.stopPropagation(); setUserOpen(false); setNotifOpen(!notifOpen); }}><Icon name="bell" />{unread ? <span className="notification-dot" /> : null}</button>{notifOpen ? <div id="notif-menu" className="header-dropdown notification-menu"><div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-zinc-800"><h3 className="text-sm font-bold">Notifikasi</h3><button className="text-xs font-medium text-emerald-700 dark:text-emerald-400" onClick={() => store.markNotifsRead()}>Tandai dibaca</button></div><ul className="max-h-72 overflow-y-auto p-4">{chat.unread > 0 ? <li><Link href="/chat" className="dropdown-link"><Icon name="chat" />{chat.unread} pesan chat belum dibaca</Link></li> : null}{notifs.length ? notifs.map(h => <li key={h.id} className="border-b border-gray-100 py-3 text-sm last:border-0 dark:border-zinc-800"><HistText text={h.text} /></li>) : chat.unread ? null : <li className="py-7 text-center text-sm text-gray-500"><Icon name="bell" className="mx-auto mb-3 h-6 w-6 text-gray-300" />Belum ada kabar baru.<p className="mt-1 text-xs">Aktivitas akunmu akan tampil di sini.</p></li>}</ul>{!isGuest ? <Link href="/riwayat" onClick={() => setNotifOpen(false)} className="block border-t border-gray-100 p-3 text-center text-xs font-semibold text-emerald-700 dark:border-zinc-800 dark:text-emerald-400">Lihat semua aktivitas →</Link> : null}</div> : null}</div>
             <div className="header-separator" />
-            <div className="relative"><button id="user-button" className="account-button" aria-label={`Menu akun ${displayName}`} aria-expanded={userOpen} aria-controls="user-menu" onClick={event => { event.stopPropagation(); setNotifOpen(false); setUserOpen(!userOpen); }}><span className="header-avatar">{avatarUrl ? <Image src={avatarUrl} alt="Foto profil" width={36} height={36} unoptimized className="h-full w-full object-cover" /> : initial}</span><span className="hidden text-left lg:block"><strong>{displayName}</strong><small>{role === "admin" ? "Administrator" : role === "dealer" ? "Dealer / Penjual" : isGuest ? "Jelajahi katalog" : "Pembeli"}</small></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg></button>{userOpen ? <div id="user-menu" className="header-dropdown account-menu"><div className="border-b border-gray-100 p-4 dark:border-zinc-800"><p className="truncate text-sm font-bold">{displayName}</p><p className="mt-1 truncate text-xs text-gray-500">{email || "Masuk untuk menyimpan pilihanmu"}</p></div><div className="p-2">{isGuest ? <Link href="/login" className="dropdown-link" onClick={() => setUserOpen(false)}><Icon name="user" />Masuk / Daftar</Link> : <><Link href="/profil" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="user" />Profil Saya</Link><Link href="/riwayat" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="history" />Aktivitas Saya</Link><Link href="/simulasi" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="calculator" />Hitung Cicilan</Link><Link href="/pengaturan" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="cog" />Pengaturan</Link><button onClick={logout} className="dropdown-link text-red-600"><Icon name="logout" />Keluar dari akun</button></>}</div></div> : null}</div>
+            <div className="relative"><button id="user-button" className="account-button" aria-label={`Menu akun ${displayName}`} aria-expanded={userOpen} aria-controls="user-menu" onClick={event => { event.stopPropagation(); setNotifOpen(false); setUserOpen(!userOpen); }}><span className="header-avatar">{avatarUrl ? <Image src={avatarUrl} alt="Foto profil" width={36} height={36} unoptimized className="h-full w-full object-cover" /> : initial}</span><span className="hidden text-left lg:block"><strong>{displayName}</strong><small>{role === "admin" ? "Administrator" : isGuest ? "Jelajahi katalog" : "Pembeli"}</small></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg></button>{userOpen ? <div id="user-menu" className="header-dropdown account-menu"><div className="border-b border-gray-100 p-4 dark:border-zinc-800"><p className="truncate text-sm font-bold">{displayName}</p><p className="mt-1 truncate text-xs text-gray-500">{email || "Masuk untuk menyimpan pilihanmu"}</p></div><div className="p-2">{isGuest ? <Link href="/login" className="dropdown-link" onClick={() => setUserOpen(false)}><Icon name="user" />Masuk / Daftar</Link> : <><Link href="/profil" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="user" />Profil Saya</Link><Link href="/riwayat" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="history" />Aktivitas Saya</Link><Link href="/simulasi" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="calculator" />Hitung Cicilan</Link><Link href="/pengaturan" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="cog" />Pengaturan</Link><button onClick={logout} className="dropdown-link text-red-600"><Icon name="logout" />Keluar dari akun</button></>}</div></div> : null}</div>
           </div>
         </header>
         <main id="main-content" className="app-content" tabIndex={-1}>{!authChecked ? <div className="workspace-loading" role="status"><span className="loading-mark"><CarLogo className="h-7 w-7" /></span><p>Menyiapkan halaman…</p></div> : <div key={pathname} className="animate-page-enter">{children}</div>}<footer className="workspace-footer"><span>© {new Date().getFullYear()} AutoBuyCars<span className="hidden sm:inline"> · Temukan mobil pilihanmu.</span></span><div><button onClick={() => setHelpOpen(true)}>Panduan & bantuan</button><span className="footer-status"><i />Ruang otomotifmu</span></div></footer></main>

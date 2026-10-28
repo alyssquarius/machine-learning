@@ -27,7 +27,7 @@ export default function JualPage() {
     );
   }
 
-  // Batasan role: hanya dealer dan admin yang bisa menjual mobil
+  // Batasan role: hanya admin yang bisa menjual mobil
   if (!permissions.canCreateListing) {
     return (
       <div className="mx-auto max-w-xl py-12 text-center animate-fade-in">

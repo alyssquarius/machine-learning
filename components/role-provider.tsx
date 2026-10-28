@@ -22,7 +22,6 @@ export interface RoleContextType {
   logout: () => Promise<void>;
   hasPermission: (permission: keyof Permission) => boolean;
   refreshRole: () => Promise<void>;
-  switchRole: (newRole: Role) => Promise<boolean>;
 }
 
 const RoleContext = React.createContext<RoleContextType | null>(null);
@@ -38,7 +37,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: profile } = await createClient()
         .from("profiles").select("role").eq("id", userId).single();
-      if (profile?.role && ["admin", "dealer", "buyer"].includes(profile.role)) {
+      if (profile?.role && ["admin", "buyer"].includes(profile.role)) {
         return profile.role as Role;
       }
     } catch {
@@ -148,36 +147,6 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function switchRole(newRole: Role): Promise<boolean> {
-    if (!user || role === "admin" || !["buyer", "dealer"].includes(newRole)) return false;
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
-          role: newRole,
-          updated_at: new Date().toISOString(),
-        });
-      if (error) {
-        console.warn("Switch role error:", error.message);
-        return false;
-      }
-      try {
-        localStorage.setItem(`abc_role_${user.id}`, newRole);
-      } catch {
-        /* abaikan */
-      }
-      store.setOwner(user.id, newRole);
-      setRole(newRole);
-      window.dispatchEvent(new CustomEvent("role-updated", { detail: newRole }));
-      return true;
-    } catch (err) {
-      console.error("switchRole failed:", err);
-      return false;
-    }
-  }
-
   async function refreshRole() {
     try {
       const supabase = createClient();
@@ -205,7 +174,6 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       logout,
       hasPermission: (perm) => checkPermission(role, perm),
       refreshRole,
-      switchRole,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [user, role, permissions, authChecked],

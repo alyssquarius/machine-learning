@@ -45,8 +45,4 @@ export function WhatsAppContact({
   );
 }
 
-export function ChatFloatingButton() {
-  const { role, authChecked } = useRole();
-  if (!authChecked || role !== "dealer") return null;
-  return <Link href="/chat" aria-label="Chat dengan admin" title="Chat Admin" className="fixed bottom-5 right-5 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-white shadow-lg transition hover:bg-sky-700"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-3 2 2-6a8.5 8.5 0 1 1 18-4.5Z"/><path d="M7 10h10M7 14h6"/></svg></Link>;
-}
+export function ChatFloatingButton() { return null; }

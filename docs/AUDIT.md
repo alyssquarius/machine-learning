@@ -28,3 +28,7 @@ Fondasi `supabase/migrations/20261029_marketplace_foundation.sql` menyiapkan kat
 Migrasi `20261029_chat_notifications.sql` diuji dengan SQL rollback lalu diterapkan permanen. Tes inbox privat, unread admin, mark-read, dan penolakan akun luar PASS. Migrasi `20261029_marketplace_foundation.sql` juga diterapkan; store frontend masih lokal dan belum mengimpor katalog lama.
 
 Browser lokal: login admin; badge Chat 1 dan tautan “1 pesan chat belum dibaca” muncul di lonceng pada dashboard. Membuka percakapan menampilkan pesan serta kolom balas. Tampilan ponsel 375 px tidak meluap horizontal. Tidak mengirim pesan uji melalui UI; tes database memakai rollback.
+
+## Penghapusan role Dealer/Penjual
+
+Role aplikasi disederhanakan menjadi admin, buyer, dan guest. Role dealer lama tidak memperoleh akses dashboard atau mutasi store. Pengalihan login/OAuth diperbarui; pilihan perubahan role mandiri dihapus. Tes otomatis diperbarui untuk memastikan dealer lama ditolak dan admin tetap diarahkan ke dashboard. 43 tes serta build produksi lulus.

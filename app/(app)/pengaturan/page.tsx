@@ -29,7 +29,7 @@ function SavedBadge({ show }: { show: boolean }) {
 export default function PengaturanPage() {
   const store = useStore();
   const { toast } = useToast();
-  const { role, logout, switchRole } = useRole();
+  const { role, logout } = useRole();
   const { theme, setTheme } = useTheme();
 
   const [saved, setSaved] = React.useState(false);
@@ -37,7 +37,6 @@ export default function PengaturanPage() {
   const [displayName, setDisplayName] = React.useState("");
   const [avatarUrl, setAvatarUrl] = React.useState("");
   const [target, setTarget] = React.useState("10");
-  const [switchingRole, setSwitchingRole] = React.useState(false);
 
   const dnTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const tgTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -113,26 +112,6 @@ export default function PengaturanPage() {
   function flash() {
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
-  }
-
-  async function handleSwitchRole(newRole: "buyer" | "dealer") {
-    if (role === newRole || switchingRole) return;
-    setSwitchingRole(true);
-    try {
-      const ok = await switchRole(newRole);
-      if (ok) {
-        toast(
-          `Peran berhasil dialihkan ke Mode ${newRole === "dealer" ? "Penjual (Dealer)" : "Pembeli (Buyer)"}.`
-        );
-        flash();
-      } else {
-        toast("Gagal mengubah peran. Coba lagi.");
-      }
-    } catch {
-      toast("Terjadi kesalahan saat mengubah peran.");
-    } finally {
-      setSwitchingRole(false);
-    }
   }
 
   function onDisplayName(v: string) {
@@ -244,7 +223,7 @@ export default function PengaturanPage() {
               </p>
             </div>
             <span className="self-start sm:self-auto rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-              {role === "admin" ? "Administrator" : role === "dealer" ? "Dealer/Penjual" : "Pembeli"}
+              {role === "admin" ? "Administrator" : "Pembeli"}
             </span>
           </div>
         </div>
@@ -339,7 +318,7 @@ export default function PengaturanPage() {
         </div>
 
         {/* KARTU WIDGET DASHBOARD */}
-        {(role === "admin" || role === "dealer") && <div className="surface settings-widgets p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        {(role === "admin") && <div className="surface settings-widgets p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <div className="mb-1 flex items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-bold text-black dark:text-white">Widget Dashboard</h2>
