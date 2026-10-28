@@ -662,7 +662,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return s.hist.filter((h) => h.ts > (Number(s.settings.notifRead) || 0)).length;
       },
       exportHistoryCSV() {
-        const q = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const q = (v: unknown) => {
+          const value = String(v ?? "");
+          const safe = /^[\s]*[=+@-]/.test(value) ? "'" + value : value;
+          return `"${safe.replace(/"/g, '""')}"`;
+        };
         const rows: string[][] = [["waktu", "tipe", "teks"]];
         this.history().forEach((h) => {
           rows.push([
@@ -1050,7 +1054,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           purchaseData.paymentType === "booking"
             ? `Tanda Jadi (Booking) Rp ${(purchaseData.bookingFee || 0).toLocaleString("id-ID")}`
             : method === "kredit"
-              ? `Kredit — DP Rp ${purchaseData.dp.toLocaleString("id-ID")}, ${purchaseData.tenor}× Rp ${purchaseData.installment.toLocaleString("id-ID")}/bln`
+              ? `Kredit: DP Rp ${purchaseData.dp.toLocaleString("id-ID")}, ${purchaseData.tenor}× Rp ${purchaseData.installment.toLocaleString("id-ID")}/bln`
               : `Tunai Penuh (Rp ${car.price.toLocaleString("id-ID")})`;
 
         s.hist.unshift({

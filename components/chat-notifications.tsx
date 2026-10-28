@@ -93,8 +93,12 @@ export function ChatNotifications({ children }: { children: React.ReactNode }) {
     };
   }, [user?.id, role, authChecked, revision, toast]);
   async function markRead(id: string) {
-    const { error } = await createClient().rpc("mark_support_read", { p_message_id: id });
-    if (!error) window.dispatchEvent(new Event("support-chat-refresh"));
+    try {
+      const { error } = await createClient().rpc("mark_support_read", { p_message_id: id });
+      if (!error) window.dispatchEvent(new Event("support-chat-refresh"));
+    } catch {
+      // The next inbox refresh retains the unread count and allows another attempt.
+    }
   }
   return (
     <Ctx.Provider

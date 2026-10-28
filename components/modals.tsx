@@ -27,15 +27,33 @@ function ModalShell({
   children,
   wide = false,
   className = "",
+  label = "Informasi kendaraan",
 }: {
   onClose: () => void;
   children: React.ReactNode;
   wide?: boolean;
   className?: string;
+  label?: string;
 }) {
   return (
-    <Dialog onClose={onClose} wide={wide} className={className}>
+    <Dialog onClose={onClose} wide={wide} className={className} label={label}>
       {children}
+    </Dialog>
+  );
+}
+
+function MissingVehicle({ onClose }: { onClose: () => void }) {
+  return (
+    <Dialog onClose={onClose} title="Mobil tidak tersedia">
+      <div className="p-6">
+        <p className="page-description">
+          Listing mungkin sudah dihapus atau tidak tersedia di browser ini. Tutup jendela ini untuk
+          memilih mobil lainnya.
+        </p>
+        <button type="button" onClick={onClose} className="button-primary mt-5">
+          Kembali ke katalog
+        </button>
+      </div>
     </Dialog>
   );
 }
@@ -162,7 +180,11 @@ export function SellModal({
   }
 
   return (
-    <ModalShell onClose={() => onClose()} wide>
+    <ModalShell
+      onClose={() => onClose()}
+      wide
+      label={editingId ? "Edit listing mobil" : "Tambah listing mobil"}
+    >
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#18181b]">
         <div>
           <div className="flex items-center gap-2">
@@ -437,7 +459,7 @@ export function DetailModal({
 
   const [showReceipt, setShowReceipt] = React.useState(false);
 
-  if (!car) return null;
+  if (!car) return <MissingVehicle onClose={onClose} />;
   const c = car;
   const on = store.isFav(c.id);
   const offers = store.offersFor(c.id);
@@ -577,12 +599,12 @@ export function DetailModal({
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                Lihat Nota Resmi
+                Lihat ringkasan simulasi
               </button>
             </div>
             <p className="mt-2 text-xs text-emerald-900 dark:text-emerald-200">
               {c.purchase.method === "kredit"
-                ? `Kredit — DP ${fmtRp(c.purchase.dp)} • ${c.purchase.tenor}× ${fmtRp(c.purchase.installment)}/bln • Pemohon: ${c.purchase.name}`
+                ? `Kredit: DP ${fmtRp(c.purchase.dp)} • ${c.purchase.tenor}× ${fmtRp(c.purchase.installment)}/bln • Pemohon: ${c.purchase.name}`
                 : c.purchase.method === "tawar"
                   ? `Terjual via tawaran ${fmtRp(c.price)} • Pembeli: ${c.purchase.name}`
                   : `Dibeli tunai ${fmtRp(c.price)} • Pembeli: ${c.purchase.name}`}
@@ -606,7 +628,7 @@ export function DetailModal({
                       {fmtRp(o.amount)}
                     </p>
                     <p className="truncate text-gray-500 dark:text-zinc-400 mt-0.5">
-                      {o.note || "—"} • {timeAgo(o.ts)} •{" "}
+                      {o.note || "Tanpa catatan"} • {timeAgo(o.ts)} •{" "}
                       <span className="font-semibold uppercase">{o.status}</span>
                     </p>
                   </div>
@@ -699,7 +721,7 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
   const [err, setErr] = React.useState("");
   const [amountDisplay, setAmountDisplay] = React.useState("");
 
-  if (!car) return null;
+  if (!car) return <MissingVehicle onClose={onClose} />;
 
   function formatNumber(val: string): string {
     const num = val.replace(/\D/g, "");
@@ -724,7 +746,7 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
   }
 
   return (
-    <ModalShell onClose={onClose}>
+    <ModalShell onClose={onClose} label="Ajukan penawaran mobil">
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#18181b]">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-black dark:text-white">
@@ -826,7 +848,7 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
   const [err, setErr] = React.useState("");
   const [receipt, setReceipt] = React.useState<{ car: Car; purchase: Purchase } | null>(null);
 
-  if (!car) return null;
+  if (!car) return <MissingVehicle onClose={onClose} />;
   const c = car;
 
   const calc = checkoutCalc(c.price, dpPct, tenor, 8);
@@ -880,14 +902,15 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
   const sellerPhone = c.sellerPhone || getAdminWhatsApp();
 
   return (
-    <ModalShell onClose={onClose} wide>
+    <ModalShell onClose={onClose} wide label="Simulasi pemesanan mobil">
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#18181b]">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-black dark:text-white">
             Pemesanan & Pembelian Mobil
           </h3>
           <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-            Transaksi aman langsung terhubung dengan penjual terverifikasi
+            Simpan simulasi pemesanan untuk dibahas bersama penjual. Pembayaran tidak diproses di
+            website.
           </p>
         </div>
         <button
@@ -933,7 +956,7 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z" />
               </svg>
-              {sellerPhone}
+              {sellerPhone || "Belum dicantumkan"}
             </span>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { type Car, type Purchase } from "@/components/store-provider";
 import { fmtRp } from "@/lib/format";
 import { WhatsAppIcon } from "@/components/icons";
 import { getAdminWhatsApp } from "@/lib/config";
+import { useToast } from "@/components/toast";
 
 interface ReceiptModalProps {
   car: Car;
@@ -14,6 +15,7 @@ interface ReceiptModalProps {
 }
 
 export function ReceiptModal({ car, purchase, onClose }: ReceiptModalProps) {
+  const { toast } = useToast();
   const dateFormatted = React.useMemo(() => {
     const d = new Date(purchase.ts || Date.now());
     return d.toLocaleDateString("id-ID", {
@@ -49,11 +51,11 @@ export function ReceiptModal({ car, purchase, onClose }: ReceiptModalProps) {
           ? "Janji Temu Inspeksi (COD)"
           : "Ambil di Showroom";
 
-    return `*NOTA PEMESANAN KENDARAAN — AUTOBUYCARS*
+    return `*RINGKASAN SIMULASI KENDARAAN AUTOBUYCARS*
 ---------------------------------------
 No. Invoice : *#${purchase.invoiceNumber}*
 Tanggal     : ${dateFormatted}
-Status      : *${isBooking ? "BOOKING DIKONFIRMASI" : isCredit ? "PENGAJUAN KREDIT" : "LUNAS"}*
+Status      : *${isBooking ? "SIMULASI BOOKING" : isCredit ? "SIMULASI KREDIT" : "SIMULASI TUNAI"}*
 
 *DETAIL KENDARAAN:*
 • Unit       : *${car.title}* (${car.year})
@@ -69,7 +71,7 @@ ${purchase.address ? `• Alamat     : ${purchase.address}\n` : ""}${purchase.no
 • Nama       : *${purchase.name}*
 • No. Kontak : ${purchase.phone}
 
-Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyCars. Mohon konfirmasi jadwal cek fisik / serah terima unit. Terima kasih!`;
+Halo Penjual, saya membuat simulasi untuk mobil ini di AutoBuyCars. Belum ada pembayaran atau pemesanan yang dikonfirmasi. Saya ingin membahas ketersediaan unit dan rincian biayanya.`;
   }, [car, purchase, dateFormatted]);
 
   const openWhatsApp = () => {
@@ -79,6 +81,10 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
     }
     if (!cleanPhone.startsWith("62") && cleanPhone.length > 0) {
       cleanPhone = "62" + cleanPhone;
+    }
+    if (!/^62\d{8,13}$/.test(cleanPhone)) {
+      toast("Nomor penjual belum tersedia. Hubungi admin melalui chat.");
+      return;
     }
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -132,7 +138,7 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
               }`}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-current" />
-              {isBooking ? "BOOKING TERKONFIRMASI" : isCredit ? "PENGAJUAN KREDIT" : "LUNAS"}
+              {isBooking ? "Simulasi booking" : isCredit ? "Simulasi kredit" : "Simulasi tunai"}
             </span>
             <button
               onClick={onClose}
@@ -154,7 +160,7 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
         <div className="mt-5 grid grid-cols-2 gap-4 border-b border-gray-100 pb-5 text-xs sm:grid-cols-4 print:border-gray-200 dark:border-zinc-800">
           <div>
             <p className="text-[10px] uppercase font-semibold text-gray-400 dark:text-zinc-500">
-              No. Invoice
+              Nomor simulasi
             </p>
             <p className="mt-0.5 font-mono font-bold text-black dark:text-white">
               #{purchase.invoiceNumber}
@@ -162,7 +168,7 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
           </div>
           <div>
             <p className="text-[10px] uppercase font-semibold text-gray-400 dark:text-zinc-500">
-              Tanggal Transaksi
+              Tanggal simulasi
             </p>
             <p className="mt-0.5 font-medium text-black dark:text-white">{dateFormatted}</p>
           </div>
@@ -195,6 +201,8 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
           {car.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
+              width={112}
+              height={80}
               src={car.image}
               alt={car.title}
               className="h-20 w-28 shrink-0 rounded-xl object-cover shadow-xs"
@@ -212,8 +220,10 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
               {car.title}
             </h4>
             <p className="text-xs text-gray-500 dark:text-zinc-400">
-              {car.km ? `${car.km.toLocaleString("id-ID")} km` : "Km Rendah"} • Lokasi:{" "}
-              {car.location || "Indonesia"}
+              {Number.isFinite(car.km)
+                ? `${car.km.toLocaleString("id-ID")} km`
+                : "Kilometer belum diisi"}{" "}
+              • Lokasi: {car.location || "Indonesia"}
             </p>
           </div>
           <div className="mt-3 sm:mt-0 sm:text-right">
@@ -259,27 +269,19 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
               </div>
             )}
 
-            <div className="flex justify-between text-gray-600 dark:text-zinc-300">
-              <span>Garansi Mesin & Transmisi 1 Tahun</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                GRATIS (Diskon 100%)
-              </span>
-            </div>
-            <div className="flex justify-between text-gray-600 dark:text-zinc-300">
-              <span>Biaya Administrasi & Verifikasi Dokumen</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                GRATIS (Promo ABC)
-              </span>
-            </div>
+            <p className="text-gray-600 dark:text-zinc-300">
+              Biaya administrasi, asuransi, garansi, dan biaya lainnya belum termasuk. Tanyakan
+              rinciannya kepada penjual.
+            </p>
 
             <div className="border-t border-dashed border-gray-200 pt-2.5 dark:border-zinc-800">
               <div className="flex justify-between items-baseline">
                 <span className="text-sm font-bold text-black dark:text-white">
                   {isBooking
-                    ? "Total Dibayarkan Saat Ini"
+                    ? "Perkiraan tanda jadi"
                     : isCredit
-                      ? "Total Uang Muka (DP) Saat Ini"
-                      : "Total Pembayaran"}
+                      ? "Perkiraan uang muka"
+                      : "Perkiraan pembayaran tunai"}
                 </span>
                 <span className="text-lg font-black tracking-tight text-emerald-600 dark:text-emerald-400">
                   {fmtRp(amountPaidNow)}
@@ -325,26 +327,28 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
               Data Penjual / Showroom
             </h6>
             <p className="mt-1 font-bold text-black dark:text-white">
-              Dealer Terverifikasi AutoBuyCars
+              {car.sellerName || "Penjual pada listing"}
             </p>
-            <p className="text-gray-500 dark:text-zinc-400">WhatsApp: {sellerPhone}</p>
+            <p className="text-gray-500 dark:text-zinc-400">
+              WhatsApp: {sellerPhone || "Belum dicantumkan"}
+            </p>
             <p className="mt-1 text-gray-600 dark:text-zinc-300">
               <span className="font-semibold text-black dark:text-white">Lokasi Unit:</span>{" "}
               {car.location || "Indonesia"}
             </p>
-            <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-              ✓ Garansi Keaslian Dokumen BPKB & STNK
-            </div>
+            <p className="mt-2 text-gray-600 dark:text-zinc-300">
+              Periksa kondisi kendaraan dan dokumen langsung bersama penjual.
+            </p>
           </div>
         </div>
         <div className="mt-6 flex flex-col gap-2.5 sm:flex-row print:hidden">
           <button
             type="button"
             onClick={openWhatsApp}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#20BA5A] active:scale-95"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#137a3b] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#106532] active:scale-95"
           >
             <WhatsAppIcon className="h-5 w-5" />
-            Kirim Nota ke WhatsApp Penjual
+            Bahas simulasi via WhatsApp
           </button>
           <button
             type="button"
@@ -364,7 +368,7 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
                 d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
               />
             </svg>
-            Cetak / Simpan Nota (PDF)
+            Cetak / Simpan simulasi (PDF)
           </button>
           <button
             type="button"

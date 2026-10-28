@@ -6,10 +6,8 @@ import { CarCard } from "@/components/car-card";
 import { SellToolbar, useModals } from "@/components/sell-shared";
 import { useStore } from "@/components/store-provider";
 import { useRole } from "@/components/role-provider";
-import { WhatsAppContact } from "@/components/whatsapp-contact";
 import { EmptyState } from "@/components/ui";
 import { Icon } from "@/components/icons";
-import { config } from "@/lib/config";
 
 export default function JualPage() {
   const { role, permissions, authChecked } = useRole();
@@ -47,12 +45,12 @@ export default function JualPage() {
           </svg>
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-black sm:text-3xl dark:text-white">
-          Akses Khusus Dealer & Penjual
+          Pengelolaan listing untuk admin
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-zinc-400">
           {role === "guest"
-            ? "Anda belum login. Silakan masuk atau mendaftar sebagai Dealer untuk dapat mengunggah dan mengelola listing mobil."
-            : "Akun Anda saat ini memiliki peran Pembeli (Buyer). Fitur memasang listing mobil khusus untuk Dealer dan Administrator."}
+            ? "Masuk dengan akun administrator untuk menambahkan dan mengelola listing mobil."
+            : "Akun pembeli dapat mencari mobil, menyimpan favorit, dan menghubungi admin. Listing dikelola oleh administrator."}
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -62,13 +60,9 @@ export default function JualPage() {
           >
             Lihat Katalog Mobil
           </Link>
-          <WhatsAppContact
-            phoneNumber={config.whatsapp.phoneNumber}
-            message={`Halo Admin AutoBuyCars, saya ingin mendaftar dan memverifikasi akun saya sebagai Dealer mobil.`}
-            className="w-full justify-center px-5 py-2.5 text-sm font-semibold sm:w-auto"
-          >
-            Daftar Menjadi Dealer
-          </WhatsAppContact>
+          <Link href={role === "guest" ? "/login" : "/chat"} className="button-secondary">
+            {role === "guest" ? "Masuk ke akun" : "Hubungi admin"}
+          </Link>
         </div>
       </div>
     );

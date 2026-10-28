@@ -200,8 +200,8 @@ export default function RegisterPage() {
 
   return (
     <AuthShell
-      title="Buat Akun Pembeli Baru"
-      subtitle="Daftar akun secara instan untuk mulai mencari, menawar, dan membeli mobil impian Anda."
+      title="Buat akun pembeli."
+      subtitle="Simpan mobil favorit, hubungi admin, dan catat simulasi pembelianmu."
       badge="Pendaftaran Akun Pembeli"
     >
       {error ? (
@@ -239,7 +239,7 @@ export default function RegisterPage() {
             type="text"
             autoComplete="name"
             required
-            placeholder="Auto Enthusiast"
+            placeholder="Nama lengkapmu"
             className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 transition-colors focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:focus:border-white dark:focus:ring-white"
           />
         </div>

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --color-black: #0f172a;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+  --color-black: #1d1d1f;
   --color-emerald-50: var(--color-sky-50);
   --color-emerald-100: var(--color-sky-100);
   --color-emerald-200: var(--color-sky-200);
@@ -16,26 +16,26 @@
   --color-emerald-950: var(--color-sky-950);
 }
 :root {
-  --canvas: #f7fafc;
+  --canvas: #f5f5f7;
   --panel: #fff;
-  --ink: #172b40;
-  --muted: #64768b;
-  --line: #e5edf4;
-  --accent: #0369a1;
-  --accent-soft: #eaf6ff;
+  --ink: #1d1d1f;
+  --muted: #606067;
+  --line: #dedee3;
+  --accent: #0066cc;
+  --accent-soft: #eef5fc;
   --sidebar: #fff;
-  --hero: #edf7ff;
+  --hero: #f5f5f7;
 }
 html.dark {
-  --canvas: #0b1220;
-  --panel: #111d2e;
-  --ink: #e3edf8;
-  --muted: #9aadc4;
-  --line: #23344b;
-  --accent: #7dd3fc;
-  --accent-soft: #162e46;
-  --sidebar: #0e1929;
-  --hero: #12283f;
+  --canvas: #141416;
+  --panel: #1d1d1f;
+  --ink: #f5f5f7;
+  --muted: #b0b0b7;
+  --line: #38383d;
+  --accent: #86bfff;
+  --accent-soft: #202f40;
+  --sidebar: #1d1d1f;
+  --hero: #202023;
   color-scheme: dark;
 }
 * {
@@ -2671,5 +2671,251 @@ html.dark .buyer-shell {
 @media (pointer: coarse) {
   .chat-key-hint {
     display: none;
+  }
+}
+
+/* Neutral showroom surfaces keep vehicle photography and prices in focus. */
+.buyer-shell {
+  --canvas: #f5f5f7;
+  --line: #dedee3;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+}
+html.dark .buyer-shell {
+  --canvas: #141416;
+  --panel: #1d1d1f;
+  --ink: #f5f5f7;
+  --muted: #b0b0b7;
+  --line: #38383d;
+  --accent: #86bfff;
+  --accent-soft: #202f40;
+}
+.buyer-shell .workspace-header {
+  min-height: 64px;
+  height: 64px;
+  padding-inline: max(24px, calc((100vw - 1200px) / 2));
+  border-bottom: 1px solid var(--line);
+}
+.buyer-brand {
+  font-size: 18px;
+  letter-spacing: -0.7px;
+}
+.buyer-brand .brand-symbol {
+  background: none;
+  border: 0;
+  color: var(--ink);
+  width: 28px;
+}
+.buyer-top-nav {
+  gap: 12px;
+}
+.buyer-top-nav a {
+  font-size: 12px;
+  border-radius: 0;
+  padding: 12px 8px;
+}
+.buyer-top-nav a:hover,
+.buyer-top-nav a[aria-current="page"] {
+  background: none;
+  color: var(--ink);
+}
+.buyer-top-nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 7px;
+}
+.buyer-shell .app-content {
+  max-width: 1280px;
+  padding-top: 0;
+}
+.buyer-catalog .catalog-hero {
+  padding: 0;
+  margin-bottom: 20px;
+  background: var(--panel);
+  border-radius: 0;
+}
+.catalog-intro {
+  text-align: center;
+  padding: 58px 24px 38px;
+}
+.buyer-catalog .catalog-hero h1 {
+  font-size: clamp(42px, 5vw, 68px);
+  line-height: 1.04;
+  letter-spacing: -2.8px;
+  font-weight: 650;
+  margin-bottom: 20px;
+}
+.buyer-catalog .catalog-hero .catalog-intro > p {
+  display: block;
+  font-size: clamp(16px, 1.7vw, 21px);
+  line-height: 1.5;
+  color: var(--muted);
+}
+.catalog-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  margin-top: 26px;
+}
+.buyer-shell .button-primary {
+  background: #0066cc;
+  color: #fff;
+  border-color: #0066cc;
+  box-shadow: none;
+  font-weight: 500;
+  padding-inline: 23px;
+}
+.buyer-shell .button-primary:hover {
+  background: #005bb5;
+  box-shadow: none;
+}
+.catalog-text-link {
+  color: var(--accent);
+  font-size: 15px;
+  padding-block: 12px;
+}
+.catalog-text-link:hover {
+  text-decoration: underline;
+}
+.catalog-text-link span {
+  margin-left: 6px;
+  font-size: 22px;
+  vertical-align: -1px;
+}
+.catalog-hero-image {
+  position: relative;
+  height: 310px;
+  overflow: hidden;
+  background: #a7aaac;
+}
+.catalog-hero-image img {
+  object-position: center 70%;
+}
+.catalog-hero-image > span {
+  position: absolute;
+  bottom: 22px;
+  left: 28px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: #1d1d1f;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+.buyer-catalog .catalog-demo-note {
+  background: var(--panel);
+  color: var(--muted);
+  border: 0;
+  border-radius: 0;
+  padding: 12px 18px;
+  text-align: center;
+  font-size: 12px;
+}
+.buyer-catalog .catalog-results-heading {
+  padding-top: 36px;
+  margin-bottom: 24px;
+  scroll-margin-top: 88px;
+}
+.buyer-catalog .catalog-results-heading h2 {
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -1px;
+}
+.buyer-catalog .buyer-search {
+  padding: 26px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  box-shadow: none;
+}
+.buyer-catalog .catalog-browse-options {
+  background: var(--panel);
+  border-color: var(--line);
+  border-radius: 12px;
+  box-shadow: none;
+}
+.buyer-shell .surface {
+  box-shadow: none;
+}
+.buyer-car-card {
+  border: 0;
+  border-radius: 16px;
+  box-shadow: none;
+}
+.buyer-car-card > .relative > button > div {
+  height: 240px;
+}
+.buyer-car-card h3 {
+  font-size: 18px;
+}
+.buyer-car-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+.buyer-shell .discovery-help {
+  margin-top: 48px;
+  padding: 32px;
+  background: var(--panel);
+  border: 0;
+  border-radius: 16px;
+}
+.buyer-shell .workspace-footer {
+  margin-top: 48px;
+  color: var(--muted);
+}
+.buyer-shell .footer-status i {
+  display: none;
+}
+.buyer-catalog > p:last-of-type {
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (max-width: 1023px) {
+  .buyer-shell .workspace-header {
+    padding-inline: 20px;
+  }
+}
+@media (max-width: 639px) {
+  .buyer-shell .workspace-header {
+    height: 60px;
+    min-height: 60px;
+    padding-inline: 16px;
+  }
+  .buyer-shell .app-content {
+    padding-top: 0;
+  }
+  .catalog-intro {
+    padding: 42px 18px 30px;
+  }
+  .buyer-catalog .catalog-hero h1 {
+    font-size: 42px;
+    letter-spacing: -1.8px;
+  }
+  .catalog-hero-actions {
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .catalog-hero-image {
+    height: 250px;
+  }
+  .catalog-hero-image > span {
+    left: 16px;
+    bottom: 16px;
+    font-size: 11px;
+  }
+  .buyer-catalog .catalog-results-heading {
+    padding-top: 20px;
+  }
+  .buyer-catalog .buyer-search {
+    padding: 18px;
+  }
+  .buyer-shell .discovery-help {
+    padding: 24px;
+  }
+  .buyer-catalog input,
+  .buyer-catalog select {
+    min-width: 0;
+  }
+  .buyer-catalog .catalog-price-options {
+    flex-wrap: wrap;
+    overflow: visible;
   }
 }

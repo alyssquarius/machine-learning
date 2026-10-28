@@ -15,6 +15,8 @@ export function CarGallery({
     <section aria-label="Galeri foto kendaraan" className="space-y-3">
       <div className="relative overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
         <img
+          width={960}
+          height={600}
           src={photos[index] || "/images/car-hero.jpg"}
           alt={`${car.title}, foto ${index + 1}`}
           className="aspect-[16/10] w-full object-cover"
@@ -58,7 +60,13 @@ export function CarGallery({
               onClick={() => setActive(i)}
               className={`h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${i === index ? "border-sky-500" : "border-transparent"}`}
             >
-              <img src={src} alt="" className="h-full w-full object-cover" />
+              <img
+                src={src}
+                alt=""
+                width={160}
+                height={100}
+                className="h-full w-full object-cover"
+              />
             </button>
           ))}
         </div>

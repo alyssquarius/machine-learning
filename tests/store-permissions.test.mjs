@@ -120,6 +120,18 @@ test("buyer favourites retain their count and unrelated accounts do not inherit 
   s.setOwner("unrelated", "buyer");
   assert.equal(s.history().filter((h) => h.type === "beli").length, 0);
 });
+test("history exports quote cells and neutralize spreadsheet formulas", () => {
+  const s = store();
+  s.setOwner("buyer", "buyer");
+  s.log("favorit", '=HYPERLINK("https://example.com","click")');
+  s.log("favorit", "+SUM(1,2)");
+  const csv = s.exportHistoryCSV();
+  assert.ok(csv.includes('"\'=HYPERLINK(""https://example.com"",""click"")"'));
+  assert.ok(csv.includes('"\'+SUM(1,2)"'));
+  assert.equal(s.history().length, 2);
+  s.clearHistory();
+  assert.equal(s.history().length, 0);
+});
 test.after(() => {
   delete globalThis.localStorage;
   delete globalThis.window;

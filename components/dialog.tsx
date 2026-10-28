@@ -29,6 +29,15 @@ export function Dialog({
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const panel = ref.current;
+    const backdrop = panel?.parentElement;
+    const background = Array.from(document.body.children)
+      .filter(
+        (element): element is HTMLElement => element instanceof HTMLElement && element !== backdrop,
+      )
+      .map((element) => ({ element, inert: element.inert }));
+    background.forEach(({ element }) => {
+      element.inert = true;
+    });
     const focusables = () =>
       Array.from(
         panel?.querySelectorAll<HTMLElement>(
@@ -64,6 +73,9 @@ export function Dialog({
     panel?.addEventListener("keydown", key);
     return () => {
       document.body.style.overflow = overflow;
+      background.forEach(({ element, inert }) => {
+        element.inert = inert;
+      });
       panel?.removeEventListener("keydown", key);
       previous?.focus();
     };

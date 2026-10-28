@@ -85,20 +85,25 @@ export function ChatClient() {
     let stopped = false;
     async function load() {
       if (document.hidden) return;
-      const { data, error: failure } = await client
-        .from("support_messages")
-        .select("id,thread_id,sender_id,body,created_at")
-        .eq("thread_id", selected)
-        .order("created_at", { ascending: false })
-        .order("id", { ascending: false })
-        .limit(limit);
-      if (stopped) return;
-      if (failure) {
-        setMessageError("Pesan belum dapat dimuat. Coba muat ulang.");
-        return;
+      try {
+        const { data, error: failure } = await client
+          .from("support_messages")
+          .select("id,thread_id,sender_id,body,created_at")
+          .eq("thread_id", selected)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .limit(limit);
+        if (stopped) return;
+        if (failure) {
+          setMessageError("Pesan belum dapat dimuat. Coba muat ulang.");
+          return;
+        }
+        setMessageError("");
+        setMessages((data || []).reverse());
+      } catch {
+        if (!stopped)
+          setMessageError("Koneksi terputus. Pesan belum dapat dimuat; coba muat ulang.");
       }
-      setMessageError("");
-      setMessages((data || []).reverse());
     }
     void load();
     const timer = setInterval(load, 3000);
@@ -118,28 +123,35 @@ export function ChatClient() {
     const key = currentSession.current;
     setStarting(true);
     setError("");
-    const { data, error: failure } = await client
-      .from("support_threads")
-      .insert({
-        buyer_id: user.id,
-        buyer_name: String(
-          user.user_metadata?.full_name || user.email?.split("@")[0] || "Pembeli",
-        ).slice(0, 80),
-      })
-      .select()
-      .single();
-    if (currentSession.current !== key) return;
-    setStarting(false);
-    if (failure) {
-      if (failure.code === "23505") {
-        setRetry((n) => n + 1);
+    try {
+      const { data, error: failure } = await client
+        .from("support_threads")
+        .insert({
+          buyer_id: user.id,
+          buyer_name: String(
+            user.user_metadata?.full_name || user.email?.split("@")[0] || "Pembeli",
+          ).slice(0, 80),
+        })
+        .select()
+        .single();
+      if (currentSession.current !== key) return;
+      setStarting(false);
+      if (failure) {
+        if (failure.code === "23505") {
+          inbox.refresh();
+          return;
+        }
+        setError("Percakapan belum dapat dibuat. Silakan coba lagi.");
         return;
       }
-      setError("Percakapan belum dapat dibuat. Silakan coba lagi.");
-      return;
+      inbox.refresh();
+      setSelected(data.id);
+    } catch {
+      if (currentSession.current === key)
+        setError("Koneksi terputus. Percakapan belum dibuat; coba lagi.");
+    } finally {
+      if (currentSession.current === key) setStarting(false);
     }
-    inbox.refresh();
-    setSelected(data.id);
   }
   async function send(event: React.FormEvent) {
     event.preventDefault();
@@ -149,29 +161,36 @@ export function ChatClient() {
     const threadId = selected;
     setSending(true);
     setMessageError("");
-    const { data, error: failure } = await client
-      .from("support_messages")
-      .insert({ thread_id: threadId, sender_id: user.id, body })
-      .select()
-      .single();
-    if (currentSession.current !== key) return;
-    setSending(false);
-    if (failure) {
-      setMessageError(
-        "Pesan belum terkirim. Teks tetap tersimpan di kolom pesan; coba kirim lagi.",
+    try {
+      const { data, error: failure } = await client
+        .from("support_messages")
+        .insert({ thread_id: threadId, sender_id: user.id, body })
+        .select()
+        .single();
+      if (currentSession.current !== key) return;
+      setSending(false);
+      if (failure) {
+        setMessageError(
+          "Pesan belum terkirim. Teks tetap tersimpan di kolom pesan; coba kirim lagi.",
+        );
+        return;
+      }
+      setDraft("");
+      atBottom.current = true;
+      window.dispatchEvent(new Event("support-chat-refresh"));
+      setMessages((prev) =>
+        prev.some((m) => m.id === data.id)
+          ? prev
+          : [...prev, data].sort(
+              (a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
+            ),
       );
-      return;
+    } catch {
+      if (currentSession.current === key)
+        setMessageError("Koneksi terputus. Teks pesan tetap tersedia; coba kirim lagi.");
+    } finally {
+      if (currentSession.current === key) setSending(false);
     }
-    setDraft("");
-    atBottom.current = true;
-    window.dispatchEvent(new Event("support-chat-refresh"));
-    setMessages((prev) =>
-      prev.some((m) => m.id === data.id)
-        ? prev
-        : [...prev, data].sort(
-            (a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
-          ),
-    );
     // Refresh other inboxes through the next polling cycle. No optimistic success before DB acknowledgement.
   }
   if (authChecked && !user)

@@ -40,13 +40,22 @@ export default function PengaturanPage() {
   const { theme, setTheme } = useTheme();
 
   const [saved, setSaved] = React.useState(false);
-  const [user, setUser] = React.useState({ name: "User", email: "user@example.com", id: "" });
+  const [user, setUser] = React.useState({ name: "Memuat akun…", email: "", id: "" });
   const [displayName, setDisplayName] = React.useState("");
   const [avatarUrl, setAvatarUrl] = React.useState("");
   const [target, setTarget] = React.useState("10");
 
   const dnTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const tgTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  React.useEffect(
+    () => () => {
+      if (dnTimer.current) clearTimeout(dnTimer.current);
+      if (tgTimer.current) clearTimeout(tgTimer.current);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+    },
+    [],
+  );
 
   React.useEffect(() => {
     setDisplayName(store.getDisplayName());
@@ -103,7 +112,8 @@ export default function PengaturanPage() {
             setAvatarUrl(safeMeta);
           }
         }
-      });
+      })
+      .catch(() => toast("Informasi akun belum dapat dimuat. Coba buka ulang halaman ini."));
 
     const onAvatarUpdated = (e: Event) => {
       const url = (e as CustomEvent).detail as string;
@@ -116,7 +126,8 @@ export default function PengaturanPage() {
 
   function flash() {
     setSaved(true);
-    setTimeout(() => setSaved(false), 1800);
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    savedTimer.current = setTimeout(() => setSaved(false), 1800);
   }
 
   function onDisplayName(v: string) {
@@ -162,6 +173,7 @@ export default function PengaturanPage() {
     const digits = v.replace(/[^\d]/g, "").slice(0, 3);
     setTarget(digits);
     if (tgTimer.current) clearTimeout(tgTimer.current);
+    if (!digits) return;
     tgTimer.current = setTimeout(() => {
       const n = Math.max(1, Math.min(100, Math.round(Number(digits) || 0)));
       if (!n) return;
@@ -173,6 +185,10 @@ export default function PengaturanPage() {
 
   function saveTargetNow() {
     if (tgTimer.current) clearTimeout(tgTimer.current);
+    if (!target || Number(target) < 1) {
+      toast("Target minimal 1.");
+      return;
+    }
     const n = Math.max(1, Math.min(100, Math.round(Number(target) || 0)));
     if (!n) {
       toast("Target minimal 1.");
@@ -243,7 +259,7 @@ export default function PengaturanPage() {
                 Status Keanggotaan Akun
               </h2>
               <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-                Informasi hak akses dan status resmi akun Anda di platform AutoBuyCars.
+                Peran akun menentukan fitur yang dapat kamu gunakan di AutoBuyCars.
               </p>
             </div>
             <span className="self-start sm:self-auto rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
@@ -256,7 +272,7 @@ export default function PengaturanPage() {
           {role === "admin" ? (
             <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
               <p className="text-sm font-semibold text-amber-900 dark:text-amber-300">
-                Akun Administrator Resmi
+                Akun administrator
               </p>
               <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                 Akun ini dapat mengelola inventaris, keputusan penawaran, dan pengaturan workspace.
@@ -460,7 +476,7 @@ export default function PengaturanPage() {
             <p className="mt-2 text-[11px] text-gray-500 dark:text-zinc-400">
               {sisa === 0
                 ? `Target ${targetNum} unit tercapai bulan ini!`
-                : `${soldMonth}/${targetNum} terjual bulan ini — ${sisa} lagi menuju target.`}
+                : `${soldMonth}/${targetNum} terjual bulan ini, ${sisa} lagi menuju target.`}
             </p>
           </div>
         )}
@@ -593,7 +609,7 @@ export default function PengaturanPage() {
               }}
               className="text-xs font-semibold text-gray-500 hover:text-black dark:text-zinc-400 dark:hover:text-white"
             >
-              Bersihkan Cache Lokal
+              Hapus listing dan aktivitas lokal
             </button>
           </div>
         </div>

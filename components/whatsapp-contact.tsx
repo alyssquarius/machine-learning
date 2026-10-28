@@ -3,6 +3,7 @@
 import * as React from "react";
 import { WhatsAppIcon } from "./icons";
 import { getAdminWhatsApp } from "@/lib/config";
+import { useToast } from "./toast";
 
 interface WhatsAppContactProps {
   phoneNumber?: string;
@@ -17,6 +18,7 @@ export function WhatsAppContact({
   className = "",
   children,
 }: WhatsAppContactProps) {
+  const { toast } = useToast();
   const handleClick = () => {
     const rawPhone = phoneNumber || getAdminWhatsApp();
     let cleanPhone = rawPhone.replace(/\D/g, "");
@@ -27,6 +29,10 @@ export function WhatsAppContact({
       cleanPhone = "62" + cleanPhone;
     }
 
+    if (!/^62\d{8,13}$/.test(cleanPhone)) {
+      toast("Nomor WhatsApp belum tersedia. Gunakan Chat Admin untuk menanyakan mobil ini.");
+      return;
+    }
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
@@ -35,7 +41,7 @@ export function WhatsAppContact({
   return (
     <button
       onClick={handleClick}
-      className={`inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#20BA5A] active:scale-97 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 dark:focus:ring-offset-zinc-950 ${className}`}
+      className={`inline-flex items-center gap-2 rounded-lg bg-[#137a3b] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#106532] active:scale-97 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#137a3b] ${className}`}
     >
       <WhatsAppIcon className="h-5 w-5" />
       {children || "Hubungi via WhatsApp"}

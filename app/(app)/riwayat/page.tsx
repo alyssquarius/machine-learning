@@ -36,6 +36,12 @@ export default function RiwayatPage() {
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [receiptCar, setReceiptCar] = React.useState<Car | null>(null);
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  React.useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   function onFilterChange(v: string) {
     setFilterRaw(v);
@@ -44,7 +50,7 @@ export default function RiwayatPage() {
   }
 
   const total = store.history().length;
-  const list = React.useMemo(() => {
+  const list = (() => {
     let out = store.history();
     const f = filter;
     if (f === "all") return out;
@@ -60,17 +66,16 @@ export default function RiwayatPage() {
       out = out.filter((h) => h.type === f);
     }
     return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.cars, filter]);
+  })();
 
   function exportCSV() {
     const csv = store.exportHistoryCSV();
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "riwayat-autobuycars.csv";
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     toast("Riwayat diunduh sebagai CSV.");
   }
 
@@ -94,26 +99,30 @@ export default function RiwayatPage() {
       <div className="mb-6">
         <div className="flex flex-wrap gap-2">
           <button
+            disabled={!total}
             onClick={() => {
               if (!total) return;
               if (!confirm("Hapus semua riwayat?")) return;
               store.clearHistory();
               toast("Riwayat dihapus.");
             }}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-500 transition hover:border-red-300 hover:text-red-600 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-400"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-500 transition hover:border-red-300 hover:text-red-600 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-400"
           >
             Hapus
           </button>
-          <input
-            aria-label="Filter jenis aktivitas"
-            value={filterRaw}
-            onChange={(e) => onFilterChange(e.target.value)}
-            list="hist-filter-list"
-            type="text"
-            placeholder="Ketik & pilih aktivitas..."
-            autoComplete="off"
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition appearance-none placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-white dark:focus:ring-white"
-          />
+          <label className="history-filter-label">
+            <span>Jenis aktivitas atau kata kunci</span>
+            <input
+              aria-label="Filter jenis aktivitas"
+              value={filterRaw}
+              onChange={(e) => onFilterChange(e.target.value)}
+              list="hist-filter-list"
+              type="text"
+              placeholder="Ketik & pilih aktivitas..."
+              autoComplete="off"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition appearance-none placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-white dark:focus:ring-white"
+            />
+          </label>
           <datalist id="hist-filter-list">
             {HIST_OPTIONS.map((o) => (
               <option key={o.id} value={o.label} />
@@ -125,8 +134,12 @@ export default function RiwayatPage() {
         {list.length === 0 ? (
           <EmptyState
             icon="history"
-            title="Ruang untuk perjalanan barumu."
-            description="Aktivitas akan muncul setelah kamu menyimpan favorit, menambahkan listing, atau membuat penawaran."
+            title={total ? "Tidak ada aktivitas yang cocok." : "Belum ada aktivitas."}
+            description={
+              total
+                ? "Ubah jenis aktivitas atau kata kunci untuk melihat catatan lainnya."
+                : "Aktivitas akan muncul setelah kamu menyimpan favorit, menambahkan listing, atau membuat penawaran."
+            }
             action={{ href: "/beli", label: "Jelajahi katalog" }}
           />
         ) : (
@@ -183,7 +196,7 @@ export default function RiwayatPage() {
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                   />
                                 </svg>
-                                Lihat Nota Resmi
+                                Lihat ringkasan simulasi
                               </button>
                             </>
                           );

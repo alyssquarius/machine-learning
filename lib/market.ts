@@ -10,10 +10,10 @@ export const TENORS = [12, 24, 36, 48, 60];
 
 export const PRICE_PRESETS = [
   { id: "all", label: "Semua harga", min: "", max: "" },
-  { id: "u200", label: "< Rp 200 jt", min: "", max: 200000000 },
+  { id: "u200", label: "Sampai Rp 200 jt", min: "", max: 200000000 },
   { id: "200-400", label: "Rp 200–400 jt", min: 200000000, max: 400000000 },
   { id: "400-600", label: "Rp 400–600 jt", min: 400000000, max: 600000000 },
-  { id: "a600", label: "> Rp 600 jt", min: 600000000, max: "" },
+  { id: "a600", label: "Mulai Rp 600 jt", min: 600000000, max: "" },
 ] as const;
 
 export const HIST_OPTIONS = [

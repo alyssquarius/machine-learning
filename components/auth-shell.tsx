@@ -24,23 +24,19 @@ export function AuthHero({ quote, name, role }: { quote?: string; name?: string;
         className="object-cover"
       />
       <div className="auth-hero-shade" />
-      <div className="auth-hero-top">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />
-        THE ROAD IS YOURS
-      </div>
+      <div className="auth-hero-top">AutoBuyCars</div>
       <div className="auth-hero-copy">
-        <p className="hero-eyebrow">SETIAP PERJALANAN PUNYA CERITA</p>
         <h2>
-          Lebih dari mobil.
+          Pilih mobilnya.
           <br />
-          <span>Awal cerita baru.</span>
+          Rencanakan anggarannya.
         </h2>
         <p>
           {quote ||
-            "Temukan pilihan yang tepat, rencanakan langkahmu, dan nikmati perjalanan berikutnya bersama AutoBuyCars."}
+            "Simpan pilihan mobil, bandingkan spesifikasi, dan tanyakan detailnya kepada admin."}
         </p>
         <div className="auth-hero-bottom">
-          <span>{name || "Temukan. Rencanakan. Melangkah."}</span>
+          <span>{name || "Katalog mobil & simulasi cicilan"}</span>
           <span>{role || "AutoBuyCars / Indonesia"}</span>
         </div>
       </div>

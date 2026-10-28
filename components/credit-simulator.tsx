@@ -113,7 +113,7 @@ export function CreditSimulator({ initialPrice = 250000000 }: { initialPrice?: n
           <div className="my-4 flex flex-wrap justify-between gap-2 text-sm font-semibold">
             <span>{dp}% dari harga mobil</span>
             <span className="text-sky-700 dark:text-sky-300">
-              {priceValid ? fmtRp((amount * dp) / 100) : "—"}
+              {priceValid ? fmtRp((amount * dp) / 100) : "Belum dihitung"}
             </span>
           </div>
           <input
@@ -163,7 +163,7 @@ export function CreditSimulator({ initialPrice = 250000000 }: { initialPrice?: n
             open={!rateValid || undefined}
           >
             <summary className="cursor-pointer text-xs font-semibold">
-              Asumsi bunga: {rate || "—"}% per tahun{" "}
+              Asumsi bunga: {rate || "0"}% per tahun{" "}
               <span className="font-normal text-slate-500">· Ubah</span>
             </summary>
             <label htmlFor="credit-rate" className="mt-4 block text-xs font-semibold">
@@ -197,7 +197,7 @@ export function CreditSimulator({ initialPrice = 250000000 }: { initialPrice?: n
             <p className="text-xs font-semibold text-sky-200">PERKIRAAN CICILAN</p>
             <output aria-live="polite" className="mt-4 block text-3xl font-semibold tracking-tight">
               <span key={`${valid}-${result.installment}`} className="credit-value-enter block">
-                {valid ? fmtRp(result.installment) : "—"}
+                {valid ? fmtRp(result.installment) : "Belum dihitung"}
               </span>
             </output>
             <p className="mt-1 text-xs text-sky-100">
@@ -216,7 +216,7 @@ export function CreditSimulator({ initialPrice = 250000000 }: { initialPrice?: n
                   className={`flex justify-between gap-4 ${i === 4 ? "border-t border-white/20 pt-4 font-semibold" : ""}`}
                 >
                   <dt className="text-sky-100">{label}</dt>
-                  <dd className="text-right">{valid ? value : "—"}</dd>
+                  <dd className="text-right">{valid ? value : "Belum dihitung"}</dd>
                 </div>
               ))}
             </dl>

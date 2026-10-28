@@ -180,19 +180,26 @@ export default function VerifyEmailPage() {
       }
     >
       {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+        <div
+          role="alert"
+          className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400"
+        >
           {error}
         </div>
       )}
 
       {resendSuccess && (
-        <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-400">
+        <div
+          role="status"
+          className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-400"
+        >
           Kode verifikasi baru telah dikirim!
         </div>
       )}
 
-      <div className="mb-8">
-        <div className="mb-4 flex justify-center gap-3" onPaste={handlePaste}>
+      <fieldset className="mb-8">
+        <legend className="mb-3 text-sm font-medium">Kode verifikasi 6 digit</legend>
+        <div className="otp-fields mb-4 flex justify-center gap-3" onPaste={handlePaste}>
           {code.map((digit, index) => (
             <input
               key={index}
@@ -200,6 +207,8 @@ export default function VerifyEmailPage() {
                 inputRefs.current[index] = el;
               }}
               type="text"
+              aria-label={`Digit ${index + 1} dari 6`}
+              autoComplete={index === 0 ? "one-time-code" : "off"}
               inputMode="numeric"
               maxLength={1}
               value={digit}
@@ -213,7 +222,7 @@ export default function VerifyEmailPage() {
         <p className="text-center text-sm text-gray-500 dark:text-zinc-400">
           Cek inbox atau folder spam email Anda
         </p>
-      </div>
+      </fieldset>
 
       <button
         onClick={handleVerify}

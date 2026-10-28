@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./refinements.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StoreProvider } from "@/components/store-provider";
 import { ToastProvider } from "@/components/toast";
@@ -10,9 +11,10 @@ export const metadata: Metadata = {
     default: "AutoBuyCars",
     template: "%s | AutoBuyCars",
   },
-  description: "Platform jual beli mobil terpercaya",
+  description:
+    "Cari mobil, simpan favorit, dan rencanakan anggaran dengan simulasi cicilan AutoBuyCars.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
     apple: "/favicon.png",
   },
 };

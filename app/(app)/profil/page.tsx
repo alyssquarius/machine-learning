@@ -254,7 +254,7 @@ export default function ProfilPage() {
             <div>
               <h2 className="text-sm font-semibold">Akunmu, dalam kendalimu.</h2>
               <p className="page-description !mt-1">
-                Ubah tema, pilih mode akun, dan kelola preferensi melalui halaman pengaturan.
+                Ubah tema, nama tampilan, dan preferensi melalui halaman pengaturan.
               </p>
               <a
                 href="/pengaturan"

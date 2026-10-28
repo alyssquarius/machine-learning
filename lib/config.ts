@@ -2,13 +2,12 @@ export const LS_ADMIN_WHATSAPP = "abc_admin_whatsapp";
 
 export const config = {
   whatsapp: {
-    // Nomor WhatsApp customer service bawaan (format: 62xxxx tanpa +)
-    phoneNumber: "6281234567890",
+    phoneNumber: process.env.NEXT_PUBLIC_ADMIN_WHATSAPP?.trim() || "",
     defaultMessage: "Halo, saya tertarik dengan AutoBuyCars",
   },
   app: {
     name: "AutoBuyCars",
-    description: "Platform jual beli mobil terpercaya",
+    description: "Katalog mobil dan simulasi cicilan AutoBuyCars",
   },
 } as const;
 

@@ -182,9 +182,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        searchRef.current?.focus();
+        const catalogSearch = document.getElementById("catalog-search");
+        if (catalogSearch) {
+          catalogSearch.scrollIntoView({ block: "center" });
+          catalogSearch.focus();
+        } else if (searchRef.current?.getClientRects().length) {
+          searchRef.current.focus();
+        } else {
+          router.push("/beli");
+        }
       }
       if (e.key === "Escape") {
+        if (notifOpen) document.getElementById("notif-button")?.focus();
+        else if (userOpen) document.getElementById("user-button")?.focus();
         setNotifOpen(false);
         setUserOpen(false);
         setMobileOpen(false);
@@ -196,7 +206,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       document.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKey);
     };
-  }, []);
+  }, [router, notifOpen, userOpen]);
 
   const isGuest = !user;
   const displayName = isGuest
@@ -387,7 +397,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="workspace-header">
           {buyerView ? (
             <div className="buyer-header-main">
-              <Link href="/beli" className="buyer-brand" aria-label="AutoBuyCars — Cari Mobil">
+              <Link href="/beli" className="buyer-brand" aria-label="AutoBuyCars, cari mobil">
                 <span className="brand-symbol">
                   <CarLogo className="h-6 w-6" />
                 </span>
@@ -403,6 +413,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     aria-current={pathname === n.href ? "page" : undefined}
                   >
                     {n.label}
+                    {n.href === "/favorit" && favCount > 0 ? (
+                      <span className="buyer-nav-count">{favCount}</span>
+                    ) : null}
+                    {n.href === "/chat" && chat.unread > 0 ? (
+                      <span className="buyer-nav-count">{chat.unread}</span>
+                    ) : null}
                   </Link>
                 ))}
                 <Link href="/simulasi" aria-current={pathname === "/simulasi" ? "page" : undefined}>
@@ -568,14 +584,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </div>
                   <div className="p-2">
                     {isGuest ? (
-                      <Link
-                        href="/login"
-                        className="dropdown-link"
-                        onClick={() => setUserOpen(false)}
-                      >
-                        <Icon name="user" />
-                        Masuk / Daftar
-                      </Link>
+                      <>
+                        <Link
+                          href="/login"
+                          className="dropdown-link"
+                          onClick={() => setUserOpen(false)}
+                        >
+                          <Icon name="user" />
+                          Masuk / Daftar
+                        </Link>
+                        <Link
+                          href="/simulasi"
+                          className="dropdown-link"
+                          onClick={() => setUserOpen(false)}
+                        >
+                          <Icon name="calculator" />
+                          Hitung cicilan
+                        </Link>
+                      </>
                     ) : (
                       <>
                         <Link
@@ -667,6 +693,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span>{n.label}</span>
               {n.href === "/favorit" && favCount > 0 ? (
                 <small aria-label={`${favCount} mobil favorit`}>{favCount}</small>
+              ) : null}
+              {n.href === "/chat" && chat.unread > 0 ? (
+                <small aria-label={`${chat.unread} pesan belum dibaca`}>{chat.unread}</small>
               ) : null}
             </Link>
           ))}

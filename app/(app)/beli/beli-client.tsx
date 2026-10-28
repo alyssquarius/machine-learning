@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { useStore, imageFor } from "@/components/store-provider";
@@ -340,10 +341,36 @@ export default function BeliClient() {
   return (
     <div className={role === "buyer" || role === "guest" ? "buyer-catalog" : ""}>
       <section className="hero-panel catalog-hero">
-        <div className="hero-photo" />
-        <p className="hero-eyebrow">KATALOG MOBIL</p>
-        <h1>Cari mobil dengan mudah.</h1>
-        <p>Cari nama mobil, pilih anggaran, lalu buka foto untuk melihat detail.</p>
+        <div className="catalog-intro">
+          <h1>
+            Mobil pilihanmu.
+            <br />
+            Cerita berikutnya.
+          </h1>
+          <p>
+            Temukan mobil yang cocok untuk keseharianmu.
+            <br className="hidden sm:block" /> Mulai dari model, kebutuhan, atau anggaran.
+          </p>
+          <div className="catalog-hero-actions">
+            <a href="#pilihan-mobil" className="button-primary">
+              Lihat pilihan mobil
+            </a>
+            <Link href="/simulasi" className="catalog-text-link">
+              Hitung cicilan <span aria-hidden="true">›</span>
+            </Link>
+          </div>
+        </div>
+        <div className="catalog-hero-image">
+          <Image
+            src="/images/car-hero.jpg"
+            alt="Detail bodi dan spoiler mobil sport putih"
+            fill
+            priority
+            sizes="(max-width: 639px) 100vw, 1200px"
+            className="object-cover"
+          />
+          <span>Setiap detail. Sebuah pilihan.</span>
+        </div>
       </section>
       {available.some((c) => c.isDemo) && (
         <p className="catalog-demo-note mb-5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
@@ -351,7 +378,10 @@ export default function BeliClient() {
           dijual.
         </p>
       )}
-      <div className="catalog-results-heading mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div
+        id="pilihan-mobil"
+        className="catalog-results-heading mb-5 flex flex-wrap items-center justify-between gap-3"
+      >
         <div>
           <p className="eyebrow mb-1!">KATALOG KENDARAAN</p>
           <h2 className="text-base font-semibold">{list.length} mobil tersedia</h2>
@@ -389,30 +419,36 @@ export default function BeliClient() {
               className={inputCls}
             />
           </div>
-          <select
-            aria-label="Kategori mobil"
-            value={cat}
-            onChange={(e) => setCat(e.target.value)}
-            className={selectCls}
-          >
-            <option value="all">Semua kategori</option>
-            {[...new Set([...CATEGORIES, ...cats])].map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Urutkan mobil"
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className={selectCls}
-          >
-            <option value="new">Terbaru</option>
-            <option value="cheap">Termurah</option>
-            <option value="exp">Termahal</option>
-            <option value="love">Paling diminati</option>
-          </select>
+          <label className="catalog-select-field">
+            <span>Kategori</span>
+            <select
+              aria-label="Kategori mobil"
+              value={cat}
+              onChange={(e) => setCat(e.target.value)}
+              className={selectCls}
+            >
+              <option value="all">Semua kategori</option>
+              {[...new Set([...CATEGORIES, ...cats])].map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="catalog-select-field">
+            <span>Urutkan</span>
+            <select
+              aria-label="Urutkan mobil"
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className={selectCls}
+            >
+              <option value="new">Terbaru</option>
+              <option value="cheap">Termurah</option>
+              <option value="exp">Termahal</option>
+              <option value="love">Paling diminati</option>
+            </select>
+          </label>
         </div>
         <button
           type="button"
@@ -476,33 +512,40 @@ export default function BeliClient() {
             </div>
           </div>
 
-          <input
-            aria-label="Harga minimum"
-            value={min}
-            onChange={(e) => {
-              setMin(e.target.value.replace(/[^\d]/g, ""));
-              setPreset("custom");
-            }}
-            type="number"
-            min={0}
-            inputMode="numeric"
-            placeholder="Harga min (Rp)"
-            className={inputPlain}
-          />
-          <input
-            aria-label="Harga maksimum"
-            value={max}
-            onChange={(e) => {
-              setMax(e.target.value.replace(/[^\d]/g, ""));
-              setPreset("custom");
-            }}
-            type="number"
-            min={0}
-            inputMode="numeric"
-            placeholder="Harga maks (Rp)"
-            className={inputPlain}
-          />
-          <div>
+          <label className="catalog-filter-field">
+            <span>Harga minimum (Rp)</span>
+            <input
+              aria-label="Harga minimum"
+              value={min}
+              onChange={(e) => {
+                setMin(e.target.value.replace(/[^\d]/g, ""));
+                setPreset("custom");
+              }}
+              type="number"
+              min={0}
+              inputMode="numeric"
+              placeholder="Harga min (Rp)"
+              className={inputPlain}
+            />
+          </label>
+          <label className="catalog-filter-field">
+            <span>Harga maksimum (Rp)</span>
+            <input
+              aria-label="Harga maksimum"
+              value={max}
+              onChange={(e) => {
+                setMax(e.target.value.replace(/[^\d]/g, ""));
+                setPreset("custom");
+              }}
+              type="number"
+              min={0}
+              inputMode="numeric"
+              placeholder="Harga maks (Rp)"
+              className={inputPlain}
+            />
+          </label>
+          <label className="catalog-filter-field">
+            <span>Kota kendaraan</span>
             <input
               aria-label="Kota kendaraan"
               value={locRaw}
@@ -520,8 +563,9 @@ export default function BeliClient() {
                   <option key={c} value={c} />
                 ))}
             </datalist>
-          </div>
-          <div>
+          </label>
+          <label className="catalog-filter-field">
+            <span>Tahun kendaraan</span>
             <input
               aria-label="Tahun kendaraan"
               value={yearRaw}
@@ -553,7 +597,12 @@ export default function BeliClient() {
                 <option key={y} value={y} />
               ))}
             </datalist>
-          </div>
+          </label>
+          {min !== "" && max !== "" && Number(min) > Number(max) ? (
+            <p role="alert" className="catalog-filter-error">
+              Harga maksimum harus sama atau lebih besar dari harga minimum.
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="catalog-price-options flex flex-wrap gap-2">
