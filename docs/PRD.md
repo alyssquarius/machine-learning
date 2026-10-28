@@ -278,3 +278,13 @@ Tampilan pembeli mengambil inspirasi hierarki visual dan penyajian produk dari h
 Interaksi: transisi masuk halaman 450 ms, dialog 320 ms, kartu terangkat dan foto membesar ringan pada perangkat dengan hover, penanda tenor terpilih, serta animasi singkat saat hasil cicilan berubah. Efek baru menghormati prefers-reduced-motion. Ringkasan cicilan tetap terlihat saat menggulir di desktop lebar; ponsel mempertahankan ringkasan di atas formulir.
 
 Validasi: build produksi, TypeScript, dan git diff --check lulus. Pratinjau katalog dan simulasi diperiksa pada desktop 1440 px; simulasi mode gelap pada 375 px tidak meluap horizontal. Pilihan 24 bulan dengan harga Rp185 juta, DP30%, bunga flat8% menghasilkan Rp6.259.167 per bulan. Perubahan masih lokal, belum dipush atau dideploy.
+
+## 23. Notifikasi dan kemudahan chat (v1.13)
+
+Kotak masuk memakai ringkasan pesan terbaru dan jumlah pesan masuk belum dibaca dari Supabase. Penanda baca tersimpan per akun dan percakapan, sehingga setiap admin mempunyai status bacanya sendiri. RPC penanda baca memverifikasi akses percakapan dan hanya menerima ID pesan yang dapat dibaca akun tersebut. Query ringkasan tetap mengikuti RLS.
+
+Lonceng dan menu Chat admin menunjukkan pesan belum dibaca. Toast muncul ketika pesan masuk baru terdeteksi setelah pemuatan awal. Pemeriksaan otomatis setiap 5 detik selama halaman terlihat; fokus atau tab kembali aktif memuat ulang data. Ini notifikasi di dalam website, belum mencakup push saat browser ditutup.
+
+Chat admin menyediakan pencarian nama, cuplikan pesan terakhir dan label pesan baru. Ponsel menggunakan daftar percakapan lalu ruang balas dengan tombol kembali. Enter mengirim pada perangkat dengan pointer presisi; Shift+Enter membuat baris baru. Ponsel menggunakan tombol kirim. Pesan dianggap dibaca ketika riwayat dimuat dan posisi baca berada di bagian bawah.
+
+Migrasi notifikasi dan fondasi marketplace telah dijalankan pada Supabase. Fondasi marketplace belum dihubungkan ke store; data katalog browser belum diimpor. Uji transaksi rollback untuk notifikasi lulus: inbox privat, unread admin, penanda baca dan penolakan akun luar.

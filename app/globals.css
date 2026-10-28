@@ -437,3 +437,25 @@ html.dark .buyer-shell { --canvas:#0b1220; --line:#26364a; }
  .buyer-car-card,.buyer-car-card img,.credit-period,.button-primary,.discovery-group,.discovery-brand { transition:none!important; }
  .buyer-car-card:hover,.buyer-car-card:hover img,.button-primary:hover,.discovery-group:hover,.discovery-brand:hover,.credit-period:hover { transform:none; }
 }
+/* Chat: persistent conversation list, clear unread states, mobile master/detail. */
+.chat-admin { grid-template-columns:300px minmax(0,1fr); gap:0; border:1px solid var(--line); border-radius:22px; overflow:hidden; background:var(--panel); }
+.chat-admin .chat-inbox,.chat-admin .chat-panel { border:0; border-radius:0; box-shadow:none; }
+.chat-admin .chat-inbox { border-right:1px solid var(--line); }
+.chat-thread { position:relative; margin-bottom:4px; padding:14px 12px; }
+.chat-thread span:nth-child(2) { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-search { width:100%; margin-top:16px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--canvas); font-size:12px; }
+.chat-unread { display:inline-block; margin-top:7px; border-radius:99px; padding:3px 8px; background:var(--accent); color:var(--panel); font-size:10px; font-weight:600; }
+.chat-back { display:none; }
+.chat-composer textarea { border-color:var(--line); border-radius:14px; background:var(--canvas); }
+.chat-composer>div { gap:12px; }
+.chat-composer>div>span { max-width:65%; line-height:1.6; }
+@media(max-width:767px) {
+ .chat-admin { grid-template-columns:minmax(0,1fr); }
+ .chat-admin .chat-inbox { max-height:none; min-height:380px; border:0; }
+ .chat-admin:not(.has-selection) .chat-panel { display:none; }
+ .chat-admin.has-selection .chat-inbox { display:none; }
+ .chat-admin.has-selection .chat-back { display:inline-flex; min-width:38px; padding:8px; }
+ .chat-panel { height:calc(100dvh - 215px); min-height:360px; }
+ .chat-heading { gap:10px; }
+}
+@media(pointer:coarse) { .chat-key-hint { display:none; } }

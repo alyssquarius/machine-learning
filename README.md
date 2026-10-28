@@ -61,3 +61,5 @@ Untuk database baru, baca `supabase-setup-avatars.sql`, kemudian migrasi `supaba
 - `supabase/migrations/`: migrasi database yang ditinjau terpisah dari deployment frontend.
 - `tests/`: regresi konfigurasi, proteksi rute, cookie redirect, dan OAuth.
 - `docs/`: PRD dan panduan operasional.
+
+Notifikasi chat dalam aplikasi menggunakan migrasi `supabase/migrations/20261029_chat_notifications.sql`. Migrasi notifikasi dan fondasi marketplace sudah diterapkan pada proyek aktif. Inbox diperiksa setiap 5 detik ketika website terlihat, dengan badge, toast dan penanda baca per akun; belum ada push notification saat browser ditutup. Tabel marketplace baru belum menggantikan store lokal.

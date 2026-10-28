@@ -22,3 +22,9 @@ Batas cakupan:
 SQL `docs/sql/verify-support-chat.sql` dijalankan ulang pada proyek Supabase melalui SQL Editor. Hasil PASS: buyer kirim/baca, admin baca/balas, akun luar tidak dapat membaca atau mengirim, pengirim palsu/pesan terlalu panjang/update pesan ditolak. Seluruh data uji di-rollback. Skrip diperbaiki agar dapat menguji pembeli yang sudah mempunyai thread, tanpa menimpa percakapan yang ada.
 
 Fondasi `supabase/migrations/20261029_marketplace_foundation.sql` menyiapkan katalog terpusat dan favorit privat. Data pembelian, alamat, dan penawaran tidak ditempatkan pada tabel katalog publik. Skema dan query katalog sebagai anon berhasil divalidasi dalam transaksi rollback pada database yang sama. **Migrasi ini belum diterapkan permanen dan frontend belum menggunakan tabel baru.** Integrasi store, impor data lokal yang ditinjau, penanganan konflik antarperangkat, serta migrasi riwayat/transaksi masih diperlukan; sinkronisasi antarperangkat belum selesai.
+
+## Notifikasi chat — pemasangan langsung
+
+Migrasi `20261029_chat_notifications.sql` diuji dengan SQL rollback lalu diterapkan permanen. Tes inbox privat, unread admin, mark-read, dan penolakan akun luar PASS. Migrasi `20261029_marketplace_foundation.sql` juga diterapkan; store frontend masih lokal dan belum mengimpor katalog lama.
+
+Browser lokal: login admin; badge Chat 1 dan tautan “1 pesan chat belum dibaca” muncul di lonceng pada dashboard. Membuka percakapan menampilkan pesan serta kolom balas. Tampilan ponsel 375 px tidak meluap horizontal. Tidak mengirim pesan uji melalui UI; tes database memakai rollback.
