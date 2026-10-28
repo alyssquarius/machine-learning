@@ -36,13 +36,13 @@ export default function RegisterPage() {
     (async () => {
       try {
         const supabase = createClient();
-        const { data } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getUser();
         if (cancelled) return;
-        if (data.session?.user) {
+        if (data.user) {
           const { data: profile } = await supabase
             .from("profiles")
             .select("role")
-            .eq("id", data.session.user.id)
+            .eq("id", data.user.id)
             .single();
           if (cancelled) return;
           const role = profile?.role;
@@ -102,6 +102,7 @@ export default function RegisterPage() {
         password: pw,
         options: {
           data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) {
@@ -118,10 +119,10 @@ export default function RegisterPage() {
         try {
           await supabase.from("profiles").upsert({
             id: data.user.id,
-            role: data.user.email === "admin@autobuycars.com" ? "admin" : "buyer",
+            role: "buyer",
             display_name: fullName,
             updated_at: new Date().toISOString(),
-          });
+          }, { onConflict: "id", ignoreDuplicates: true });
         } catch {
           /* abaikan */
         }
@@ -131,6 +132,8 @@ export default function RegisterPage() {
 
       // Arahkan ke halaman input kode verifikasi OTP
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+    } catch (err) {
+      setError(friendlyError(err));
     } finally {
       setLoading(false);
     }

@@ -89,9 +89,9 @@ export default function VerifyEmailPage() {
             const supabase = createClient();
             await supabase.from("profiles").upsert({
               id: data.user.id,
-              role: data.user.email === "admin@autobuycars.com" ? "admin" : "buyer",
+              role: "buyer",
               updated_at: new Date().toISOString(),
-            });
+            }, { onConflict: "id", ignoreDuplicates: true });
           }
         } catch {
           /* abaikan */

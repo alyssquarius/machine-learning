@@ -1,83 +1,60 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getSupabaseConfig } from "./config";
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  let response = NextResponse.next({ request });
+  const pathname = request.nextUrl.pathname;
+  const matches = (paths: string[]) => paths.some(
+    (path) => pathname === path || pathname.startsWith(path + "/")
+  );
+  const protectedPage = matches(["/jual", "/dashboard", "/favorit", "/riwayat", "/pengaturan", "/profil"]);
+  // Recovery and email verification must remain accessible with an active session.
+  const signInPage = matches(["/login", "/register"]);
+  const config = getSupabaseConfig();
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return supabaseResponse;
+  function redirect(path: string) {
+    const destination = request.nextUrl.clone();
+    destination.pathname = path;
+    destination.search = "";
+    const redirected = NextResponse.redirect(destination);
+    // Preserve refreshed/removed session cookies across redirects.
+    response.cookies.getAll().forEach((cookie) => redirected.cookies.set(cookie));
+    return redirected;
+  }
 
-  const supabase = createServerClient(url, anon, {
+  if (!config) return protectedPage ? redirect("/login") : response;
+  // The PKCE callback needs the original verifier cookies; it exchanges its own session.
+  if (pathname === "/auth/callback") return response;
+  const supabase = createServerClient(config.url, config.key, {
     cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
-        );
+      encode: "tokens-only",
+      getAll: () => request.cookies.getAll(),
+      setAll(cookies) {
+        cookies.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        cookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
-  const isAuthPage = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/choose-role"].some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
-  const isProtected = ["/jual", "/pengaturan", "/profil"].some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
-
-  if (!user && isProtected) {
-    const login = request.nextUrl.clone();
-    login.pathname = "/login";
-    return NextResponse.redirect(login);
+  let user;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Public catalogue stays available during an authentication outage.
+    return protectedPage ? redirect("/login") : response;
   }
 
-  // Jika user login mengakses /login atau /register, redirect sesuai role
-  if (user && isAuthPage && pathname !== "/choose-role") {
-    let userRole = "buyer";
-    if (user.email === "admin@autobuycars.com") {
-      userRole = "admin";
-    } else {
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
+  if (!user) return protectedPage ? redirect("/login") : response;
 
-        if (!profile?.role && pathname !== "/choose-role") {
-          const chooseRoleUrl = request.nextUrl.clone();
-          chooseRoleUrl.pathname = "/choose-role";
-          return NextResponse.redirect(chooseRoleUrl);
-        }
-        if (profile?.role) {
-          userRole = profile.role;
-        }
-      } catch {
-        // Jika tabel profiles belum ada, biarkan ke choose-role jika bukan di choose-role
-        if (pathname !== "/choose-role") {
-          const chooseRoleUrl = request.nextUrl.clone();
-          chooseRoleUrl.pathname = "/choose-role";
-          return NextResponse.redirect(chooseRoleUrl);
-        }
-      }
-    }
-
-    const dest = request.nextUrl.clone();
-    dest.pathname = ["admin", "dealer"].includes(userRole) ? "/dashboard" : "/beli";
-    return NextResponse.redirect(dest);
+  if (signInPage || matches(["/dashboard", "/jual"])) {
+    const { data: profile } = await supabase.from("profiles")
+      .select("role").eq("id", user.id).maybeSingle();
+    const seller = ["admin", "dealer"].includes(profile?.role);
+    if (signInPage) return redirect(seller ? "/dashboard" : "/beli");
+    if (!seller) return redirect("/beli");
   }
-
-  return supabaseResponse;
+  return response;
 }

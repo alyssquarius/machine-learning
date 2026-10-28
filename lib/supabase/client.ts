@@ -1,10 +1,12 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { getSupabaseConfig } from "./config";
 
 export function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
-    throw new Error("Supabase env vars not configured");
+  const config = getSupabaseConfig();
+  if (!config) {
+    throw new Error("Layanan akun belum dikonfigurasi. Hubungi pengelola website.");
   }
-  return createBrowserClient(url, key);
+  return createBrowserClient(config.url, config.key, {
+    cookies: { encode: "tokens-only" },
+  });
 }

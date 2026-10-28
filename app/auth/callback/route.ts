@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -6,42 +7,43 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const origin = requestUrl.origin;
 
-  if (code) {
-    const supabase = await createClient();
-    const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+  if (code && getSupabaseConfig()) {
+    try {
+      const supabase = await createClient();
+      const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!sessionError) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      if (!sessionError) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-      if (user) {
-        const isAdmin = user.email === "admin@autobuycars.com";
-        const defaultRole = isAdmin ? "admin" : "buyer";
+        if (user) {
+          // Bersihkan jika user_metadata masih membawa base64 dataUrl lama di Supabase Auth
+          if (String(user?.user_metadata?.avatar_url || "").startsWith("data:")) {
+            try {
+              await supabase.auth.updateUser({ data: { avatar_url: null } });
+            } catch {}
+          }
 
-        try {
-          // Buat atau pastikan profile otomatis tersimpan sebagai role buyer (atau admin)
-          await supabase.from("profiles").upsert({
-            id: user.id,
-            role: defaultRole,
-            display_name:
-              user.user_metadata?.full_name ||
-              user.user_metadata?.name ||
-              user.email?.split("@")[0] ||
-              "Pengguna",
-            updated_at: new Date().toISOString(),
-          });
-        } catch {
-          /* abaikan jika tabel profiles belum ada */
+          // Create a new profile without overwriting an existing dealer/admin role.
+          const { data: profile } = await supabase.from("profiles")
+            .select("role").eq("id", user.id).maybeSingle();
+          if (!profile) {
+            await supabase.from("profiles").upsert({
+              id: user.id,
+              role: "buyer",
+              display_name: user.user_metadata?.full_name || user.user_metadata?.name || "Pengguna",
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "id", ignoreDuplicates: true });
+          }
+          const destination = ["admin", "dealer"].includes(profile?.role) ? "/dashboard" : "/beli";
+          return NextResponse.redirect(`${origin}${destination}`);
         }
-
-        if (isAdmin) {
-          return NextResponse.redirect(`${origin}/dashboard`);
-        }
-        return NextResponse.redirect(`${origin}/beli`);
       }
+    } catch {
+      // Invalid or unavailable auth services return to a usable sign-in page.
     }
   }
 
-  return NextResponse.redirect(`${origin}/beli`);
+  return NextResponse.redirect(`${origin}/login?error=auth_callback`);
 }

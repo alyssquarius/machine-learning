@@ -32,21 +32,24 @@ export default function LoginPage() {
   const [passwordInput, setPasswordInput] = React.useState("");
 
   React.useEffect(() => {
+    if (new URL(window.location.href).searchParams.get("error") === "auth_callback") {
+      setError("Tautan masuk tidak valid atau sudah kedaluwarsa. Silakan masuk kembali.");
+    }
     let cancelled = false;
     (async () => {
       try {
         const supabase = createClient();
-        const { data } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getUser();
         if (cancelled) return;
-        if (data.session?.user) {
+        if (data.user) {
           const { data: profile } = await supabase
             .from("profiles")
             .select("role")
-            .eq("id", data.session.user.id)
+            .eq("id", data.user.id)
             .single();
           if (cancelled) return;
           const role = profile?.role;
-          if (role === "admin" || data.session.user.email === "admin@autobuycars.com") {
+          if (["admin", "dealer"].includes(role)) {
             router.replace("/dashboard");
           } else {
             router.replace("/beli");
@@ -81,17 +84,20 @@ export default function LoginPage() {
       // Cek role user untuk redirect yang tepat
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        if (user.email === "admin@autobuycars.com") {
-          router.replace("/dashboard");
-          return;
+        // Bersihkan jika user_metadata masih membawa base64 dataUrl lama di Supabase Auth
+        if (String(user?.user_metadata?.avatar_url || "").startsWith("data:")) {
+          try {
+            await supabase.auth.updateUser({ data: { avatar_url: null } });
+          } catch {}
         }
+
         const { data: profile } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", user.id)
           .single();
         const role = profile?.role;
-        if (role === "admin") {
+        if (["admin", "dealer"].includes(role)) {
           router.replace("/dashboard");
         } else {
           router.replace("/beli");
@@ -99,6 +105,8 @@ export default function LoginPage() {
       } else {
         router.replace("/beli");
       }
+    } catch (err) {
+      setError(friendlyError(err));
     } finally {
       setLoading(false);
     }
@@ -131,17 +139,11 @@ export default function LoginPage() {
     }
   }
 
-  function fillAdminDemo() {
-    setEmailInput("admin@autobuycars.com");
-    setPasswordInput("AdminPassword123!");
-    setError("");
-  }
-
   return (
     <AuthShell
       title="Selamat Datang Kembali"
-      subtitle="Masuk untuk mengakses katalog mobil terverifikasi, kalkulator kredit, dan status transaksi."
-      badge="Platform Otomotif Terverifikasi"
+      subtitle="Masuk untuk menyimpan favorit, mencoba simulasi kredit, dan melihat riwayat aktivitas."
+      badge="Marketplace Mobil Indonesia"
     >
       {error ? (
         <div
@@ -274,20 +276,6 @@ export default function LoginPage() {
         </svg>
         <span>{googleLoading ? "Menghubungkan..." : "Masuk dengan Akun Google"}</span>
       </button>
-
-      {/* Akses Cepat Demo / Shortcut */}
-      <div className="mt-4 rounded-xl border border-gray-100 bg-gray-50/70 p-2.5 dark:border-zinc-800/80 dark:bg-zinc-950/40">
-        <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400">
-          <span>Akses Admin Demo:</span>
-          <button
-            type="button"
-            onClick={fillAdminDemo}
-            className="font-bold text-blue-600 transition hover:underline dark:text-blue-400 active:scale-95"
-          >
-            Isi Form Admin Otomatis
-          </button>
-        </div>
-      </div>
 
       {/* Footer Navigation */}
       <div className="mt-5 space-y-3 pt-3 border-t border-gray-100 dark:border-zinc-800">

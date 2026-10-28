@@ -198,6 +198,10 @@ export default function BeliClient() {
         </p>
       </div>
 
+      <p className="mb-4 rounded-xl border border-gray-200 p-3 text-sm text-gray-600 dark:border-zinc-800 dark:text-zinc-400">
+        Data katalog saat ini tersimpan pada browser ini dan belum tersinkron antarperangkat.
+      </p>
+
       <div className="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-col gap-3 md:flex-row">
           <div className="relative flex-1">
@@ -221,6 +225,7 @@ export default function BeliClient() {
             />
           </div>
           <select
+            aria-label="Kategori mobil"
             value={cat}
             onChange={(e) => setCat(e.target.value)}
             className={selectCls}
@@ -233,6 +238,7 @@ export default function BeliClient() {
             ))}
           </select>
           <select
+            aria-label="Urutkan mobil"
             value={sort}
             onChange={(e) => setSort(e.target.value)}
             className={selectCls}
@@ -365,7 +371,9 @@ export default function BeliClient() {
 
       {list.length === 0 ? (
         <p className="py-12 text-center text-sm text-gray-500 dark:text-zinc-400">
-          Tidak ada mobil yang cocok dengan pencarianmu.
+          {store.all().some((car) => car.status === "running")
+            ? "Tidak ada mobil yang cocok. Coba ubah atau reset filter pencarian."
+            : "Belum ada mobil tersedia di katalog pada browser ini."}
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">

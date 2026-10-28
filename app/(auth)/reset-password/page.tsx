@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { AuthShell } from "@/components/auth-shell";
 import { createClient } from "@/lib/supabase/client";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 import { friendlyError } from "@/lib/format";
 
 export default function ResetPasswordPage() {
@@ -17,10 +18,23 @@ export default function ResetPasswordPage() {
   const [showPw, setShowPw] = React.useState(false);
 
   React.useEffect(() => {
+    if (!getSupabaseConfig()) return;
     const supabase = createClient();
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || (session && !ready)) setReady(true);
     });
+    const code = new URL(window.location.href).searchParams.get("code");
+    if (code) {
+      // Browser client initialization already exchanges PKCE codes. Await it
+      // through getUser instead of consuming the one-time code a second time.
+      void supabase.auth.getUser().then(({ data, error }) => {
+        if (error || !data.user) setExpired(true);
+        else {
+          setReady(true);
+          window.history.replaceState({}, "", "/reset-password");
+        }
+      }).catch(() => setExpired(true));
+    }
     const t = setTimeout(() => {
       setReady((r) => {
         if (!r) setExpired(true);
@@ -56,8 +70,10 @@ export default function ResetPasswordPage() {
         setError(friendlyError(error));
         return;
       }
-      setSuccess("Password berhasil diubah. Mengalihkan ke dashboard...");
-      setTimeout(() => router.replace("/dashboard"), 1500);
+      setSuccess("Password berhasil diubah. Mengalihkan ke katalog...");
+      setTimeout(() => router.replace("/beli"), 1500);
+    } catch (err) {
+      setError(friendlyError(err));
     } finally {
       setLoading(false);
     }

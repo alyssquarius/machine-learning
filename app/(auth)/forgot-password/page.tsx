@@ -33,6 +33,8 @@ export default function ForgotPasswordPage() {
       setSuccess(
         "Jika email terdaftar, tautan untuk mengatur ulang password sudah dikirim. Cek kotak masuk atau folder spam."
       );
+    } catch (err) {
+      setError(friendlyError(err));
     } finally {
       setLoading(false);
     }

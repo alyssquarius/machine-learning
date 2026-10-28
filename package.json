@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -36,5 +38,8 @@
     "@types/react-dom": "^19.3.0",
     "postcss": "^8.5.30",
     "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }

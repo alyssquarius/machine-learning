@@ -1,59 +1,56 @@
 # AutoBuyCars
 
-Platform jual beli mobil — Next.js 16 App Router + Tailwind CSS v4 + Supabase Auth.
+Platform jual beli mobil berbahasa Indonesia menggunakan Next.js 16 App Router, React, Tailwind CSS v4, dan Supabase Auth.
 
-## Jalan lokal
+## Menjalankan proyek
+
+Gunakan Node.js 22.13+ (Node.js 24 LTS dapat digunakan).
 
 ```bash
-npm install
+npm ci
+cp .env.example .env.local
 npm run dev
 ```
 
-Buka `http://localhost:3000` (redirect ke `/login`).
+Isi `.env.local` dengan URL proyek Supabase dan **public anon key**. Jangan gunakan service role key di variabel `NEXT_PUBLIC_*`. Buka `http://localhost:3000`; halaman awal mengarah ke `/beli`.
 
-Butuh env Supabase di `.env.local`:
+Tanpa konfigurasi Supabase, katalog tetap dapat dibuka sebagai pengunjung dan halaman akun menampilkan informasi bahwa layanan belum tersedia.
 
-```
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-```
-
-## Build
+## Validasi
 
 ```bash
-npx tsc --noEmit
-npx next build --webpack
+npm run typecheck
+npm test
+npm run build
+npm start
 ```
 
-Catatan: `npm run build` bawaan (Turbopack Next 16.4.0) gagal di
-`@vercel/turbopack-next/internal/font/google/font` — bug toolchain,
-bukan kode aplikasi. Build webpack lolos penuh (13 route static).
+Build menggunakan webpack. Font memakai font sistem sehingga proses build tidak membutuhkan koneksi ke Google Fonts. Pengujian autentikasi menggunakan Node test runner dengan mock Supabase; tidak membutuhkan kredensial nyata.
+
+## Fitur dan batasan
+
+- Katalog, pencarian/filter, detail kendaraan, favorit, dashboard, listing, penawaran, simulasi checkout/invoice, riwayat, tema, profil, dan kontak WhatsApp.
+- Login email/password, pendaftaran/verifikasi email, Google OAuth, dan reset password memakai Supabase.
+- **Listing, penawaran, transaksi, favorit, dan riwayat masih menggunakan localStorage. Data belum dibagikan antarbrowser/perangkat. Checkout bukan pembayaran sungguhan.**
+- Profil/peran memakai tabel Supabase `profiles`. Admin ditetapkan melalui database oleh pengelola; alamat email tertentu tidak memberi akses admin otomatis. Cache browser tidak menjadi sumber izin admin.
+- Foto tidak boleh disimpan sebagai base64 dalam metadata Auth karena metadata masuk ke JWT/cookie. Penyimpanan avatar lama pada profil masih perlu dipindahkan ke Storage sebagai pengembangan berikutnya.
+
+## Deployment Vercel
+
+Lihat [panduan deployment dan diagnosis Safari](docs/DEPLOYMENT.md). Konfigurasi lokal `.env.local` tidak otomatis masuk ke Vercel. Perubahan `NEXT_PUBLIC_*` memerlukan build/deployment baru.
+
+Untuk database baru, baca `supabase-setup-avatars.sql`, kemudian migrasi `supabase/migrations/20261028_protect_profile_privileges.sql`. Tinjau dan uji pada staging sebelum produksi. Migrasi ini menambahkan pembatasan perubahan role admin dan status verifikasi; belum dijalankan pada proyek Supabase pengguna.
+
+## Dokumen produk
+
+[PRD AutoBuyCars setelah pembaruan](docs/PRD.md) menjelaskan perilaku saat ini, perbaikan, kriteria penerimaan, dan pengembangan menuju marketplace dengan data terpusat.
 
 ## Struktur
 
-- `app/` — App Router: `(app)/dashboard|jual|beli|favorit|riwayat|pengaturan|profil`, `(auth)/login|register|forgot-password|reset-password`, `loading/error/not-found`
-- `components/` — `app-shell`, `auth-shell`, `car-card`, `dashboard-widgets`, `hist-text`, `modals`, `sell-shared`, `store-provider`, `theme-*`, `toast`, `icons`, `whatsapp-contact`
-- `lib/` — `cities` (kota se-Indonesia), `market` (widget/checkout/filter), `format`, `config`, `roles` (RBAC system), `supabase/client|server|middleware`
-- `middleware.ts` — session Supabase (Next.js 16)
-- `app/globals.css` — satu-satunya global CSS (Tailwind v4)
-
-## Fitur
-
-- 🔐 **Auth**: Supabase Auth (login, register, forgot password)
-- 🚗 **Listing**: CRUD mobil dengan status (queued, running, done, failed)
-- 💰 **Transaction**: Beli tunai/kredit, ajukan penawaran, terima/tolak offer
-- ⭐ **Favorit**: Simpan mobil favorit
-- 📊 **Dashboard**: Analytics penjualan, widget performa
-- 📱 **WhatsApp**: Kontak seller, customer support, request verification
-- 👥 **Role System**: Admin, Dealer, Buyer, Guest dengan 25+ permissions
-- 🌙 **Dark Mode**: Theme toggle dengan persistensi
-- 📱 **Responsive**: Mobile-first design
-
-## Konvensi UI
-
-Semua halaman fitur mengikuti pola header Riwayat:
-
-- Judul `text-2xl sm:text-3xl font-bold tracking-tight`
-- Subjudul `mt-1 text-sm text-gray-500 dark:text-zinc-400`
-- Bar aksi `flex flex-wrap gap-2`, tombol `px-4 py-2 text-sm font-semibold rounded-lg`
-- Gambar via `next/image`, teks riwayat via `HistText` (tanpa `dangerouslySetInnerHTML`)
+- `app/`: halaman App Router dan callback autentikasi.
+- `components/`: komponen UI, penyimpanan browser, dan provider autentikasi/peran.
+- `lib/supabase/`: konfigurasi dan client Supabase browser/server serta pembaruan sesi.
+- `proxy.ts`: pemeriksaan sesi dan redirect Next.js 16.
+- `supabase/migrations/`: migrasi database yang ditinjau terpisah dari deployment frontend.
+- `tests/`: regresi konfigurasi, proteksi rute, cookie redirect, dan OAuth.
+- `docs/`: PRD dan panduan operasional.

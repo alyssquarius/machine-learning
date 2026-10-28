@@ -25,10 +25,10 @@ export default function Error({
           Coba lagi
         </button>
         <Link
-          href="/dashboard"
+          href="/beli"
           className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
         >
-          Ke Dashboard
+          Ke Katalog Mobil
         </Link>
       </div>
     </div>

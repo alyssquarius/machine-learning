@@ -4,6 +4,7 @@ import * as React from "react";
 import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 import {
   type Role,
   type Permission,
@@ -32,55 +33,36 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = React.useState<Role>("guest");
   const [authChecked, setAuthChecked] = React.useState(false);
 
-  async function fetchUserRole(userId: string, email?: string): Promise<Role> {
-    if (email === "admin@autobuycars.com") {
-      return "admin";
-    }
+  async function fetchUserRole(userId: string): Promise<Role> {
     try {
-      const supabase = createClient();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
+      const { data: profile } = await createClient()
+        .from("profiles").select("role").eq("id", userId).single();
       if (profile?.role && ["admin", "dealer", "buyer"].includes(profile.role)) {
-        // Sync ke localStorage
-        try {
-          localStorage.setItem(`abc_role_${userId}`, profile.role);
-        } catch {
-          /* abaikan */
-        }
         return profile.role as Role;
       }
     } catch {
-      /* abaikan */
-    }
-    // Fallback: baca dari localStorage (diset oleh choose-role)
-    try {
-      const cached = localStorage.getItem(`abc_role_${userId}`);
-      if (cached && ["admin", "dealer", "buyer"].includes(cached)) {
-        return cached as Role;
-      }
-    } catch {
-      /* abaikan */
+      // Unavailable role data must not grant elevated permissions.
     }
     return "buyer";
   }
 
   React.useEffect(() => {
     let cancelled = false;
+    if (!getSupabaseConfig()) {
+      setAuthChecked(true);
+      return;
+    }
     const supabase = createClient();
 
     (async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getUser();
         if (cancelled) return;
-        const session = data?.session;
+        const session = data.user ? { user: data.user } : null;
         if (session?.user) {
           setUser(session.user);
           store.setOwner(session.user.id);
-          const r = await fetchUserRole(session.user.id, session.user.email);
+          const r = await fetchUserRole(session.user.id);
           if (!cancelled) setRole(r);
         } else {
           setUser(null);
@@ -98,7 +80,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
       if (event === "SIGNED_OUT") {
         setUser(null);
@@ -108,8 +90,13 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       } else if (event === "SIGNED_IN" && session?.user) {
         setUser(session.user);
         store.setOwner(session.user.id);
-        const r = await fetchUserRole(session.user.id, session.user.email);
-        if (!cancelled) setRole(r);
+        // Supabase callbacks run under the auth lock; query after it is released.
+        setTimeout(() => {
+          if (cancelled) return;
+          void fetchUserRole(session.user.id).then((r) => {
+            if (!cancelled) setRole(r);
+          });
+        }, 0);
       }
     });
 
@@ -144,7 +131,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function switchRole(newRole: Role): Promise<boolean> {
-    if (!user) return false;
+    if (!user || role === "admin" || !["buyer", "dealer"].includes(newRole)) return false;
     try {
       const supabase = createClient();
       const { error } = await supabase
@@ -156,6 +143,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         });
       if (error) {
         console.warn("Switch role error:", error.message);
+        return false;
       }
       try {
         localStorage.setItem(`abc_role_${user.id}`, newRole);
@@ -178,7 +166,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       const u = data?.user;
       if (u) {
         setUser(u);
-        const r = await fetchUserRole(u.id, u.email);
+        const r = await fetchUserRole(u.id);
         setRole(r);
       }
     } catch {

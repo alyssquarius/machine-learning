@@ -1,3 +1,4 @@
+import { getSupabaseConfig } from "@/lib/supabase/config";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -44,8 +45,8 @@ export function AuthHero({
               </svg>
             </div>
             <div>
-              <p className="text-xs font-bold text-white tracking-wide">1.200+ Unit Terverifikasi</p>
-              <p className="text-[11px] text-zinc-300">160 Titik Inspeksi Ketat</p>
+              <p className="text-xs font-bold text-white tracking-wide">Jelajahi Katalog Mobil</p>
+              <p className="text-[11px] text-zinc-300">Filter sesuai kebutuhan Anda</p>
             </div>
           </div>
         </div>
@@ -59,8 +60,8 @@ export function AuthHero({
               </svg>
             </div>
             <div>
-              <p className="text-xs font-bold text-white tracking-wide">Garansi Mesin & Transmisi</p>
-              <p className="text-[11px] text-zinc-300">Jaminan Keaslian BPKB & STNK</p>
+              <p className="text-xs font-bold text-white tracking-wide">Informasi Detail Kendaraan</p>
+              <p className="text-[11px] text-zinc-300">Hubungi penjual untuk konfirmasi</p>
             </div>
           </div>
         </div>
@@ -89,13 +90,13 @@ export function AuthHero({
                 <svg className="h-4 w-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                <span>Tanpa Biaya Tersembunyi</span>
+                <span>Simulasi Harga & Kredit</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <svg className="h-4 w-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                <span>Inspeksi Bebas Banjir</span>
+                <span>Bandingkan Pilihan Mobil</span>
               </div>
             </div>
           )}
@@ -160,14 +161,19 @@ export function AuthShell({
             </p>
 
             <div className="rounded-2xl border border-gray-200/80 bg-white/80 p-6 sm:p-8 backdrop-blur-md shadow-xs dark:border-zinc-800/80 dark:bg-zinc-900/70">
-              {children}
+              {getSupabaseConfig() ? children : (
+                <div role="status" className="space-y-4 text-sm">
+                  <p>Layanan akun sementara belum tersedia. Silakan coba lagi nanti atau hubungi pengelola website.</p>
+                  <Link href="/beli" className="inline-block font-semibold underline">Jelajahi katalog mobil</Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Footer info */}
         <div className="mt-auto pt-6 text-center text-xs text-gray-400 dark:text-zinc-500">
-          &copy; 2026 AutoBuyCars • Sistem Otomotif Terverifikasi
+          &copy; 2026 AutoBuyCars • Platform Jual Beli Mobil
         </div>
       </div>
 
