@@ -11,6 +11,8 @@ import { useRole } from "@/components/role-provider";
 import { createClient } from "@/lib/supabase/client";
 import { fmtRp, timeAgo } from "@/lib/format";
 import { STATUS_LABEL } from "@/components/car-card";
+import { PageHeader } from "@/components/ui";
+import { Icon } from "@/components/icons";
 import { WIDGETS } from "@/lib/market";
 
 function HideButton({ id, title, dark = false }: { id: string; title: string; dark?: boolean }) {
@@ -34,89 +36,28 @@ function HideButton({ id, title, dark = false }: { id: string; title: string; da
 
 function Banner() {
   const store = useStore();
-  const [name, setName] = React.useState("User");
-  const [date, setDate] = React.useState("");
-  const [greet, setGreet] = React.useState("Selamat Datang");
-  const s = store.stats();
+  const { user } = useRole();
+  const [greeting, setGreeting] = React.useState("Selamat datang");
+  const name = store.getDisplayName() || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "kembali";
   const target = store.getTarget();
-  const soldMonth = store.soldThisMonth();
-  const pct = Math.min(100, Math.round((soldMonth / Math.max(1, target)) * 100));
-  const favCount = s.favCount;
-
-  React.useEffect(() => {
-    const h = new Date().getHours();
-    setGreet(h < 11 ? "Selamat Pagi" : h < 15 ? "Selamat Siang" : h < 18 ? "Selamat Sore" : "Selamat Malam");
-    setDate(new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
-    createClient()
-      .auth.getUser()
-      .then(({ data }) => {
-        const u = data?.user;
-        const dn = store.getDisplayName();
-        setName(dn || String(u?.user_metadata?.full_name || u?.email?.split("@")[0] || "User"));
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.ready]);
-
-  return (
-    <div className="relative mb-8 overflow-hidden rounded-xl border border-zinc-950 bg-zinc-950 p-6 text-white sm:p-8 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
-      <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: "url(/images/car-hero.jpg)" }} />
-      <div className="absolute inset-0 bg-zinc-950/80 dark:bg-zinc-900/70" />
-      <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <p className="text-sm font-medium text-zinc-400 dark:text-zinc-500">{date}</p>
-            <HideButton id="banner" title="Sembunyikan banner" dark />
-          </div>
-          <h1 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">
-            {greet}, <span className="text-white dark:text-zinc-100">{name}</span>!
-          </h1>
-          <p className="max-w-xl text-sm leading-relaxed text-zinc-300 sm:text-base dark:text-zinc-400">
-            Anda punya {s.active} mobil aktif dan {s.sold} terjual. Temukan penawaran terbaik hari ini untuk mobil idamanmu di AutoBuyCars.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/beli" className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-zinc-950 shadow-sm transition hover:bg-zinc-200 dark:bg-zinc-200 dark:hover:bg-white">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Cari Mobil Baru
-            </Link>
-            <Link href="/favorit" className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:bg-white/15 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300">
-              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span>{favCount} mobil difavoritkan</span>
-            </Link>
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5 lg:w-72 dark:border-white/10 dark:bg-black/25">
-          <div className="mb-3 flex justify-between text-sm">
-            <span className="font-medium text-zinc-300 dark:text-zinc-400">Target penjualan</span>
-            <span className="font-bold text-white dark:text-zinc-100">{pct}%</span>
-          </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/15 dark:bg-white/10">
-            <div className="h-full rounded-full bg-white transition-all duration-1000 dark:bg-zinc-300" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="mt-3 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500">
-            {soldMonth}/{target} terjual bulan ini
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  const sold = store.soldThisMonth();
+  const pct = Math.min(100, Math.round(sold / Math.max(1, target) * 100));
+  React.useEffect(() => { const hour = Number(new Intl.DateTimeFormat("id-ID", { timeZone:"Asia/Jakarta", hour:"numeric", hourCycle:"h23" }).format(new Date())); setGreeting(hour < 11 ? "Selamat pagi" : hour < 15 ? "Selamat siang" : hour < 18 ? "Selamat sore" : "Selamat malam"); }, []);
+  return <div className="hero-panel dashboard-hero"><div className="hero-photo" /><div className="absolute right-3 top-3"><HideButton id="banner" title="Sembunyikan sapaan" dark /></div><div className="relative"><p className="hero-eyebrow">RUANG UNTUK PERJALANAN BERIKUTNYA</p><h2 className="mb-3 mt-3 text-[29px] font-semibold leading-tight tracking-tight">{greeting}, {name}.<br /><span className="text-emerald-200">Siap melangkah lebih jauh?</span></h2><p className="hero-description">Pantau inventaris, kelola penawaran, dan temukan peluang baru. Semua perjalananmu, dalam satu tempat.</p><div className="hero-actions"><Link href="/jual" className="button-primary !border-emerald-300 !bg-emerald-200 !text-emerald-950"><Icon name="plus" className="h-4 w-4" />Tambah listing</Link><Link href="/beli" className="hero-link">Jelajahi katalog<Icon name="arrow" className="h-4 w-4" /></Link></div></div><div className="hero-target"><small>Target penjualan bulan ini</small><div className="target-number my-3">{pct}<span className="ml-1 text-base text-emerald-100/60">%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-emerald-200" style={{width:`${pct}%`}} /></div><p className="mt-3 text-[10px] text-emerald-100/70">{sold} dari {target} unit tercapai</p><Link href="/pengaturan" className="mt-3 inline-block text-[9px] text-emerald-200 underline underline-offset-4">Atur target penjualan</Link></div></div>;
 }
 
 function InventoryTable() {
   const store = useStore();
   const [q, setQ] = React.useState("");
   const [status, setStatus] = React.useState("all");
-  const cars = store.all().filter((c) => {
+  const cars = store.inventory().filter((c) => {
     if (status !== "all" && c.status !== status) return false;
     const needle = q.trim().toLowerCase();
     if (needle && !(c.title.toLowerCase().includes(needle) || (c.location || "").toLowerCase().includes(needle))) return false;
     return true;
   });
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="relative flex flex-col overflow-hidden surface lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex flex-col gap-4 border-b border-gray-200 p-6 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
         <div className="pr-12">
           <h2 className="text-lg font-bold text-black dark:text-white">Daftar Inventaris</h2>
@@ -181,7 +122,7 @@ function PopularList() {
   const store = useStore();
   const popular = store.popular(3);
   return (
-    <div className="relative rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="surface relative p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-5 flex items-center justify-between gap-2 pr-12">
         <h2 className="text-base font-bold text-black dark:text-white">Mobil Populer</h2>
         <Link href="/beli" className="text-xs font-semibold text-black transition-all hover:underline dark:text-white">
@@ -232,7 +173,7 @@ function RecentActivity() {
   const store = useStore();
   const items = store.history().slice(0, 5);
   return (
-    <div className="relative rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="surface relative p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="absolute right-4 top-4">
         <HideButton id="recent" title="Sembunyikan aktivitas terbaru" />
       </div>
@@ -276,7 +217,7 @@ export default function DashboardPage() {
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black dark:border-zinc-700 dark:border-t-white" />
-          <p className="mt-3 text-xs text-gray-500 dark:text-zinc-400">Memuat katalog mobil...</p>
+          <p className="mt-3 text-xs text-gray-500 dark:text-zinc-400">Memuat dashboard...</p>
         </div>
       </div>
     );
@@ -284,6 +225,7 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <PageHeader eyebrow="OVERVIEW" title="Dashboard" description="Gambaran yang jelas untuk setiap keputusanmu." actions={<Link href="/jual" className="button-secondary"><Icon name="tag" className="h-4 w-4" />Kelola inventaris</Link>} />
       {hidden.length > 0 ? (
         <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
           <span className="mr-1 text-xs font-medium text-gray-500 dark:text-zinc-400">Disembunyikan:</span>
@@ -320,7 +262,7 @@ export default function DashboardPage() {
 
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {isHidden("trend") ? null : (
-          <div className="relative rounded-xl border border-gray-200 bg-white p-6 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="surface relative p-6 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="absolute right-4 top-4">
               <HideButton id="trend" title="Sembunyikan tren" />
             </div>
@@ -328,7 +270,7 @@ export default function DashboardPage() {
           </div>
         )}
         {isHidden("donut") ? null : (
-          <div className="relative flex flex-col rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="surface relative flex flex-col p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="absolute right-4 top-4">
               <HideButton id="donut" title="Sembunyikan jenis mobil" />
             </div>
@@ -342,7 +284,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {isHidden("popular") ? null : <PopularList />}
           {isHidden("activity") ? null : (
-            <div className="relative rounded-xl border border-black bg-black p-6 text-white dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+            <div className="relative rounded-2xl border border-emerald-900 bg-[#173f31] p-6 text-white dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
               <div className="absolute right-4 top-4">
                 <HideButton id="activity" title="Sembunyikan aktivitas" />
               </div>

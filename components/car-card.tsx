@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -18,8 +19,8 @@ export const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_CLS: Record<string, string> = {
   done: "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950",
-  running: "bg-zinc-600 text-white",
-  queued: "bg-zinc-200 text-zinc-950 dark:bg-zinc-800 dark:text-white",
+  running: "bg-emerald-50 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100",
+  queued: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
   failed:
     "border border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400",
 };
@@ -87,13 +88,16 @@ export function CarCard({
     return true;
   }
 
-  function act(fn: () => void, msg: string) {
-    fn();
+  function act(fn: () => unknown, msg: string) {
+    if (fn() === null) {
+      toast("Aksi tidak diizinkan atau listing sudah berubah.");
+      return;
+    }
     toast(msg);
   }
 
   return (
-    <div className="car-card-hover animate-fade-in overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-xs transition dark:border-zinc-800/90 dark:bg-zinc-900">
+    <div className="surface car-card-hover animate-fade-in overflow-hidden">
       <div
         className="relative cursor-pointer"
         onClick={() => onDetail?.(car.id)}
@@ -149,6 +153,8 @@ export function CarCard({
         <p className="mt-2 text-lg font-bold text-black dark:text-white">
           {fmtRp(car.price)}
         </p>
+        <div className="card-feature-row"><span>{car.category}</span><span>{car.year}</span><span>{car.km.toLocaleString("id-ID")} km</span></div>
+        {!sell ? <Link href={`/simulasi?harga=${car.price}`} className="mb-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400"><Icon name="calculator" className="h-3.5 w-3.5" />Hitung estimasi cicilan →</Link> : null}
         {best ? (
           <p className="mt-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
             Tawaran tertinggi {fmtRp(best.amount)}
@@ -270,7 +276,7 @@ export function CarCard({
                   Tandai Terjual
                 </button>
               ) : null}
-              {car.status === "done" ? (
+              {car.status === "done" && !car.purchase ? (
                 <button
                   onClick={() =>
                     act(

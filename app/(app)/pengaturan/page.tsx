@@ -7,6 +7,7 @@ import { useToast } from "@/components/toast";
 import { createClient } from "@/lib/supabase/client";
 import { WIDGETS } from "@/lib/market";
 import { useRole } from "@/components/role-provider";
+import { PageHeader } from "@/components/ui";
 import { RoleBadge } from "@/components/role-badge";
 import { getAdminWhatsApp, setAdminWhatsApp } from "@/lib/config";
 import { WhatsAppIcon } from "@/components/icons";
@@ -280,24 +281,10 @@ export default function PengaturanPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-12">
-      {/* Header Halaman */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-5 dark:border-zinc-800">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-black sm:text-3xl dark:text-white">
-            Pengaturan Akun
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-            Kelola peran, profil tampilan, preferensi antarmuka, dan data akun Anda.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <RoleBadge role={role} />
-          <SavedBadge show={saved} />
-        </div>
-      </div>
+      <PageHeader eyebrow="PREFERENSI WORKSPACE" title="Buat nyaman, dengan caramu." description="Kelola akun, pilih tampilan, dan sesuaikan workspace dengan kebutuhanmu." actions={<div className="flex items-center gap-3"><RoleBadge role={role} /><SavedBadge show={saved} /></div>} />
 
       {/* SECTION: STATUS KEANGGOTAAN */}
-      <div className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white/95 shadow-xs backdrop-blur-md dark:border-zinc-800/90 dark:bg-zinc-900/95">
+      <div className="overflow-hidden surface shadow-xs backdrop-blur-md dark:border-zinc-800/90 dark:bg-zinc-900/95">
         <div className="border-b border-gray-100 p-6 dark:border-zinc-800/80">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -312,7 +299,7 @@ export default function PengaturanPage() {
               </p>
             </div>
             <span className="self-start sm:self-auto rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-              {role === "admin" ? "Administrator" : "Pembeli Terverifikasi"}
+              {role === "admin" ? "Administrator" : role === "dealer" ? "Dealer/Penjual" : "Pembeli"}
             </span>
           </div>
         </div>
@@ -324,7 +311,7 @@ export default function PengaturanPage() {
                 Akun Administrator Resmi
               </p>
               <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
-                Anda memiliki akses penuh ke seluruh operasional platform, verifikasi listing kendaraan, dan inspeksi riwayat transaksi.
+                Akun ini dapat mengelola inventaris, keputusan penawaran, dan pengaturan workspace.
               </p>
             </div>
           ) : (
@@ -336,7 +323,7 @@ export default function PengaturanPage() {
                 </p>
               </div>
               <p className="mt-1 text-xs leading-relaxed text-blue-800 dark:text-blue-300">
-                Akun Anda memiliki akses langsung ke seluruh katalog kendaraan terverifikasi, fitur booking online (tanda jadi), kalkulator kredit cicilan, penerbitan nota transaksi resmi, dan kontak langsung ke penjual via WhatsApp.
+                Jelajahi katalog, simpan favorit, buat penawaran, dan coba simulasi kredit. Hubungi penjual untuk membahas pembelian langsung.
               </p>
             </div>
           )}
@@ -411,7 +398,7 @@ export default function PengaturanPage() {
       {/* GRID PENGATURAN LAINNYA */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* KARTU PROFIL TAMPILAN */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-base font-bold text-black dark:text-white">Profil & Tampilan</h2>
           <p className="mt-1 mb-4 text-xs text-gray-500 dark:text-zinc-400">
             Nama sapaan yang muncul di header dan dashboard.
@@ -474,7 +461,7 @@ export default function PengaturanPage() {
 
         {/* KARTU TARGET PENJUALAN (Khusus Dealer & Admin) */}
         {role !== "buyer" && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
             <h2 className="text-base font-bold text-black dark:text-white">Target Penjualan Bulanan</h2>
             <p className="mt-1 mb-4 text-xs text-gray-500 dark:text-zinc-400">
               Tentukan target penjualan unit mobil untuk monitoring performa.
@@ -527,7 +514,7 @@ export default function PengaturanPage() {
         )}
 
         {/* KARTU TEMA WARNA */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-base font-bold text-black dark:text-white">Tema Tampilan</h2>
           <p className="mt-1 mb-4 text-xs text-gray-500 dark:text-zinc-400">
             Pilih mode terang, gelap, atau ikuti preferensi sistem perangkat.
@@ -574,7 +561,7 @@ export default function PengaturanPage() {
         </div>
 
         {/* KARTU WIDGET DASHBOARD */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="surface p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <div className="mb-1 flex items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-bold text-black dark:text-white">Widget Dashboard</h2>
@@ -640,7 +627,7 @@ export default function PengaturanPage() {
         </div>
 
         {/* KARTU DATA & AKUN (LOGOUT & RESET) */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="surface p-6 shadow-xs lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-base font-bold text-black dark:text-white">Aksi Akun & Sesi</h2>
           <p className="mt-1 mb-4 text-xs text-gray-500 dark:text-zinc-400">
             Kelola sesi masuk atau bersihkan cache penyimpanan lokal di perangkat ini.

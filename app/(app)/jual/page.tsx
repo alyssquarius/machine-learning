@@ -7,6 +7,8 @@ import { SellToolbar, useModals } from "@/components/sell-shared";
 import { useStore } from "@/components/store-provider";
 import { useRole } from "@/components/role-provider";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
+import { EmptyState } from "@/components/ui";
+import { Icon } from "@/components/icons";
 import { config } from "@/lib/config";
 
 export default function JualPage() {
@@ -15,7 +17,7 @@ export default function JualPage() {
   const [filter, setFilter] = React.useState("all");
   const { openAdd, openEdit, openDetail, modals, setBuyId, setOfferId } = useModals();
   const s = store.stats();
-  const list = store.all().filter((c) => filter === "all" || c.status === filter);
+  const list = store.inventory().filter((c) => filter === "all" || c.status === filter);
 
   if (!authChecked) {
     return (
@@ -40,7 +42,7 @@ export default function JualPage() {
         <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-zinc-400">
           {role === "guest"
             ? "Anda belum login. Silakan masuk atau mendaftar sebagai Dealer untuk dapat mengunggah dan mengelola listing mobil."
-            : "Akun Anda saat ini memiliki peran Pembeli (Buyer). Fitur memasang listing mobil khusus untuk Dealer terverifikasi dan Administrator."}
+            : "Akun Anda saat ini memiliki peran Pembeli (Buyer). Fitur memasang listing mobil khusus untuk Dealer dan Administrator."}
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -76,7 +78,7 @@ export default function JualPage() {
         {stats.map((t) => (
           <div
             key={t.label}
-            className="rounded-2xl border border-gray-200/80 bg-white/80 p-4 backdrop-blur-md shadow-xs transition-all kpi-card-hover dark:border-zinc-800/80 dark:bg-zinc-900/80"
+            className="surface p-5"
           >
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
               {t.label}
@@ -88,9 +90,7 @@ export default function JualPage() {
         ))}
       </div>
       {list.length === 0 ? (
-        <p className="py-12 text-center text-sm text-gray-500 dark:text-zinc-400">
-          Belum ada listing pada filter ini.
-        </p>
+        <div className="surface"><EmptyState icon="tag" title="Listing pertamamu, peluang berikutnya." description="Tambahkan informasi mobil dan foto terbaiknya. Listing yang ditayangkan akan muncul di katalog browser ini."><button onClick={openAdd} className="button-primary"><Icon name="plus" className="h-4 w-4" />Tambahkan mobil</button></EmptyState></div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => (

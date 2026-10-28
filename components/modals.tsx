@@ -11,8 +11,10 @@ import { fmtRp, timeAgo } from "@/lib/format";
 import { checkoutCalc, TENORS } from "@/lib/market";
 import { STATUS_LABEL } from "@/components/car-card";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
+import { Dialog } from "@/components/dialog";
 import { CarImageUpload } from "@/components/car-image-upload";
 import { ReceiptModal } from "@/components/invoice-modal";
+import { canPerformAction } from "@/lib/roles";
 import { getAdminWhatsApp } from "@/lib/config";
 
 function ModalShell({
@@ -26,37 +28,7 @@ function ModalShell({
   wide?: boolean;
   className?: string;
 }) {
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 md:p-6 animate-fade-in">
-      {/* Backdrop: Gelap pekat & kontras tinggi agar tidak ada teks/tombol latar belakang yang bocor */}
-      <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity duration-300 dark:bg-black/85"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      {/* Dialog Card: 100% Solid Opaque Surface, flex-col berstruktur rapi */}
-      <div
-        className={`relative z-10 flex flex-col max-h-[92vh] sm:max-h-[88vh] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-zinc-200/90 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-[#18181b] dark:ring-white/10 animate-zoom-in ${
-          wide ? "max-w-2xl" : "max-w-lg"
-        } ${className}`}
-      >
-        {children}
-      </div>
-    </div>
-  );
+  return <Dialog onClose={onClose} wide={wide} className={className}>{children}</Dialog>;
 }
 
 function FieldError({ msg }: { msg: string }) {
@@ -141,7 +113,7 @@ export function SellModal({
           : "Listing diperbarui."
       );
     } else {
-      store.add({
+      const created = store.add({
         title,
         price,
         year,
@@ -155,6 +127,7 @@ export function SellModal({
         sellerId: store.owner() || "",
         sellerName: store.getDisplayName() || "",
       });
+      if (!created) return setErr("Anda tidak memiliki izin untuk membuat listing.");
       toast(
         listingStatus === "running"
           ? "Listing berhasil ditayangkan ke katalog pembeli!"
@@ -491,7 +464,7 @@ export function DetailModal({
                       {o.note || "—"} • {timeAgo(o.ts)} • <span className="font-semibold uppercase">{o.status}</span>
                     </p>
                   </div>
-                  {o.status === "pending" && (role === "admin" || role === "dealer") ? (
+                  {o.status === "pending" && canPerformAction(role, "canAcceptOffer", { isOwner: c.sellerId === store.owner() }) ? (
                     <div className="flex shrink-0 gap-1.5">
                       <button
                         onClick={() => {
@@ -613,7 +586,7 @@ export function OfferModal({ carId, onClose }: { carId: string; onClose: () => v
 
     if (!amount || amount < 1000000) return setErr("Tawaran minimal Rp 1.000.000.");
     setErr("");
-    store.makeOffer(carId, amount, note);
+    if (!store.makeOffer(carId, amount, note)) return setErr("Penawaran tidak dapat dikirim. Periksa izin akun dan status mobil.");
     toast("Penawaran berhasil dikirim ke penjual.");
     onClose();
   }
@@ -746,10 +719,10 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
 
     toast(
       paymentType === "booking"
-        ? "Booking berhasil! Unit mobil telah diamankan dan nota resmi diterbitkan."
+        ? "Simulasi booking tersimpan. Konfirmasikan ketersediaan unit kepada penjual."
         : method === "kredit"
-        ? "Pengajuan kredit berhasil diproses! Nota resmi telah diterbitkan."
-        : "Pembelian tunai berhasil dikonfirmasi! Nota resmi telah diterbitkan."
+        ? "Simulasi kredit tersimpan. Ringkasan siap ditinjau."
+        : "Simulasi pembelian tunai tersimpan. Ringkasan siap ditinjau."
     );
 
     setReceipt({
@@ -1004,7 +977,7 @@ export function CheckoutModal({ carId, onClose }: { carId: string; onClose: () =
         {/* Card Garansi */}
         <div className="rounded-2xl border border-gray-100 bg-gray-50/80 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/60">
           <p className="text-xs text-gray-600 dark:text-zinc-400">
-            ✓ Unit terverifikasi dengan jaminan bebas banjir & tabrakan berat. Nota pemesanan resmi akan diterbitkan otomatis.
+            Ringkasan ini adalah simulasi. Konfirmasikan kondisi kendaraan, ketersediaan, dan pembayaran langsung dengan penjual.
           </p>
         </div>
       </div>

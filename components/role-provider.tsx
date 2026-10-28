@@ -49,35 +49,42 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     let cancelled = false;
+    let authVersion = 0;
     if (!getSupabaseConfig()) {
       setAuthChecked(true);
       return;
     }
     const supabase = createClient();
 
+    const initialVersion = authVersion;
     (async () => {
       try {
         const { data } = await supabase.auth.getUser();
-        if (cancelled) return;
+        if (cancelled || authVersion !== initialVersion) return;
         const session = data.user ? { user: data.user } : null;
         if (session?.user) {
           const verifiedUser = await repairLegacyAvatarSession(supabase, session.user);
-          if (cancelled) return;
+          if (cancelled || authVersion !== initialVersion) return;
           setUser(verifiedUser);
           store.setOwner(session.user.id);
           const r = await fetchUserRole(session.user.id);
-          if (!cancelled) setRole(r);
+          if (!cancelled && authVersion === initialVersion) {
+            store.setOwner(session.user.id, r);
+            setRole(r);
+          }
         } else {
           setUser(null);
           setRole("guest");
+          store.setOwner("");
         }
       } catch {
-        if (!cancelled) {
+        if (!cancelled && authVersion === initialVersion) {
           setUser(null);
           setRole("guest");
+          store.setOwner("");
         }
       } finally {
-        if (!cancelled) setAuthChecked(true);
+        if (!cancelled && authVersion === initialVersion) setAuthChecked(true);
       }
     })();
 
@@ -86,18 +93,26 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
       if (event === "SIGNED_OUT") {
+        authVersion += 1;
+        setAuthChecked(true);
         setUser(null);
         setRole("guest");
         store.setOwner("");
         router.replace("/login");
       } else if (event === "SIGNED_IN" && session?.user) {
+        const eventVersion = ++authVersion;
+        setAuthChecked(false);
         setUser(session.user);
         store.setOwner(session.user.id);
         // Supabase callbacks run under the auth lock; query after it is released.
         setTimeout(() => {
-          if (cancelled) return;
+          if (cancelled || eventVersion !== authVersion) return;
           void fetchUserRole(session.user.id).then((r) => {
-            if (!cancelled) setRole(r);
+            if (!cancelled && eventVersion === authVersion) {
+              setAuthChecked(true);
+              store.setOwner(session.user.id, r);
+              setRole(r);
+            }
           });
         }, 0);
       }
@@ -153,6 +168,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* abaikan */
       }
+      store.setOwner(user.id, newRole);
       setRole(newRole);
       window.dispatchEvent(new CustomEvent("role-updated", { detail: newRole }));
       return true;
@@ -170,6 +186,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       if (u) {
         setUser(u);
         const r = await fetchUserRole(u.id);
+        store.setOwner(u.id, r);
         setRole(r);
       }
     } catch {

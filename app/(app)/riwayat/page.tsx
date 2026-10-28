@@ -2,10 +2,12 @@
 
 import * as React from "react";
 import { useStore, type Car } from "@/components/store-provider";
-import { DetailModal, ReceiptModal } from "@/components/modals";
+import { CheckoutModal, OfferModal, DetailModal, ReceiptModal } from "@/components/modals";
 import { HistText } from "@/components/hist-text";
 import { useToast } from "@/components/toast";
 import { timeAgo } from "@/lib/format";
+import { PageHeader, EmptyState } from "@/components/ui";
+import { Icon } from "@/components/icons";
 import { HIST_OPTIONS, resolveHistFilterValue } from "@/lib/market";
 
 const TONE: Record<string, string> = {
@@ -29,6 +31,8 @@ export default function RiwayatPage() {
   const { toast } = useToast();
   const [filterRaw, setFilterRaw] = React.useState("Semua aktivitas");
   const [filter, setFilter] = React.useState("all");
+  const [buyId, setBuyId] = React.useState<string | null>(null);
+  const [offerId, setOfferId] = React.useState<string | null>(null);
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [receiptCar, setReceiptCar] = React.useState<Car | null>(null);
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -67,22 +71,9 @@ export default function RiwayatPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-black sm:text-3xl dark:text-white">
-            Riwayat
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-            {total} aktivitas tercatat.
-          </p>
-        </div>
+      <PageHeader eyebrow="CATATAN PERJALANAN" title="Semua langkah, tercatat rapi." description={`${total} aktivitas tersimpan. Telusuri penawaran, listing, dan simulasi transaksimu.`} actions={<button onClick={exportCSV} disabled={!total} className="button-secondary disabled:opacity-40"><Icon name="download" className="h-4 w-4" />Unduh riwayat</button>} />
+      <div className="mb-6">
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={exportCSV}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-black transition hover:bg-gray-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
-          >
-            Unduh CSV
-          </button>
           <button
             onClick={() => {
               if (!total) return;
@@ -95,6 +86,7 @@ export default function RiwayatPage() {
             Hapus
           </button>
           <input
+            aria-label="Filter jenis aktivitas"
             value={filterRaw}
             onChange={(e) => onFilterChange(e.target.value)}
             list="hist-filter-list"
@@ -110,11 +102,9 @@ export default function RiwayatPage() {
           </datalist>
         </div>
       </div>
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="surface p-6">
         {list.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-500 dark:text-zinc-400">
-            Belum ada riwayat pada filter ini.
-          </p>
+          <EmptyState icon="history" title="Ruang untuk perjalanan barumu." description="Aktivitas akan muncul setelah kamu menyimpan favorit, menambahkan listing, atau membuat penawaran." action={{href:"/beli",label:"Jelajahi katalog"}} />
         ) : (
           <ul className="space-y-5">
             {list.map((h, i) => (
@@ -163,11 +153,13 @@ export default function RiwayatPage() {
         )}
       </div>
       {detailId ? (
-        <DetailModal carId={detailId} onClose={() => setDetailId(null)} onBuy={() => {}} onOffer={() => {}} />
+        <DetailModal carId={detailId} onClose={() => setDetailId(null)} onBuy={setBuyId} onOffer={setOfferId} />
       ) : null}
       {receiptCar && receiptCar.purchase ? (
         <ReceiptModal car={receiptCar} purchase={receiptCar.purchase} onClose={() => setReceiptCar(null)} />
       ) : null}
+      {buyId ? <CheckoutModal carId={buyId} onClose={() => setBuyId(null)} /> : null}
+      {offerId ? <OfferModal carId={offerId} onClose={() => setOfferId(null)} /> : null}
       <p className="hidden">{histLabel(filter.startsWith("q:") ? "all" : filter)}</p>
     </div>
   );

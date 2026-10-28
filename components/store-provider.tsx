@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cleanCategory } from "@/lib/cities";
+import { canPerformAction, hasPermission, type Role } from "@/lib/roles";
 import { safeImageUrl } from "@/lib/format";
 
 // ---------- Tipe ----------
@@ -253,6 +254,7 @@ interface StoreApi {
   ready: boolean;
   cars: Car[];
   all(): Car[];
+  inventory(): Car[];
   get(id: string): Car | undefined;
   history(): HistEntry[];
   stats(): Stats;
@@ -278,7 +280,7 @@ interface StoreApi {
   makeOffer(id: string, amount: number, note?: string): Offer | null;
   decideOffer(id: string, offerId: string, accept: boolean): Offer | null;
   toggleFav(id: string): boolean;
-  add(data: Partial<Car> & { title: string; price: number; year: number }): Car;
+  add(data: Partial<Car> & { title: string; price: number; year: number }): Car | null;
   update(id: string, patch: Partial<Car>): Car | null;
   remove(id: string): boolean;
   setStatus(id: string, status: CarStatus): Car | null;
@@ -310,7 +312,7 @@ interface StoreApi {
   markNotifsRead(): void;
   clearHistory(): void;
   reset(): void;
-  setOwner(id: string): string;
+  setOwner(id: string, role?: Role): string;
   duplicate(id: string): Car | null;
   clearFavs(): number;
 }
@@ -334,6 +336,7 @@ export function StoreProvider({
   children: React.ReactNode;
 }) {
   const ownerRef = React.useRef("");
+  const roleRef = React.useRef<Role>("guest");
   const [snap, setSnap] = React.useState<Snapshot>({
     cars: [],
     favs: [],
@@ -383,6 +386,7 @@ export function StoreProvider({
         /* abaikan */
       }
 
+      snapRef.current = next;
       setSnap({ ...next, cars: [...next.cars] });
     },
     [scoped]
@@ -403,16 +407,9 @@ export function StoreProvider({
         let localCarsChanged = false;
         cars = cars.map((localCar) => {
           const sc = sharedMap.get(localCar.id);
-          if (sc) {
-            if (sc.purchase && (!localCar.purchase || localCar.status !== sc.status)) {
-              localCarsChanged = true;
-              return {
-                ...localCar,
-                status: sc.status,
-                badge: sc.badge || (sc.status === "done" ? "Terjual" : localCar.badge),
-                purchase: sc.purchase,
-              };
-            }
+          if (sc && JSON.stringify(sc) !== JSON.stringify(localCar)) {
+            localCarsChanged = true;
+            return sc;
           }
           return localCar;
         });
@@ -433,7 +430,7 @@ export function StoreProvider({
         if (ownerId) {
           let histChanged = false;
           cars.forEach((c) => {
-            if ((c.sellerId === ownerId || seen.has(c.id)) && c.purchase && c.status === "done") {
+            if (c.sellerId === ownerId && c.purchase && c.status === "done") {
               const p = c.purchase;
               const alreadyNotified = hist.some(
                 (h) => h.carId === c.id && h.text.includes(p.invoiceNumber)
@@ -504,8 +501,19 @@ export function StoreProvider({
 
   const api: StoreApi = React.useMemo(() => {
     const cur = () => snapRef.current;
+    const latestSnapshot = () => {
+      const snapshot = clone(cur());
+      const shared = normalizeCars(load(LS_SHARED_CARS, []));
+      const cars = new Map(snapshot.cars.map((car) => [car.id, car]));
+      shared.forEach((car) => cars.set(car.id, car));
+      snapshot.cars = [...cars.values()];
+      return snapshot;
+    };
+    const inventory = () => cur().cars.filter((car) => roleRef.current === "admin" || (!!ownerRef.current && car.sellerId === ownerRef.current));
+    const canMutateListing = (car: Car, action: "canEditOwnListing" | "canDeleteOwnListing" | "canAcceptOffer" | "canRejectOffer") =>
+      !!ownerRef.current && canPerformAction(roleRef.current, action, { isOwner: car.sellerId === ownerRef.current });
     const mutate = (fn: (s: Snapshot) => Snapshot, opts?: { silentHist?: boolean }) => {
-      const next = fn(clone(cur()));
+      const next = fn(latestSnapshot());
       void opts;
       persist(next);
     };
@@ -516,6 +524,7 @@ export function StoreProvider({
       all() {
         return [...cur().cars].sort((a, b) => b.createdAt - a.createdAt);
       },
+      inventory() { return inventory().sort((a, b) => b.createdAt - a.createdAt); },
       get(id) {
         return cur().cars.find((c) => c.id === id);
       },
@@ -523,21 +532,21 @@ export function StoreProvider({
         return [...cur().hist].sort((a, b) => b.ts - a.ts);
       },
       stats(): Stats {
-        const cars = cur().cars;
+        const cars = inventory();
         const favs = cur().favs;
         return {
           total: cars.length,
           active: cars.filter((c) => c.status === "running").length,
           sold: cars.filter((c) => c.status === "done").length,
           pending: cars.filter((c) => c.status === "queued").length,
-          favCount: favs.filter((id) => cars.some((c) => c.id === id)).length,
+          favCount: favs.filter((id) => cur().cars.some((c) => c.id === id)).length,
           activeValue: cars
             .filter((c) => c.status === "running")
             .reduce((a, c) => a + (c.price || 0), 0),
         };
       },
       categoryDist() {
-        const cars = cur().cars;
+        const cars = inventory();
         const cats: Record<string, number> = {};
         cars.forEach((c) => {
           cats[c.category || "Lainnya"] = (cats[c.category || "Lainnya"] || 0) + 1;
@@ -548,7 +557,7 @@ export function StoreProvider({
           .sort((a, b) => b.pct - a.pct);
       },
       popular(limit = 3) {
-        return [...cur().cars]
+        return [...inventory()]
           .sort((a, b) => (b.interest || 0) - (a.interest || 0))
           .slice(0, limit);
       },
@@ -569,13 +578,13 @@ export function StoreProvider({
         return list.reduce((a, b) => (b.amount > a.amount ? b : a));
       },
       pendingOffersCount() {
-        return cur().cars.reduce(
+        return inventory().reduce(
           (a, c) => a + ((c.offers || []).filter((o) => o.status === "pending").length),
           0
         );
       },
       totalRevenue() {
-        return cur().cars
+        return inventory()
           .filter((c) => c.status === "done")
           .reduce((a, c) => a + (Number(c.price) || 0), 0);
       },
@@ -585,14 +594,14 @@ export function StoreProvider({
         return this.soldEvents().filter((ts) => ts >= start).length;
       },
       soldEvents() {
-        return cur()
-          .cars.filter((c) => c.status === "done")
+        return inventory()
+          .filter((c) => c.status === "done")
           .map((c) => (c.purchase && c.purchase.ts) || c.createdAt)
           .filter((ts) => ts > 0)
           .sort((a, b) => a - b);
       },
       listedEvents() {
-        return cur().cars
+        return inventory()
           .map((c) => c.createdAt)
           .filter((ts) => ts > 0)
           .sort((a, b) => a - b);
@@ -655,7 +664,8 @@ export function StoreProvider({
         return ownerRef.current;
       },
       makeOffer(id, amount, note) {
-        const s = clone(cur());
+        if (!ownerRef.current || !hasPermission(roleRef.current, "canMakeOffer")) return null;
+        const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
         if (!car || car.status !== "running") return null;
         const val = Number(amount) || 0;
@@ -682,8 +692,9 @@ export function StoreProvider({
         return offer;
       },
       decideOffer(id, offerId, accept) {
-        const s = clone(cur());
+        const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
+        if (car && !canMutateListing(car, accept ? "canAcceptOffer" : "canRejectOffer")) return null;
         if (!car || !car.offers) return null;
         if (car.status === "done") return null;
         const offer = car.offers.find((o) => o.id === offerId);
@@ -729,7 +740,8 @@ export function StoreProvider({
         return offer;
       },
       toggleFav(id) {
-        const s = clone(cur());
+        if (!ownerRef.current) return false;
+        const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
         if (!car) return false;
         const on = !s.favs.includes(id);
@@ -749,7 +761,8 @@ export function StoreProvider({
         return on;
       },
       add(data) {
-        const s = clone(cur());
+        if (!ownerRef.current || !hasPermission(roleRef.current, "canCreateListing")) return null;
+        const s = latestSnapshot();
         const category = cleanCategory(data.category, "SUV");
         const maxYear = new Date().getFullYear();
         const yearNum = Math.min(maxYear, Math.max(1990, Number(data.year) || maxYear));
@@ -768,7 +781,7 @@ export function StoreProvider({
           badge: status === "running" ? "Dijual" : "Baru",
           image: imageFor(category, data.image),
           description: String(data.description || "").trim().slice(0, 500),
-          sellerId: String(data.sellerId || ownerRef.current || "").trim(),
+          sellerId: ownerRef.current,
           sellerName: String(data.sellerName || cur().settings.displayName || "").trim().slice(0, 60),
           sellerPhone: String(data.sellerPhone || "").trim(),
           createdAt: Date.now(),
@@ -790,9 +803,11 @@ export function StoreProvider({
         return car;
       },
       update(id, patch) {
-        const s = clone(cur());
+        const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
+        if (car && !canMutateListing(car, "canEditOwnListing")) return null;
         if (!car) return null;
+        if (car.purchase && patch.status && patch.status !== "done") return null;
         const allowed = ["title", "price", "year", "km", "location", "category", "status", "badge", "image", "description", "interest"];
         const clean: Partial<Car> = {};
         Object.keys(patch || {}).forEach((k) => {
@@ -827,8 +842,9 @@ export function StoreProvider({
         return car;
       },
       remove(id) {
-        const s = clone(cur());
+        const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
+        if (car && !canMutateListing(car, "canDeleteOwnListing")) return false;
         if (!car) return false;
         s.cars = s.cars.filter((c) => c.id !== id);
         s.favs = s.favs.filter((f) => f !== id);
@@ -851,9 +867,11 @@ export function StoreProvider({
       },
       setStatus(id, status) {
         if (!STATUSES.includes(status)) return null;
-        const s = clone(cur());
+        const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
+        if (car && !canMutateListing(car, "canEditOwnListing")) return null;
         if (!car) return null;
+        if (car.purchase && status && status !== "done") return null;
         car.status = status;
         if (status === "running") car.badge = "Dijual";
         const label =
@@ -870,9 +888,11 @@ export function StoreProvider({
         return car;
       },
       edit(id, data) {
-        const s = clone(cur());
+        const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
+        if (car && !canMutateListing(car, "canEditOwnListing")) return null;
         if (!car) return null;
+        if (car.purchase && data.status && data.status !== "done") return null;
         const title = String(data.title || "").trim().slice(0, 80);
         const price = Number(data.price) || 0;
         const year = Number(data.year) || car.year;
@@ -909,7 +929,8 @@ export function StoreProvider({
         return car;
       },
       buy(id, opts = {}) {
-        const s = clone(cur());
+        if (!ownerRef.current || !hasPermission(roleRef.current, "canBuyCar")) return null;
+        const s = latestSnapshot();
         const car = s.cars.find((c) => c.id === id);
         if (!car || car.status !== "running") return null;
         car.status = "done";
@@ -1112,14 +1133,20 @@ export function StoreProvider({
           return s;
         });
       },
-      setOwner(id) {
-        ownerRef.current = String(id || "");
-        setSnap(loadForOwner(ownerRef.current));
+      setOwner(id, role = "guest") {
+        const nextId = String(id || "");
+        if (ownerRef.current === nextId && roleRef.current === role) return nextId;
+        roleRef.current = role;
+        ownerRef.current = nextId;
+        const next = loadForOwner(ownerRef.current);
+        snapRef.current = next;
+        setSnap(next);
         return ownerRef.current;
       },
       duplicate(id) {
-        const s = clone(cur());
+        const s = latestSnapshot();
         const src = s.cars.find((c) => c.id === id);
+        if (src && !canMutateListing(src, "canEditOwnListing")) return null;
         if (!src) return null;
         const car: Car = clone(src);
         car.id = uid("c");
@@ -1142,7 +1169,7 @@ export function StoreProvider({
         return car;
       },
       clearFavs() {
-        const s = clone(cur());
+        const s = latestSnapshot();
         const n = s.favs.length;
         s.favs = [];
         if (n)

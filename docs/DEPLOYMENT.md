@@ -91,3 +91,11 @@ SDK Auth yang terpasang mempertahankan JWT lama setelah `updateUser()`. Karena i
 Halaman profil juga tidak lagi melakukan request Auth dan penulisan metadata berulang ketika snapshot store berubah. Cookie deletion dari pembaruan bertahap tetap dikirim agar chunk lama tidak tertinggal.
 
 Perubahan tambahan ini belum dideploy. Setelah deployment, uji login dan Profil Saya pada sesi baru. Jangan menghapus seluruh data situs tanpa backup; jika browser sudah menolak request karena cookie lama, cleanup dalam aplikasi mungkin tidak sempat dijalankan. Belum ada pengambilan network trace dari sesi Safari yang gagal.
+
+## Penyelesaian terverifikasi dengan akun admin
+
+Audit akun nyata berikutnya mengonfirmasi bahwa metadata Auth masih berisi avatar sepanjang 53.807 karakter dan role profil NULL. Memperbaiki cookie guest saja belum menyelesaikan sumber token besar. Metadata diperbaiki melalui SQL Editor dengan mempertahankan foto pada profiles, lalu role admin ditetapkan setelah persetujuan khusus pemilik. JWT baru sekitar 860 byte (sebelumnya 72.600) dan satu cookie (sebelumnya 31). Request HTTP/2 ke /profil berhasil 200. Safari biasa berhasil login ke dashboard, membuka Profil Saya, dan refresh penuh dengan foto tetap tampil.
+
+Trigger protect_profile_privileges dan guard_auth_inline_avatar sudah dibuat pada Supabase produksi. Sesi lama Safari diakhiri melalui tombol Keluar dari katalog yang dipulihkan lewat riwayat tab; tidak dilakukan penghapusan data domain yang kini memiliki localStorage.
+
+Perbaikan frontend tambahan dan 32 pengujian role/store ada pada kode lokal dan perlu deployment baru. Lihat [AUDIT.md](AUDIT.md) dan PRD versi 1.3. Pengujian perilaku trigger dengan subtransaksi sudah lulus setelah Mac dibuka: perubahan role admin oleh client, perubahan verified, serta penulisan avatar inline pada Auth semuanya ditolak. Pemeriksaan sesudah pengujian memastikan role tetap admin, verified tetap false, metadata tetap 73 byte, dan foto tetap 53.807 karakter pada profiles.

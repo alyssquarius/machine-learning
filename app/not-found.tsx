@@ -10,10 +10,10 @@ export default function NotFound() {
         Alamat yang kamu buka tidak tersedia.
       </p>
       <Link
-        href="/dashboard"
+        href="/beli"
         className="inline-block rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
       >
-        Kembali ke Dashboard
+        Kembali ke Katalog
       </Link>
     </div>
   );

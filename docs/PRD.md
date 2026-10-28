@@ -1,7 +1,7 @@
-# PRD AutoBuyCars — Pembaruan stabilitas dan autentikasi
+# PRD AutoBuyCars — Workspace otomotif dan pembaruan pengalaman pengguna
 
-Versi dokumen: 1.2 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
-Status: implementasi kode lokal; rilis Vercel dan migrasi Supabase belum diterapkan.
+Versi dokumen: 1.4 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
+Status: perbaikan data akun dan trigger Supabase sudah diterapkan; pembaruan tampilan, simulator dan perbaikan role/store/profil tersedia pada kode dan preview lokal, belum dideploy ke Vercel. Lihat AUDIT.md untuk bukti dan batas pengujian.
 
 ## 1. Ringkasan produk
 
@@ -14,7 +14,7 @@ Pembaruan ini berfokus pada akses halaman, kestabilan build, sesi login, pemulih
 | Masalah | Bukti | Dampak |
 | --- | --- | --- |
 | Link gagal di Safari biasa | Pesan “alamat halaman tidak sah”; URL yang sama terbuka di Safari Private dan browser terpisah | Pengguna lama tidak dapat masuk melalui profil browser tersebut |
-| Sesi berpotensi membesar | Riwayat kode menyimpan avatar base64 dalam metadata Auth; JWT membawa metadata | Risiko cookie/header terlalu besar; hubungan langsung dengan error Safari belum dibuktikan melalui trace |
+| Sesi berpotensi membesar | Riwayat kode menyimpan avatar base64 dalam metadata Auth; JWT membawa metadata | Risiko cookie/header terlalu besar; audit akun nyata mengonfirmasi token dan cookie terlalu besar; lihat bagian 13 |
 | Build bergantung jaringan font | Build awal gagal mengambil Google Fonts | Build dapat gagal ketika layanan font tidak terjangkau |
 | Konfigurasi akun kosong memicu exception | Client dibuat pada efek provider tanpa penanganan konfigurasi | Halaman dapat crash pada deployment yang belum dikonfigurasi |
 | Redirect autentikasi terlalu luas | Halaman reset dan verifikasi diperlakukan seperti login/register | Pemulihan akun terhalang saat sesi sudah terbentuk |
@@ -109,10 +109,10 @@ Angka dashboard dan status transaksi mengikuti data browser, bukan laporan pemba
 | --- | --- | --- |
 | Build | Production build selesai | `npm run build` |
 | Tipe | Tidak ada error TypeScript | `npm run typecheck` |
-| Auth regression | Guest, role, recovery, cookie redirect, callback invalid, env kosong dan outage sesuai spesifikasi | `npm test`: 19 skenario, termasuk SDK Supabase SSR dengan transport Auth tiruan |
+| Auth regression | Guest, role, recovery, cookie redirect, callback invalid, env kosong dan outage sesuai spesifikasi | `npm test`: 32 skenario, termasuk SDK Supabase SSR dengan transport Auth tiruan |
 | Production saat diagnosis | URL terbuka pada sesi baru | Diuji langsung di Safari Private dan browser terpisah; deployment lama |
 | UI lokal | Katalog dan login dapat ditampilkan | Katalog dan login diuji di browser; tanpa env, katalog tetap terbuka dan pesan layanan akun tampil. Bukan bukti integrasi login Supabase |
-| Migrasi privilege | Client tidak dapat menaikkan role/admin atau verifikasi | Harus diuji staging dan diterapkan pengelola; belum dilakukan |
+| Migrasi privilege | Client tidak dapat menaikkan role/admin atau verifikasi | Diterapkan di Supabase; tiga percobaan perubahan terlarang ditolak dan di-rollback |
 | Rilis baru | Safari biasa/Private dan autentikasi nyata berhasil | Menunggu deployment versi baru dan akun uji |
 
 Pengujian otomatis memakai mock untuk perilaku routing; tidak membuktikan koneksi database, konfigurasi email, provider Google, RLS produksi, atau pemulihan cookie Safari lama.
@@ -137,3 +137,44 @@ Pemeriksaan kode SDK yang terpasang menemukan `updateUser()` hanya menyimpan obj
 Pembaruan tambahan: cleanup terpusat memeriksa metadata user dan JWT lama, memperbarui metadata hanya bila diperlukan, kemudian menunggu JWT baru sebelum navigasi. Error cleanup tidak diabaikan. Cookie penghapusan chunk lama dipertahankan meskipun ada beberapa pembaruan cookie dalam satu request. Pembacaan profil/avatar tidak lagi menulis metadata Auth. Halaman profil memakai user dari provider, memuat data saat akun berubah, menangani storage yang diblokir, dan menampilkan pesan bila foto gagal dimuat.
 
 Kriteria tambahan: sesi uji berisi avatar inline menghasilkan cookie yang lebih kecil dan tanpa chunk usang; metadata user bersih tetapi JWT lama masih besar tetap direfresh; sesi sehat tidak menyebabkan update atau refresh tambahan; callback bersamaan berbagi satu proses perbaikan. Pengujian profil dengan akun nyata pada deployment baru masih diperlukan.
+
+## 13. Audit akun admin dan pengujian Safari setelah login
+
+Audit akun nyata mengonfirmasi avatar inline pada metadata Auth sepanjang 53.807 karakter dan role profil NULL. Setelah foto dipertahankan pada profil, metadata Auth dibersihkan dan role ditetapkan admin dengan persetujuan pemilik. JWT turun dari sekitar 72.600 menjadi 860 byte, cookie dari 31 menjadi satu. Login admin, dashboard, Profil Saya dan refresh penuh berhasil pada Safari biasa di domain produksi. Trigger perlindungan privilege dan larangan avatar inline pada metadata Auth telah ditambahkan di Supabase.
+
+Perbaikan kode lanjutan mencakup kepemilikan listing/tawaran di store, inventaris per dealer, sinkronisasi tawaran lokal, pembatasan pembukaan ulang purchase, serta penyimpanan nama profil ke database. Rincian matriks role, bukti, 32 pengujian otomatis, dan fitur admin yang belum tersedia ada pada [laporan audit](AUDIT.md). Perubahan frontend lanjutan perlu deployment baru; penyimpanan marketplace masih lokal.
+
+Pemeriksaan database lanjutan setelah Mac dibuka juga lulus: client tidak dapat mengubah role admin/status verified atau menulis avatar inline pada Auth. Ketiga percobaan diuji di subtransaksi dan tidak menyimpan perubahan. Profil admin kembali direfresh di Safari dan tetap terbuka.
+
+
+## 14. Pembaruan pengalaman pengguna — versi 1.4
+
+### Arah desain
+
+Workspace memakai sidebar hijau hutan, aksen emerald, latar netral, kartu dengan garis lembut, hierarki tipografi konsisten dan fotografi kendaraan dari aset lokal. Tema terang/gelap mengikuti token warna yang sama. Navigasi desktop berubah menjadi drawer pada lebar di bawah 1024 px. Tidak ada angka pertumbuhan, garansi kendaraan, atau klaim verifikasi yang dibuat tanpa data.
+
+### Persyaratan fitur
+
+| ID | Area | Perilaku dan kriteria penerimaan |
+| --- | --- | --- |
+| UX-01 | Navigasi | Menu mengikuti role; halaman aktif jelas; pencarian header menuju katalog; pintasan Cmd/Ctrl+K memfokuskan pencarian; drawer dapat dibuka dan ditutup pada ponsel. |
+| UX-02 | Dashboard | Ringkasan berasal dari inventaris dan riwayat akun; grafik mempunyai pilihan 7/30/90 hari dan kondisi kosong yang memberi arahan. Tidak memakai tren contoh sebagai aktivitas nyata. |
+| UX-03 | Katalog | Hero, pencarian, kategori, urutan, rentang harga, kota dan tahun; filter tambahan dapat dibuka pada ponsel; hasil kosong menawarkan simulator atau penambahan listing sesuai akses. |
+| UX-04 | Listing & favorit | Kartu menampilkan spesifikasi/status dan akses simulator; pengelolaan mempertahankan pemeriksaan pemilik; kondisi kosong menyertakan tindakan berikutnya. |
+| UX-05 | Simulator kredit | Route /simulasi, harga Rp1 juta–Rp10 miliar, DP 10–80%, tenor 12–60 bulan, bunga flat tahunan 0–25%; hasil berubah saat input diganti. |
+| UX-06 | Hasil simulasi | Menampilkan pokok pembiayaan, cicilan dan total; pengguna dapat mengunduh ringkasan TXT dan membuka katalog dengan batas anggaran. Hasil ilustratif, tidak termasuk biaya tambahan atau penawaran bank. |
+| UX-07 | Profil & pengaturan | Foto/identitas dan formulir terpisah dengan jelas; nama disimpan ke profiles; tidak ada penulisan avatar inline ke metadata Auth; akses preferensi dan bantuan tersedia. |
+| UX-08 | Riwayat | Filter dan ekspor CSV dipertahankan; detail kendaraan menghubungkan tindakan tawar/checkout ke dialog yang sesuai; ekspor dinonaktifkan jika tidak ada hasil. |
+| UX-09 | Dialog | Detail, listing, penawaran, checkout, invoice, editor foto dan bantuan memakai kerangka dialog; Escape menutup, Tab tetap di dialog, fokus kembali ke pemicu, overlay berada di atas navigasi/kontak. |
+| UX-10 | Bantuan & auth | Panduan fitur dapat dibuka dari sidebar/footer; halaman login/daftar/pemulihan memakai tata letak konsisten dan tetap mempertahankan alur Supabase. |
+| UX-11 | Aksesibilitas | Skip link, fokus keyboard terlihat, label kontrol utama, status filter terpilih dan reduced-motion tersedia. Navigasi tertutup tidak menerima fokus pada ponsel. |
+
+### Perhitungan simulator
+
+Pokok pembiayaan = harga dikurangi DP. Bunga total = pokok × bunga flat tahunan × tenor/12. Cicilan = (pokok + bunga total)/tenor. Contoh harga Rp250 juta, DP30%, bunga8% per tahun: tenor36 bulan menghasilkan cicilan sekitar Rp6.027.778; tenor60 bulan sekitar Rp4.083.333. Kalkulasi ini tidak mencakup asuransi, administrasi, atau persetujuan pembiayaan.
+
+### Validasi dan batas rilis
+
+Typecheck, 32 pengujian regresi dan production build lulus. Pemeriksaan browser lokal mencakup desktop1440 px, ponsel375 px, tema terang/gelap, profil admin, filter tambahan, drawer, dialog listing dan penutupan Escape, bantuan, serta perubahan tenor simulator. Katalog mobile tidak memiliki overflow horizontal pada lebar375 px. Pengujian dialog tidak menerbitkan listing uji.
+
+Data marketplace tetap tersimpan pada browser. UI admin mengikuti akses yang tersedia; halaman pengelolaan pengguna/verifikasi dealer belum tersedia. Pembaruan UI memerlukan deployment Vercel dan smoke test ulang sebelum dinyatakan tersedia pada domain publik.

@@ -4,7 +4,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { StoreProvider } from "@/components/store-provider";
 import { ToastProvider } from "@/components/toast";
 import { RoleProvider } from "@/components/role-provider";
-import { InteractiveRipple } from "@/components/interactive-ripple";
 
 export const metadata: Metadata = {
   title: {
@@ -32,7 +31,6 @@ export default function RootLayout({
           <StoreProvider>
             <RoleProvider>
               <ToastProvider>{children}</ToastProvider>
-              <InteractiveRipple />
             </RoleProvider>
           </StoreProvider>
         </ThemeProvider>

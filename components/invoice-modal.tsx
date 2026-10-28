@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Dialog } from "@/components/dialog";
 import { type Car, type Purchase } from "@/components/store-provider";
 import { fmtRp } from "@/lib/format";
 import { WhatsAppIcon } from "@/components/icons";
@@ -108,15 +109,9 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
     : 0;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 overflow-y-auto print:p-0 print:static print:z-0">
-      {/* Backdrop blur */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300 print:hidden"
-        onClick={onClose}
-      />
-
+    <Dialog onClose={onClose} label="Ringkasan simulasi transaksi" wide>
       {/* Kontainer Nota ala Apple */}
-      <div className="relative my-6 max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-black/10 bg-white/95 p-6 shadow-2xl backdrop-blur-2xl transition-all sm:p-8 dark:border-white/10 dark:bg-zinc-900/95 print:my-0 print:max-h-none print:w-full print:max-w-none print:rounded-none print:border-none print:p-8 print:shadow-none print:bg-white print:text-black">
+      <div className="receipt-print relative my-6 max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-black/10 bg-white/95 p-6 shadow-2xl backdrop-blur-2xl transition-all sm:p-8 dark:border-white/10 dark:bg-zinc-900/95 print:my-0 print:max-h-none print:w-full print:max-w-none print:rounded-none print:border-none print:p-8 print:shadow-none print:bg-white print:text-black">
         {/* Tombol Close & Badge atas */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-4 print:border-gray-200 dark:border-zinc-800">
           <div className="flex items-center gap-2.5">
@@ -128,7 +123,7 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
                 AutoBuyCars
               </p>
               <p className="text-[10px] text-gray-500 dark:text-zinc-400">
-                Official Purchase Receipt & Contract
+                Ringkasan Simulasi Transaksi
               </p>
             </div>
           </div>
@@ -372,9 +367,9 @@ Halo Penjual, saya telah melakukan pemesanan mobil ini melalui platform AutoBuyC
 
         {/* Footer print note */}
         <p className="mt-4 text-center text-[10px] text-gray-400 dark:text-zinc-500">
-          Nota ini diterbitkan secara elektronik oleh AutoBuyCars dan berlaku sebagai bukti sah pemesanan kendaraan.
+          Ringkasan simulasi. Konfirmasi harga, pembayaran, dan status pemesanan langsung dengan penjual.
         </p>
       </div>
-    </div>
+    </Dialog>
   );
 }

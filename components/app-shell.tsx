@@ -8,6 +8,7 @@ import { CarLogo } from "@/components/auth-shell";
 import { HistText } from "@/components/hist-text";
 import { Icon } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { HelpDialog } from "@/components/help-dialog";
 import { RoleBadge } from "@/components/role-badge";
 import { useStore } from "@/components/store-provider";
 import { createClient } from "@/lib/supabase/client";
@@ -16,6 +17,8 @@ import type { Role } from "@/lib/roles";
 import { useRole } from "@/components/role-provider";
 
 const ALL_NAV = [
+  { href: "/profil", label: "Profil Saya", icon: "user", roles: ["admin", "dealer", "buyer"] },
+  { href: "/simulasi", label: "Simulasi Kredit", icon: "calculator", roles: ["admin", "dealer", "buyer", "guest"] },
   {
     href: "/dashboard",
     label: "Dashboard",
@@ -59,12 +62,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const store = useStore();
   const { user, role, authChecked, logout } = useRole();
+  const [mobileViewport, setMobileViewport] = React.useState(false);
+  const [helpOpen, setHelpOpen] = React.useState(false);
+  const searchRef = React.useRef<HTMLInputElement>(null);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [userOpen, setUserOpen] = React.useState(false);
   const [profileAvatarUrl, setProfileAvatarUrl] = React.useState("");
   const [liveDisplayName, setLiveDisplayName] = React.useState("");
+
+  React.useEffect(() => {
+    const media = window.matchMedia("(max-width: 1023px)");
+    const update = () => { setMobileViewport(media.matches); if (!media.matches) setMobileOpen(false); };
+    update(); media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
   // Fetch avatar_url dari profiles
   React.useEffect(() => {
@@ -156,6 +169,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       }
     };
     const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); searchRef.current?.focus(); }
       if (e.key === "Escape") {
         setNotifOpen(false);
         setUserOpen(false);
@@ -196,7 +210,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const notifs = store.history().slice(0, 3);
 
   // Filter NAV sesuai role
-  const NAV = ALL_NAV.filter((n) => n.roles.includes(role));
+  const NAV = ALL_NAV.filter((n) => n.roles.includes(role)).sort((a, b) => ["/dashboard", "/beli", "/jual", "/favorit", "/riwayat", "/simulasi", "/profil", "/pengaturan"].indexOf(a.href) - ["/dashboard", "/beli", "/jual", "/favorit", "/riwayat", "/simulasi", "/profil", "/pengaturan"].indexOf(b.href));
 
   function toggleSidebar() {
     if (window.matchMedia("(min-width: 1024px)").matches) {
@@ -218,313 +232,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     NAV.find((n) => pathname === n.href || pathname.startsWith(n.href + "/"))
       ?.href || defaultHref;
 
+  const pageTitle = ALL_NAV.find(n => pathname.startsWith(n.href))?.label || "AutoBuyCars";
   return (
-    <div className={`flex min-h-screen ${authChecked ? "" : "invisible"}`}>
-      {/* Overlay mobile */}
-      <div
-        onClick={() => setMobileOpen(false)}
-        className={`fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm transition-opacity lg:hidden ${
-          mobileOpen ? "" : "hidden"
-        }`}
-      />
-      {/* Sidebar */}
-      <aside
-        id="sidebar"
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 shrink-0 flex-col overflow-hidden border-r border-gray-200 bg-white transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-950 lg:static ${
-          mobileOpen ? "" : "-translate-x-full"
-        } lg:translate-x-0 ${collapsed ? "sidebar-collapsed" : ""}`}
-      >
-        <div className="brand-wrap flex items-center justify-between p-6 pb-2">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
-              <CarLogo className="h-5 w-5" />
-            </div>
-            <span className="brand-text truncate text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-              AutoBuyCars
-            </span>
-          </div>
-        </div>
-
-        {/* Role Badge di Sidebar */}
-        <div className="brand-text px-6 py-2">
-          <RoleBadge role={role} />
-        </div>
-
-        <nav className="mt-2 flex-1 space-y-1 overflow-y-auto px-4">
-          {NAV.map((n) => {
-            const on = activeHref === n.href;
-            return (
-              <Link
-                key={n.href}
-                href={n.href}
-                title={n.label}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium active:scale-97 transition-transform ${
-                  on ? "nav-active" : "nav-item"
-                }`}
-              >
-                <Icon name={n.icon} className="h-5 w-5 shrink-0" />
-                <span className="truncate">{n.label}</span>
-                {n.href === "/favorit" && favCount > 0 ? (
-                  <span
-                    id="nav-fav-count"
-                    className="ml-auto shrink-0 rounded-full bg-zinc-950 px-2 py-0.5 text-[11px] font-bold text-white dark:bg-white dark:text-zinc-950"
-                  >
-                    {favCount}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
-        <div id="sidebar-tip" className="mt-auto p-4">
-          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-            <h4 className="mb-1 font-semibold text-black dark:text-white">
-              {role === "admin"
-                ? "Panel Admin"
-                : role === "dealer"
-                  ? "Mode Penjual"
-                  : role === "buyer"
-                    ? "Mode Pembeli"
-                    : "Mode Pengunjung"}
-            </h4>
-            <p className="mb-4 text-sm leading-relaxed text-gray-500 dark:text-zinc-400">
-              {role === "admin"
-                ? "Kelola seluruh platform dan verifikasi user."
-                : role === "dealer"
-                  ? "Upload dan kelola listing mobil jualanmu."
-                  : role === "buyer"
-                    ? "Cari, tawar, dan beli mobil impianmu."
-                    : "Masuk untuk menikmati fitur lengkap."}
-            </p>
-            {isGuest ? (
-              <Link
-                href="/login"
-                className="block w-full rounded-lg bg-black py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
-              >
-                Masuk / Daftar
-              </Link>
-            ) : (
-              <Link
-                href="/pengaturan"
-                className="block w-full rounded-lg border border-gray-300 py-2.5 text-center text-sm font-medium text-black transition hover:bg-gray-100 active:scale-97 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800"
-              >
-                Pengaturan Akun
-              </Link>
-            )}
-          </div>
-        </div>
+    <div className="workspace">
+      <a href="#main-content" className="skip-link">Lewati ke konten</a>
+      {mobileOpen ? <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} /> : null}
+      <aside id="sidebar" inert={mobileViewport && !mobileOpen} aria-hidden={mobileViewport && !mobileOpen ? true : undefined} className={`workspace-sidebar ${mobileOpen ? "mobile-open" : ""} ${collapsed ? "sidebar-collapsed" : ""}`} aria-label="Navigasi utama">
+        <Link href={defaultHref} className="brand-wrap"><span className="brand-symbol"><CarLogo className="h-6 w-6" /></span><span className="brand-text"><strong>AutoBuyCars<span>.</span></strong><small>YOUR NEXT CHAPTER</small></span></Link>
+        <button type="button" className="absolute right-3 top-[27px] rounded-lg p-1 text-emerald-100/70 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Tutup navigasi"><Icon name="x" className="h-4 w-4" /></button><div className="sidebar-divider" />
+        <p className="sidebar-label brand-text">WORKSPACE</p>
+        <nav>{NAV.map(n => <Link key={n.href} href={n.href} title={n.label} aria-current={activeHref === n.href ? "page" : undefined} onClick={() => setMobileOpen(false)} className={`sidebar-link ${activeHref === n.href ? "is-active" : ""}`}><Icon name={n.icon} className="h-[19px] w-[19px] shrink-0" /><span className="nav-label">{n.label}</span>{n.href === "/favorit" && favCount > 0 ? <span className="nav-count">{favCount}</span> : null}{activeHref === n.href ? <span className="nav-indicator" /> : null}</Link>)}</nav>
+        <div className="sidebar-bottom brand-text"><div className="sidebar-support"><span className="support-spark">✦</span><h3>Perjalanan dimulai di sini.</h3><p>{isGuest ? "Temukan mobil yang sesuai dengan rencana dan gaya hidupmu." : "Satu tempat untuk setiap langkah perjalanan otomotifmu."}</p><button onClick={() => setHelpOpen(true)}>Kenali fitur <Icon name="arrow" className="h-4 w-4" /></button></div><div className="sidebar-account"><span className="account-dot" /><span>{role === "admin" ? "Workspace Administrator" : role === "dealer" ? "Workspace Penjual" : isGuest ? "Mode Pengunjung" : "Workspace Pembeli"}</span></div></div>
       </aside>
-
-      {/* Main */}
-      <div className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto bg-white dark:bg-zinc-950">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950 lg:px-8">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <button
-              onClick={toggleSidebar}
-              title="Buka / tutup sidebar"
-              aria-label="Buka / tutup sidebar"
-              className="shrink-0 rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 active:scale-97 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
-            >
-              <Icon name="menu" />
-            </button>
-            <div className="relative w-full max-w-52 group sm:max-w-80">
-              <svg
-                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-black dark:group-focus-within:text-white"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <input
-                type="search"
-                placeholder="Cari mobil atau dealer..."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter")
-                    router.push(
-                      `/beli?q=${encodeURIComponent((e.target as HTMLInputElement).value)}`,
-                    );
-                }}
-                className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-white dark:focus:ring-white"
-              />
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-            <div className="hidden sm:block">
-              <RoleBadge role={role} />
-            </div>
-            <ThemeToggle />
-            <div className="relative shrink-0">
-              <button
-                id="notif-button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setUserOpen(false);
-                  setNotifOpen((o) => !o);
-                }}
-                aria-expanded={notifOpen}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 hover:text-black active:scale-97 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
-              >
-                <Icon name="bell" />
-                <span
-                  className={`absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 dark:border-zinc-950 ${
-                    unread ? "" : "hidden"
-                  }`}
-                />
-              </button>
-              <div
-                id="notif-menu"
-                className={`absolute right-0 z-50 mt-3 w-80 origin-top-right animate-zoom-in rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 ${
-                  notifOpen ? "" : "hidden"
-                }`}
-              >
-                <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-2 dark:border-zinc-800">
-                  <h3 className="font-semibold text-black dark:text-white">
-                    Notifikasi
-                  </h3>
-                  <button
-                    onClick={() => store.markNotifsRead()}
-                    className="text-xs font-medium text-gray-500 transition-colors hover:text-black dark:text-zinc-400 dark:hover:text-white"
-                  >
-                    Tandai dibaca
-                  </button>
-                </div>
-                <ul className="max-h-64 space-y-3 overflow-y-auto">
-                  {notifs.length ? (
-                    notifs.map((h) => (
-                      <li
-                        key={h.id}
-                        className="text-sm text-gray-600 dark:text-zinc-300"
-                      >
-                        <HistText text={h.text} />
-                      </li>
-                    ))
-                  ) : (
-                    <li className="py-4 text-center text-sm text-gray-500 dark:text-zinc-400">
-                      Tidak ada notifikasi baru
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </div>
-            <div className="hidden h-8 w-px bg-gray-200 sm:block dark:bg-zinc-800" />
-            <div className="relative">
-              <button
-                id="user-button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setNotifOpen(false);
-                  setUserOpen((o) => !o);
-                }}
-                aria-expanded={userOpen}
-                className="flex items-center gap-2 rounded-full p-1 pr-3 transition hover:bg-gray-100 active:scale-97 focus:outline-none dark:hover:bg-zinc-800"
-              >
-                <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-black dark:bg-white">
-                  {avatarUrl ? (
-                    <Image
-                      src={avatarUrl}
-                      alt="User"
-                      width={32}
-                      height={32}
-                      unoptimized
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-sm font-bold text-white dark:text-zinc-950">
-                      {initial}
-                    </span>
-                  )}
-                </div>
-                <span className="hidden text-sm font-medium text-gray-700 sm:block dark:text-zinc-200">
-                  {displayName}
-                </span>
-                <svg
-                  className="h-4 w-4 text-gray-500 dark:text-zinc-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              <div
-                id="user-menu"
-                className={`absolute right-0 z-50 mt-3 w-56 origin-top-right animate-zoom-in rounded-xl border border-gray-200 bg-white p-2 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 ${
-                  userOpen ? "" : "hidden"
-                }`}
-              >
-                {isGuest ? (
-                  <>
-                    <p className="px-3 py-2 text-xs text-gray-500 dark:text-zinc-400">
-                      Anda belum masuk
-                    </p>
-                    <Link
-                      href="/login"
-                      onClick={() => setUserOpen(false)}
-                      className="block rounded-lg bg-black px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-97 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
-                    >
-                      Masuk / Daftar
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-1 rounded-t-lg border-b border-gray-200 px-3 py-3 dark:border-zinc-800">
-                      <p className="truncate font-medium text-black dark:text-white">
-                        {displayName}
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-zinc-400">
-                        {email}
-                      </p>
-                    </div>
-                    <Link
-                      href="/profil"
-                      onClick={() => setUserOpen(false)}
-                      className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                    >
-                      Profil Saya
-                    </Link>
-                    <Link
-                      href="/pengaturan"
-                      onClick={() => setUserOpen(false)}
-                      className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                    >
-                      Pengaturan Akun
-                    </Link>
-                    <div className="my-1 border-t border-gray-200 dark:border-zinc-800" />
-                    <button
-                      onClick={logout}
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                    >
-                      Keluar
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+      <div className="workspace-body" inert={mobileViewport && mobileOpen}>
+        <header className="workspace-header"><div className="flex min-w-0 items-center gap-3"><button type="button" onClick={toggleSidebar} className="icon-button" aria-label="Buka atau tutup navigasi" aria-expanded={mobileViewport ? mobileOpen : !collapsed} aria-controls="sidebar"><Icon name="menu" /></button><div className="header-breadcrumb hidden sm:flex"><span>Workspace</span><span>/</span><strong>{pageTitle}</strong></div></div>
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3"><form className="header-search hidden md:flex" onSubmit={event => { event.preventDefault(); router.push(`/beli?q=${encodeURIComponent(searchRef.current?.value.trim() || "")}`); }}><Icon name="search" className="h-4 w-4" /><input ref={searchRef} aria-label="Cari mobil di katalog" type="search" placeholder="Cari mobil impianmu..." /><kbd>⌘ K</kbd></form><ThemeToggle className="header-theme" />
+            <div className="relative"><button type="button" id="notif-button" aria-label="Buka notifikasi" aria-controls="notif-menu" aria-expanded={notifOpen} className="icon-button relative" onClick={event => { event.stopPropagation(); setUserOpen(false); setNotifOpen(!notifOpen); }}><Icon name="bell" />{unread ? <span className="notification-dot" /> : null}</button>{notifOpen ? <div id="notif-menu" className="header-dropdown notification-menu"><div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-zinc-800"><h3 className="text-sm font-bold">Notifikasi</h3><button className="text-xs font-medium text-emerald-700 dark:text-emerald-400" onClick={() => store.markNotifsRead()}>Tandai dibaca</button></div><ul className="max-h-72 overflow-y-auto p-4">{notifs.length ? notifs.map(h => <li key={h.id} className="border-b border-gray-100 py-3 text-sm last:border-0 dark:border-zinc-800"><HistText text={h.text} /></li>) : <li className="py-7 text-center text-sm text-gray-500"><Icon name="bell" className="mx-auto mb-3 h-6 w-6 text-gray-300" />Belum ada kabar baru.<p className="mt-1 text-xs">Aktivitas akunmu akan tampil di sini.</p></li>}</ul>{!isGuest ? <Link href="/riwayat" onClick={() => setNotifOpen(false)} className="block border-t border-gray-100 p-3 text-center text-xs font-semibold text-emerald-700 dark:border-zinc-800 dark:text-emerald-400">Lihat semua aktivitas →</Link> : null}</div> : null}</div>
+            <div className="header-separator" />
+            <div className="relative"><button id="user-button" className="account-button" aria-label={`Menu akun ${displayName}`} aria-expanded={userOpen} aria-controls="user-menu" onClick={event => { event.stopPropagation(); setNotifOpen(false); setUserOpen(!userOpen); }}><span className="header-avatar">{avatarUrl ? <Image src={avatarUrl} alt="Foto profil" width={36} height={36} unoptimized className="h-full w-full object-cover" /> : initial}</span><span className="hidden text-left lg:block"><strong>{displayName}</strong><small>{role === "admin" ? "Administrator" : role === "dealer" ? "Dealer / Penjual" : isGuest ? "Jelajahi katalog" : "Pembeli"}</small></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg></button>{userOpen ? <div id="user-menu" className="header-dropdown account-menu"><div className="border-b border-gray-100 p-4 dark:border-zinc-800"><p className="truncate text-sm font-bold">{displayName}</p><p className="mt-1 truncate text-xs text-gray-500">{email || "Masuk untuk menyimpan pilihanmu"}</p></div><div className="p-2">{isGuest ? <Link href="/login" className="dropdown-link" onClick={() => setUserOpen(false)}><Icon name="user" />Masuk / Daftar</Link> : <><Link href="/profil" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="user" />Profil Saya</Link><Link href="/pengaturan" onClick={() => setUserOpen(false)} className="dropdown-link"><Icon name="cog" />Pengaturan</Link><button onClick={logout} className="dropdown-link text-red-600"><Icon name="logout" />Keluar dari akun</button></>}</div></div> : null}</div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
-          <div key={pathname} className="animate-page-enter">
-            {children}
-          </div>
-          <footer className="clear-both mt-10 flex w-full flex-col gap-4 border-t border-gray-200 pb-2 pt-6 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left dark:border-zinc-800">
-            <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">
-              &copy; 2026 AutoBuyCars. All rights reserved.
-            </p>
-            <div className="flex gap-4 text-sm text-gray-500 dark:text-zinc-400">
-              <span>Panduan</span>
-              <span>Bantuan</span>
-            </div>
-          </footer>
-        </main>
+        <main id="main-content" className="app-content" tabIndex={-1}>{!authChecked ? <div className="workspace-loading" role="status"><span className="loading-mark"><CarLogo className="h-7 w-7" /></span><p>Menyiapkan workspace kamu…</p></div> : <div key={pathname} className="animate-page-enter">{children}</div>}<footer className="workspace-footer"><span>© {new Date().getFullYear()} AutoBuyCars<span className="hidden sm:inline"> · Setiap perjalanan punya cerita.</span></span><div><button onClick={() => setHelpOpen(true)}>Panduan & bantuan</button><span className="footer-status"><i />Ruang otomotifmu</span></div></footer></main>
       </div>
+      {helpOpen ? <HelpDialog onClose={() => setHelpOpen(false)} /> : null}
     </div>
   );
 }

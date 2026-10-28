@@ -29,6 +29,8 @@ Build menggunakan webpack. Font memakai font sistem sehingga proses build tidak 
 
 ## Fitur dan batasan
 
+- Workspace responsif dengan tema terang/gelap, panduan fitur, dan kondisi kosong yang memberikan arahan.
+- Simulator kredit `/simulasi` dengan DP, tenor, bunga flat, unduhan ringkasan, dan pencarian sesuai anggaran.
 - Katalog, pencarian/filter, detail kendaraan, favorit, dashboard, listing, penawaran, simulasi checkout/invoice, riwayat, tema, profil, dan kontak WhatsApp.
 - Login email/password, pendaftaran/verifikasi email, Google OAuth, dan reset password memakai Supabase.
 - **Listing, penawaran, transaksi, favorit, dan riwayat masih menggunakan localStorage. Data belum dibagikan antarbrowser/perangkat. Checkout bukan pembayaran sungguhan.**
@@ -39,9 +41,11 @@ Build menggunakan webpack. Font memakai font sistem sehingga proses build tidak 
 
 Lihat [panduan deployment dan diagnosis Safari](docs/DEPLOYMENT.md). Konfigurasi lokal `.env.local` tidak otomatis masuk ke Vercel. Perubahan `NEXT_PUBLIC_*` memerlukan build/deployment baru.
 
-Untuk database baru, baca `supabase-setup-avatars.sql`, kemudian migrasi `supabase/migrations/20261028_protect_profile_privileges.sql`. Tinjau dan uji pada staging sebelum produksi. Migrasi ini menambahkan pembatasan perubahan role admin dan status verifikasi; belum dijalankan pada proyek Supabase pengguna.
+Untuk database baru, baca `supabase-setup-avatars.sql`, kemudian migrasi `supabase/migrations/20261028_protect_profile_privileges.sql`. Tinjau dan uji pada staging sebelum produksi. Migrasi privilege profil dan penjagaan avatar Auth sudah diterapkan pada proyek Supabase saat audit ini. Lihat docs/AUDIT.md untuk rincian hasil langsung dan batas pengujian.
 
 ## Dokumen produk
+
+[Laporan audit sesi, role, dan fungsi](docs/AUDIT.md) mencatat perbaikan Supabase yang sudah diterapkan dan batas pengujian.
 
 [PRD AutoBuyCars setelah pembaruan](docs/PRD.md) menjelaskan perilaku saat ini, perbaikan, kriteria penerimaan, dan pengembangan menuju marketplace dengan data terpusat.
 

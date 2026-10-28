@@ -80,7 +80,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission> = {
     canChangeSettings: true,
   },
 
-  // DEALER - Seller yang terverifikasi, bisa jual mobil & beli mobil
+  // DEALER - Mode penjual; verifikasi merupakan atribut terpisah.
   dealer: {
     canCreateListing: true,
     canEditOwnListing: true,
@@ -201,10 +201,14 @@ export function canPerformAction(
 
   // Special case: owner check
   if (action === "canEditOwnListing" || action === "canDeleteOwnListing") {
-    if (options?.isOwner === false && !perms.canEditAnyListing) {
+    if (options?.isOwner !== true && !(action === "canDeleteOwnListing" ? perms.canDeleteAnyListing : perms.canEditAnyListing)) {
       return false;
     }
     return perms[action];
+  }
+
+  if (action === "canAcceptOffer" || action === "canRejectOffer") {
+    return perms[action] && (userRole === "admin" || options?.isOwner === true);
   }
 
   // Special case: role hierarchy (admin > dealer > buyer > guest)
@@ -257,7 +261,7 @@ export function getRoleDescription(role: Role): string {
  */
 export function getAvailableRoleTransitions(currentRole: Role): Role[] {
   // Guest -> Buyer (register)
-  // Buyer -> Dealer (apply sebagai dealer, butuh verifikasi)
+  // Buyer -> Dealer (mode penjual mandiri; tidak memberikan status verified)
   // Dealer -> Buyer (downgrade)
   // Admin tidak bisa diubah (harus dari database)
 

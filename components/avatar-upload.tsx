@@ -3,6 +3,7 @@
 import * as React from "react";
 import { repairLegacyAvatarSession } from "@/lib/supabase/session-hygiene";
 import { createClient } from "@/lib/supabase/client";
+import { Dialog } from "@/components/dialog";
 import { useToast } from "@/components/toast";
 
 interface AvatarUploadProps {
@@ -152,11 +153,8 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-6 shadow-2xl dark:bg-zinc-900">
-        <p className="text-sm font-semibold text-black dark:text-white">
-          Atur Foto Profil
-        </p>
+    <Dialog onClose={onCancel} title="Atur foto profil">
+      <div className="flex flex-col items-center gap-4 p-6">
         <p className="text-xs text-gray-500 dark:text-zinc-400">
           Geser foto untuk mengatur posisi, gunakan slider untuk zoom.
         </p>
@@ -224,7 +222,7 @@ function ImageEditor({ file, onConfirm, onCancel }: EditorProps) {
           </button>
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
 

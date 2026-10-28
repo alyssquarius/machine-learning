@@ -8,6 +8,9 @@ import { CarCard } from "@/components/car-card";
 import { CheckoutModal, DetailModal, OfferModal } from "@/components/modals";
 import { useToast } from "@/components/toast";
 import { CATEGORIES, INDONESIA_CITIES } from "@/lib/cities";
+import { EmptyState } from "@/components/ui";
+import { Icon } from "@/components/icons";
+import { useRole } from "@/components/role-provider";
 import { PRICE_PRESETS, resolveBuyYearValue } from "@/lib/market";
 
 const inputCls =
@@ -30,8 +33,10 @@ function resolveBuyLocValue(raw: unknown, used: string[]): string {
 
 export default function BeliClient() {
   const store = useStore();
+  const { role } = useRole();
   const { toast } = useToast();
   const params = useSearchParams();
+  const [advancedOpen, setAdvancedOpen] = React.useState(false);
   const [q, setQ] = React.useState("");
   const [cat, setCat] = React.useState("all");
   const [sort, setSort] = React.useState("new");
@@ -90,6 +95,8 @@ export default function BeliClient() {
   React.useEffect(() => {
     const pq = params.get("q");
     if (pq) setQ(pq);
+    const priceMax = params.get("max");
+    if (priceMax && Number.isFinite(Number(priceMax)) && Number(priceMax) > 0) setMax(priceMax);
     const d = params.get("detail");
     if (d) setDetailId(d);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -189,20 +196,10 @@ export default function BeliClient() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-black sm:text-3xl dark:text-white">
-          Beli Mobil
-        </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-          {list.length} mobil tersedia untuk dibeli.
-        </p>
-      </div>
+      <section className="hero-panel catalog-hero"><div className="hero-photo" /><p className="hero-eyebrow">TEMUKAN PILIHAN BERIKUTNYA</p><h1>Mobil yang tepat.<br /><span className="text-emerald-200">Untuk cerita barumu.</span></h1><p>Dari perjalanan harian hingga petualangan berikutnya. Temukan kendaraan yang sesuai dengan kebutuhanmu.</p><span className="catalog-feature">Pilihanmu. Anggaranmu. Perjalananmu.</span></section>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow !mb-1">KATALOG KENDARAAN</p><h2 className="text-base font-semibold">{list.length} pilihan untuk dijelajahi</h2></div><Link href="/simulasi" className="button-secondary"><Icon name="calculator" className="h-4 w-4" />Hitung rencana cicilan</Link></div>
 
-      <p className="mb-4 rounded-xl border border-gray-200 p-3 text-sm text-gray-600 dark:border-zinc-800 dark:text-zinc-400">
-        Data katalog saat ini tersimpan pada browser ini dan belum tersinkron antarperangkat.
-      </p>
-
-      <div className="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="surface filter-bar flex flex-col gap-3">
         <div className="flex flex-col gap-3 md:flex-row">
           <div className="relative flex-1">
             <svg
@@ -217,6 +214,7 @@ export default function BeliClient() {
               />
             </svg>
             <input
+              aria-label="Cari merek, model, atau kota"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               type="search"
@@ -249,8 +247,10 @@ export default function BeliClient() {
             <option value="love">Paling diminati</option>
           </select>
         </div>
-        <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <button type="button" onClick={() => setAdvancedOpen(!advancedOpen)} aria-expanded={advancedOpen} aria-controls="advanced-catalog-filters" className="button-secondary self-start lg:hidden"><Icon name="cog" className="h-3.5 w-3.5" />{advancedOpen ? "Tutup filter tambahan" : "Filter harga, kota & tahun"}</button>
+        <div id="advanced-catalog-filters" className={`advanced-filters ${advancedOpen ? "is-open" : ""}`}>
           <input
+            aria-label="Harga minimum"
             value={min}
             onChange={(e) => {
               setMin(e.target.value.replace(/[^\d]/g, ""));
@@ -263,6 +263,7 @@ export default function BeliClient() {
             className={inputPlain}
           />
           <input
+            aria-label="Harga maksimum"
             value={max}
             onChange={(e) => {
               setMax(e.target.value.replace(/[^\d]/g, ""));
@@ -276,6 +277,7 @@ export default function BeliClient() {
           />
           <div>
             <input
+              aria-label="Kota kendaraan"
               value={locRaw}
               onChange={(e) => onLocChange(e.target.value)}
               list="buy-loc-list"
@@ -294,6 +296,7 @@ export default function BeliClient() {
           </div>
           <div>
             <input
+              aria-label="Tahun kendaraan"
               value={yearRaw}
               onChange={(e) => onYearChange(e.target.value)}
               onBeforeInput={(e) => {
@@ -334,6 +337,7 @@ export default function BeliClient() {
               <button
                 key={p.id}
                 onClick={() => applyPreset(p.id)}
+                aria-pressed={preset === p.id}
                 className={`filter-pill rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                   preset === p.id
                     ? "border-zinc-950 bg-zinc-950 text-white shadow-xs dark:border-white dark:bg-white dark:text-zinc-950"
@@ -370,11 +374,7 @@ export default function BeliClient() {
       </div>
 
       {list.length === 0 ? (
-        <p className="py-12 text-center text-sm text-gray-500 dark:text-zinc-400">
-          {store.all().some((car) => car.status === "running")
-            ? "Tidak ada mobil yang cocok. Coba ubah atau reset filter pencarian."
-            : "Belum ada mobil tersedia di katalog pada browser ini."}
-        </p>
+        <div className="surface"><EmptyState icon="car" title={dirty ? "Belum menemukan yang cocok?" : "Pilihan berikutnya sedang dipersiapkan."} description={dirty ? "Coba rentang harga yang lebih luas, atau mulai kembali dengan semua kategori." : "Belum ada mobil yang ditayangkan pada browser ini. Sambil menunggu, kamu bisa merencanakan anggaran pembelian."}>{dirty ? <button onClick={resetFilters} className="button-primary">Reset pencarian<Icon name="arrow" className="h-4 w-4" /></button> : <div className="flex flex-wrap justify-center gap-2"><Link href="/simulasi" className="button-primary">Rencanakan anggaran<Icon name="arrow" className="h-4 w-4" /></Link>{["admin", "dealer"].includes(role) ? <Link href="/jual" className="button-secondary">Tambahkan listing</Link> : null}</div>}</EmptyState></div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => (
@@ -388,6 +388,8 @@ export default function BeliClient() {
           ))}
         </div>
       )}
+
+      <p className="mt-5 flex items-start gap-2 text-[10px] leading-relaxed text-gray-400"><Icon name="help" className="h-3.5 w-3.5 shrink-0" />Katalog saat ini menggunakan data pada browser ini. Listing belum tersinkron antarperangkat.</p>
 
       {detailId ? (
         <DetailModal
