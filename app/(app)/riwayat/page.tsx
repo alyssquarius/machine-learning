@@ -71,7 +71,7 @@ export default function RiwayatPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="CATATAN PERJALANAN" title="Semua langkah, tercatat rapi." description={`${total} aktivitas tersimpan. Telusuri penawaran, listing, dan simulasi transaksimu.`} actions={<button onClick={exportCSV} disabled={!total} className="button-secondary disabled:opacity-40"><Icon name="download" className="h-4 w-4" />Unduh riwayat</button>} />
+      <PageHeader eyebrow="CATATAN PERJALANAN" title="Riwayat" description={`${total} aktivitas tersimpan. Telusuri penawaran, listing, dan simulasi transaksimu.`} actions={<button onClick={exportCSV} disabled={!total} className="button-secondary disabled:opacity-40"><Icon name="download" className="h-4 w-4" />Unduh riwayat</button>} />
       <div className="mb-6">
         <div className="flex flex-wrap gap-2">
           <button

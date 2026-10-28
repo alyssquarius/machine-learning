@@ -196,7 +196,7 @@ export default function BeliClient() {
 
   return (
     <div>
-      <section className="hero-panel catalog-hero"><div className="hero-photo" /><p className="hero-eyebrow">TEMUKAN PILIHAN BERIKUTNYA</p><h1>Mobil yang tepat.<br /><span className="text-emerald-200">Untuk cerita barumu.</span></h1><p>Dari perjalanan harian hingga petualangan berikutnya. Temukan kendaraan yang sesuai dengan kebutuhanmu.</p><span className="catalog-feature">Pilihanmu. Anggaranmu. Perjalananmu.</span></section>
+      <section className="hero-panel catalog-hero"><div className="hero-photo" /><p className="hero-eyebrow">KATALOG MOBIL</p><h1>Temukan mobil pilihanmu.</h1><p>Cari kendaraan sesuai kebutuhan dan anggaranmu.</p></section>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow !mb-1">KATALOG KENDARAAN</p><h2 className="text-base font-semibold">{list.length} pilihan untuk dijelajahi</h2></div><Link href="/simulasi" className="button-secondary"><Icon name="calculator" className="h-4 w-4" />Hitung rencana cicilan</Link></div>
 
       <div className="surface filter-bar flex flex-col gap-3">

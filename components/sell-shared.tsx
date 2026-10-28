@@ -26,7 +26,7 @@ export function SellToolbar({
 }) {
   return (
     <>
-      <PageHeader eyebrow="INVENTARIS & PENJUALAN" title="Setiap mobil punya calon pemilik." description="Kelola listing, perbarui detail, dan sambut penawaran berikutnya." actions={<button onClick={onAdd} className="button-primary"><Icon name="plus" className="h-4 w-4" />Tambah listing baru</button>} />
+      <PageHeader eyebrow="INVENTARIS & PENJUALAN" title="Jual Mobil" description="Kelola listing dan penawaran kendaraanmu." actions={<button onClick={onAdd} className="button-primary"><Icon name="plus" className="h-4 w-4" />Tambah listing baru</button>} />
       <div className="mb-6 inline-flex overflow-x-auto rounded-full bg-gray-100 p-1 dark:bg-zinc-800/80 max-w-full">
         {SELL_FILTERS.map((f) => {
           const on = filter === f.id;

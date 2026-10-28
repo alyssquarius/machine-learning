@@ -1,6 +1,6 @@
 # PRD AutoBuyCars — Workspace otomotif dan pembaruan pengalaman pengguna
 
-Versi dokumen: 1.4 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
+Versi dokumen: 1.5 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
 Status: perbaikan data akun dan trigger Supabase sudah diterapkan; pembaruan tampilan, simulator dan perbaikan role/store/profil tersedia pada kode dan preview lokal, belum dideploy ke Vercel. Lihat AUDIT.md untuk bukti dan batas pengujian.
 
 ## 1. Ringkasan produk
@@ -178,3 +178,15 @@ Pokok pembiayaan = harga dikurangi DP. Bunga total = pokok × bunga flat tahunan
 Typecheck, 32 pengujian regresi dan production build lulus. Pemeriksaan browser lokal mencakup desktop1440 px, ponsel375 px, tema terang/gelap, profil admin, filter tambahan, drawer, dialog listing dan penutupan Escape, bantuan, serta perubahan tenor simulator. Katalog mobile tidak memiliki overflow horizontal pada lebar375 px. Pengujian dialog tidak menerbitkan listing uji.
 
 Data marketplace tetap tersimpan pada browser. UI admin mengikuti akses yang tersedia; halaman pengelolaan pengguna/verifikasi dealer belum tersedia. Pembaruan UI memerlukan deployment Vercel dan smoke test ulang sebelum dinyatakan tersedia pada domain publik.
+
+
+## 15. Penyederhanaan visual — versi 1.5
+
+Palet utama berubah menjadi biru langit, dengan sidebar putih, latar abu kebiruan dan aksen biru pada tindakan utama. Mode gelap memakai navy dan aksen sky yang lebih terang. Banner dashboard/katalog dipadatkan tanpa foto latar, dekorasi dan teks berulang dikurangi, judul halaman mengikuti nama menu, dan kartu memakai garis ringan tanpa bayangan berlebihan. Bantuan profil dipindahkan setelah formulir pada ponsel.
+
+Interaksi: tombol/link mempunyai efek tekan singkat, tindakan utama memiliki halo lembut saat ditekan, halaman masuk dengan fade/geser7 px selama280 ms, ikon navigasi aktif mendapat animasi singkat. Dialog mempertahankan fokus dan Escape. Seluruh animasi/transisi dinonaktifkan bila prefers-reduced-motion aktif.
+
+Perubahan ini hanya memengaruhi presentasi; aturan akses dan penyimpanan data tetap mengikuti bagian sebelumnya. Versi1.5 tersedia pada preview lokal dan belum dipush/dideploy saat penulisan.
+
+
+Validasi versi1.5: production build dan typecheck lulus; browser lokal memeriksa dashboard terang/gelap pada1440×1000, profil dan katalog pada375×812, filter tambahan serta navigasi profil/simulator. Katalog375 px tidak mengalami overflow horizontal. Perubahan tenor36→60 bulan memperbarui cicilan Rp6.027.778→Rp4.083.333 sesuai formula sebelumnya. Animasi halaman yang diterapkan dikonfirmasi bernama pageEnter. Pengujian ini tidak menerbitkan listing atau melakukan transaksi.

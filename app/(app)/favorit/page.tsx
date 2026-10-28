@@ -19,7 +19,7 @@ export default function FavoritPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="PILIHAN PERSONAL" title="Yang menarik perhatianmu." description={`${list.length} mobil tersimpan. Simpan pilihanmu, pertimbangkan dengan tenang.`} actions={<><Link href="/beli" className="button-primary">Jelajahi katalog<Icon name="arrow" className="h-4 w-4" /></Link>{list.length ? <button className="button-secondary" onClick={() => { if (confirm("Hapus semua mobil dari favorit?")) { store.clearFavs(); toast("Daftar favorit sudah dikosongkan."); } }}>Kosongkan favorit</button> : null}</>} />
+      <PageHeader eyebrow="PILIHAN PERSONAL" title="Favorit" description={`${list.length} mobil tersimpan untuk kamu pertimbangkan.`} actions={<><Link href="/beli" className="button-primary">Jelajahi katalog<Icon name="arrow" className="h-4 w-4" /></Link>{list.length ? <button className="button-secondary" onClick={() => { if (confirm("Hapus semua mobil dari favorit?")) { store.clearFavs(); toast("Daftar favorit sudah dikosongkan."); } }}>Kosongkan favorit</button> : null}</>} />
 
       {list.length === 0 ? (
         <div className="surface"><EmptyState icon="heart" title="Beri tempat untuk pilihan favoritmu." description="Ketuk ikon hati pada mobil yang menarik perhatianmu. Semua pilihanmu akan tersimpan rapi di sini." action={{href:"/beli",label:"Temukan pilihan pertamamu"}} /></div>

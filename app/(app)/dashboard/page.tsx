@@ -43,7 +43,7 @@ function Banner() {
   const sold = store.soldThisMonth();
   const pct = Math.min(100, Math.round(sold / Math.max(1, target) * 100));
   React.useEffect(() => { const hour = Number(new Intl.DateTimeFormat("id-ID", { timeZone:"Asia/Jakarta", hour:"numeric", hourCycle:"h23" }).format(new Date())); setGreeting(hour < 11 ? "Selamat pagi" : hour < 15 ? "Selamat siang" : hour < 18 ? "Selamat sore" : "Selamat malam"); }, []);
-  return <div className="hero-panel dashboard-hero"><div className="hero-photo" /><div className="absolute right-3 top-3"><HideButton id="banner" title="Sembunyikan sapaan" dark /></div><div className="relative"><p className="hero-eyebrow">RUANG UNTUK PERJALANAN BERIKUTNYA</p><h2 className="mb-3 mt-3 text-[29px] font-semibold leading-tight tracking-tight">{greeting}, {name}.<br /><span className="text-emerald-200">Siap melangkah lebih jauh?</span></h2><p className="hero-description">Pantau inventaris, kelola penawaran, dan temukan peluang baru. Semua perjalananmu, dalam satu tempat.</p><div className="hero-actions"><Link href="/jual" className="button-primary !border-emerald-300 !bg-emerald-200 !text-emerald-950"><Icon name="plus" className="h-4 w-4" />Tambah listing</Link><Link href="/beli" className="hero-link">Jelajahi katalog<Icon name="arrow" className="h-4 w-4" /></Link></div></div><div className="hero-target"><small>Target penjualan bulan ini</small><div className="target-number my-3">{pct}<span className="ml-1 text-base text-emerald-100/60">%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-emerald-200" style={{width:`${pct}%`}} /></div><p className="mt-3 text-[10px] text-emerald-100/70">{sold} dari {target} unit tercapai</p><Link href="/pengaturan" className="mt-3 inline-block text-[9px] text-emerald-200 underline underline-offset-4">Atur target penjualan</Link></div></div>;
+  return <div className="hero-panel dashboard-hero"><div className="hero-photo" /><div className="absolute right-3 top-3"><HideButton id="banner" title="Sembunyikan sapaan" /></div><div className="relative"><p className="hero-eyebrow">WORKSPACE KAMU</p><h2 className="mb-3 mt-3 text-[29px] font-semibold leading-tight tracking-tight">{greeting}, {name}.</h2><p className="hero-description">Ringkasan inventaris dan penawaran, dalam satu tempat.</p><div className="hero-actions"><Link href="/jual" className="button-primary"><Icon name="plus" className="h-4 w-4" />Tambah listing</Link><Link href="/beli" className="hero-link">Jelajahi katalog<Icon name="arrow" className="h-4 w-4" /></Link></div></div><div className="hero-target"><small>Target penjualan bulan ini</small><div className="target-number my-3">{pct}<span className="ml-1 text-base text-emerald-100/60">%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-emerald-200" style={{width:`${pct}%`}} /></div><p className="mt-3 text-[10px] text-emerald-100/70">{sold} dari {target} unit tercapai</p><Link href="/pengaturan" className="mt-3 inline-block text-[9px] text-emerald-200 underline underline-offset-4">Atur target penjualan</Link></div></div>;
 }
 
 function InventoryTable() {
@@ -225,7 +225,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="OVERVIEW" title="Dashboard" description="Gambaran yang jelas untuk setiap keputusanmu." actions={<Link href="/jual" className="button-secondary"><Icon name="tag" className="h-4 w-4" />Kelola inventaris</Link>} />
+      <PageHeader eyebrow="OVERVIEW" title="Dashboard" description="Pantau aktivitas dan kelola kendaraanmu." actions={<Link href="/jual" className="button-secondary"><Icon name="tag" className="h-4 w-4" />Kelola inventaris</Link>} />
       {hidden.length > 0 ? (
         <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
           <span className="mr-1 text-xs font-medium text-gray-500 dark:text-zinc-400">Disembunyikan:</span>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {isHidden("popular") ? null : <PopularList />}
           {isHidden("activity") ? null : (
-            <div className="relative rounded-2xl border border-emerald-900 bg-[#173f31] p-6 text-white dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+            <div className="relative rounded-2xl border border-emerald-900 bg-[#102e49] p-6 text-white dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
               <div className="absolute right-4 top-4">
                 <HideButton id="activity" title="Sembunyikan aktivitas" />
               </div>
