@@ -1,4 +1,6 @@
 "use client";
+import { Icon } from "@/components/icons";
+import Link from "next/link";
 
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -9,8 +11,10 @@ import { useRole } from "@/components/role-provider";
 import { fmtRp, timeAgo } from "@/lib/format";
 import { checkoutCalc, TENORS } from "@/lib/market";
 import { STATUS_LABEL } from "@/components/car-card";
+import { DemoPhotoCredit } from "@/components/demo-photo-credit";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
 import { Dialog } from "@/components/dialog";
+import { CAR_BRANDS, vehicleBrand, vehicleModel } from "@/lib/vehicle-discovery";
 import { carPhotos } from "@/lib/car-photos";
 import { CarGallery } from "@/components/car-gallery";
 import { CarImageUpload } from "@/components/car-image-upload";
@@ -80,6 +84,8 @@ export function SellModal({
     if (photosBusy) return setErr("Tunggu sampai semua foto selesai diunggah.");
     const fd = new FormData(e.currentTarget);
     const title = String(fd.get("title") || "").trim();
+    const brand = String(fd.get("brand") || "").trim();
+    const model = String(fd.get("model") || "").trim();
     const price = parseNumber(priceDisplay);
     const year = Number(fd.get("year") || 0);
     const km = parseNumber(kmDisplay);
@@ -99,6 +105,8 @@ export function SellModal({
     if (editing) {
       const ok = store.edit(editing.id, {
         title,
+        brand,
+        model,
         price,
         year,
         km,
@@ -119,6 +127,8 @@ export function SellModal({
     } else {
       const created = store.add({
         title,
+        brand,
+        model,
         price,
         year,
         km,
@@ -179,6 +189,10 @@ export function SellModal({
           <div>
             <label className={labelCls}>Judul Mobil *</label>
             <input name="title" defaultValue={editing?.title || ""} placeholder="cth: Toyota Avanza 1.5 G CVT" className={inputCls} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label htmlFor="listing-brand" className={labelCls}>Merek</label><input id="listing-brand" name="brand" list="listing-brand-options" maxLength={40} defaultValue={editing && vehicleBrand(editing) !== 'Lainnya' ? vehicleBrand(editing) : ''} placeholder="Toyota" className={inputCls}/><datalist id="listing-brand-options">{CAR_BRANDS.map(b=><option key={b} value={b}/>)}</datalist></div>
+            <div><label htmlFor="listing-model" className={labelCls}>Model</label><input id="listing-model" name="model" maxLength={60} defaultValue={editing ? vehicleModel(editing) : ''} placeholder="Avanza" className={inputCls}/></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -356,15 +370,15 @@ export function DetailModal({
   }
 
   return (
-    <ModalShell onClose={onClose} wide>
+    <ModalShell onClose={onClose} wide className="vehicle-detail">
       {/* Sticky Header */}
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#18181b]">
         <div className="min-w-0 pr-3">
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-zinc-950 px-2.5 py-0.5 text-[10px] font-bold text-white dark:bg-white dark:text-zinc-950 shrink-0">
-              {STATUS_LABEL[c.status] || c.status}
+              {c.isDemo ? "Data demo" : STATUS_LABEL[c.status] || c.status}
             </span>
-            <h3 className="text-base sm:text-lg font-bold text-black truncate dark:text-white">
+            <h3 className="text-base sm:text-lg font-bold text-black leading-snug dark:text-white">
               {c.title}
             </h3>
           </div>
@@ -386,22 +400,26 @@ export function DetailModal({
       {/* Scrollable Content Body */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
         <CarGallery car={c} />
+        <DemoPhotoCredit car={c} />
 
         <div className="flex items-baseline justify-between">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              Harga Penawaran
+              Harga mobil
             </span>
             <p className="text-2xl sm:text-3xl font-extrabold tracking-tight text-black dark:text-white">
               {fmtRp(c.price)}
             </p>
           </div>
-          <div className="text-right text-xs text-gray-500 dark:text-zinc-400">
+          {!c.isDemo && <div className="text-right text-xs text-gray-500 dark:text-zinc-400">
             <span>{c.interest || 0}% peminat</span>
             <span className="mx-1.5">•</span>
             <span>{timeAgo(c.createdAt)}</span>
-          </div>
+          </div>}
         </div>
+
+        <section aria-label="Spesifikasi mobil"><h4 className="mb-3 text-sm font-semibold">Spesifikasi mobil</h4><dl className="vehicle-specs">{[["Tahun",String(c.year)],["Kilometer",c.km > 0 ? `${c.km.toLocaleString("id-ID")} km` : "Belum diisi"],["Lokasi",c.location],["Tipe mobil",c.category]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
+        <Link href={`/simulasi?harga=${c.price}`} onClick={onClose} className="button-secondary w-full"><Icon name="calculator" className="h-4 w-4"/>Hitung cicilan mobil ini</Link>
 
         {c.description ? (
           <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
@@ -413,6 +431,8 @@ export function DetailModal({
             </p>
           </div>
         ) : null}
+
+        {!c.isDemo && <section className="seller-info" aria-label="Informasi penjual"><h4 className="text-sm font-semibold">Informasi penjual</h4><p className="mt-2 text-sm">{c.sellerName || "Penjual mobil"}</p><p className="mt-1 text-xs leading-relaxed text-slate-500">{c.sellerPhone ? "Ketuk Hubungi Penjual untuk membuka WhatsApp. Tanyakan ketersediaan, kondisi mobil, dan jadwal melihat unit langsung." : "Nomor penjual belum tersedia. Kamu bisa meminta bantuan melalui Chat Admin."}</p></section>}
 
         {c.purchase ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/40">
@@ -491,8 +511,8 @@ export function DetailModal({
       </div>
 
       {/* Sticky Fixed Footer Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-gray-100 px-6 py-3.5 bg-gray-50/80 dark:border-zinc-800/80 dark:bg-zinc-900/80 shrink-0">
-        <div className="flex items-center gap-2">
+      <div className="detail-actions flex flex-wrap items-center justify-between gap-2.5 border-t border-gray-100 px-6 py-3.5 bg-gray-50/80 dark:border-zinc-800/80 dark:bg-zinc-900/80 shrink-0">
+        <div className="detail-action-buttons flex w-full items-center justify-between gap-2">
           <button
             onClick={() => {
               if (!requireAuth("menyimpan mobil ke favorit")) return;
@@ -511,13 +531,13 @@ export function DetailModal({
             <span>{on ? "Tersimpan" : "Favorit"}</span>
           </button>
 
-          <WhatsAppContact
-            phoneNumber={c.sellerPhone || "6281234567890"}
+          {c.isDemo || !c.sellerPhone ? <span className="text-xs text-slate-500">{c.isDemo ? "Data demo · Tidak untuk dijual" : "Kontak penjual belum tersedia"}</span> : <WhatsAppContact
+            phoneNumber={c.sellerPhone}
             message={`Halo, saya tertarik dengan mobil ${c.title} seharga ${fmtRp(c.price)} di AutoBuyCars.`}
-            className="rounded-xl px-3.5 py-2 text-xs font-semibold"
+            className="detail-contact rounded-xl px-4 py-3 text-sm font-semibold justify-center"
           >
             Hubungi Penjual
-          </WhatsAppContact>
+          </WhatsAppContact>}
         </div>
 
 

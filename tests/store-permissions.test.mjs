@@ -9,7 +9,7 @@ const moduleURL = source => `data:text/javascript;base64,${Buffer.from(source).t
 const hooksURL = moduleURL(`export const createContext=()=>({Provider:'provider'});export const useRef=x=>({current:x});export const useState=x=>[typeof x==='function'?x():x,()=>{}];export const useMemo=f=>f();export const useCallback=f=>f;export const useEffect=()=>{};export const createElement=(_tag,props)=>props.value;`);
 let source = await readFile(new URL('../components/store-provider.tsx', import.meta.url), 'utf8');
 source = source.replace('"react"', JSON.stringify(hooksURL));
-for (const name of ['cities', 'format', 'roles', 'car-photos']) {
+for (const name of ['cities', 'format', 'roles', 'car-photos', 'demo-cars']) {
   let contents = stripTypeScriptTypes(await readFile(new URL(`../lib/${name}.ts`, import.meta.url), 'utf8'));
   if(name === 'car-photos') contents = contents.replace("'./format'", JSON.stringify(moduleURL(stripTypeScriptTypes(await readFile(new URL('../lib/format.ts',import.meta.url),'utf8')))));
   source = source.replace(`"@/lib/${name}"`, JSON.stringify(moduleURL(contents)));
@@ -18,7 +18,7 @@ await swc.loadBindings();
 const transformed = await swc.transform(source, { filename:'store-provider.tsx', jsc:{parser:{syntax:'typescript',tsx:true},transform:{react:{runtime:'classic'}},target:'es2022'}, module:{type:'es6'} });
 const { StoreProvider } = await import(moduleURL(transformed.code));
 function store() {
-  const data = new Map();
+  const data = new Map([['abc_demo_catalog_v1','1']]);
   globalThis.localStorage = { getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k),key:i=>[...data.keys()][i]??null,get length(){return data.size} };
   globalThis.window = Object.assign(new EventTarget(), { localStorage:globalThis.localStorage });
   return StoreProvider({children:null});
@@ -54,4 +54,9 @@ test('listing galleries preserve cover, cap at ten and survive edits and duplica
  const edited=s.edit(c.id,{...listing,images:[images[3],images[2]]});assert.deepEqual(edited.images,[images[3],images[2]]);assert.equal(edited.image,images[3]);
  const copy=s.duplicate(c.id);assert.deepEqual(copy.images,edited.images);
  const changed=s.update(c.id,{images:['javascript:alert(1)',images[2],images[2],images[1]]});assert.deepEqual(changed.images,[images[2],images[1]]);assert.equal(changed.image,images[2]);
+});
+test('brand, model and extended body types survive listing create, update and edit',()=>{
+ const s=store();s.setOwner('dealer','dealer');const c=s.add({...listing,brand:'Honda',model:'Civic',category:'Coupe'});assert.equal(c.brand,'Honda');assert.equal(c.model,'Civic');assert.equal(c.category,'Coupe');
+ const changed=s.update(c.id,{brand:'Toyota',model:'Hiace',category:'Van'});assert.equal(changed.brand,'Toyota');assert.equal(changed.model,'Hiace');
+ const edited=s.edit(c.id,{...listing,brand:'Isuzu',model:'D-Max',category:'Pickup'});assert.equal(edited.brand,'Isuzu');assert.equal(edited.model,'D-Max');assert.equal(edited.category,'Pickup');
 });

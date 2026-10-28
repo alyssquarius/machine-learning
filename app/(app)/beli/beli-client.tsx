@@ -11,6 +11,8 @@ import { CATEGORIES, INDONESIA_CITIES } from "@/lib/cities";
 import { EmptyState } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { useRole } from "@/components/role-provider";
+import { CarDiscovery } from "@/components/car-discovery";
+import { CAR_BRANDS, DISCOVERY_GROUPS, vehicleBrand, vehicleModel, matchesDiscovery } from "@/lib/vehicle-discovery";
 import { PRICE_PRESETS, resolveBuyYearValue } from "@/lib/market";
 
 const inputCls =
@@ -38,6 +40,9 @@ export default function BeliClient() {
   const params = useSearchParams();
   const [advancedOpen, setAdvancedOpen] = React.useState(false);
   const [q, setQ] = React.useState("");
+  const [brand, setBrand] = React.useState("all");
+  const [model, setModel] = React.useState("all");
+  const [group, setGroup] = React.useState("all");
   const [cat, setCat] = React.useState("all");
   const [sort, setSort] = React.useState("new");
   const [min, setMin] = React.useState("");
@@ -50,8 +55,15 @@ export default function BeliClient() {
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [offerId, setOfferId] = React.useState<string | null>(null);
   const [buyId, setBuyId] = React.useState<string | null>(null);
+  const resultsRef = React.useRef<HTMLParagraphElement>(null);
   const locTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const yearTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const available = React.useMemo(() => store.all().filter(c=>c.status === "running"), [store.cars]);
+  const brands = [...new Set([...CAR_BRANDS,...available.map(vehicleBrand)])];
+  const models = [...new Set(available.filter(c=>brand !== 'all' && vehicleBrand(c) === brand).map(vehicleModel).filter(Boolean))].sort();
+  const activeGroup = DISCOVERY_GROUPS.find(g=>g.id === group);
+  function chooseBrand(value:string) { setBrand(value); setModel('all'); }
 
   const usedCities = React.useMemo(
     () => [
@@ -93,14 +105,35 @@ export default function BeliClient() {
 
   // Deep-link: /beli?q=...&detail=...
   React.useEffect(() => {
-    const pq = params.get("q");
-    if (pq) setQ(pq);
-    const priceMax = params.get("max");
-    if (priceMax && Number.isFinite(Number(priceMax)) && Number(priceMax) > 0) setMax(priceMax);
+    if (locTimer.current) clearTimeout(locTimer.current);
+    if (yearTimer.current) clearTimeout(yearTimer.current);
+    setQ(params.get("q") || "");
+    setBrand(params.get("brand")?.slice(0,40) || "all");
+    setModel(params.get("model")?.slice(0,60) || "all");
+    const requestedGroup = params.get("group");
+    setGroup(DISCOVERY_GROUPS.some(g=>g.id === requestedGroup) ? requestedGroup! : "all");
+    const requestedCategory = params.get("category");
+    setCat(CATEGORIES.some(c=>c === requestedCategory) ? requestedCategory! : "all");
+    for(const [key,setValue] of [["min",setMin],["max",setMax]] as const) {
+      const value=params.get(key); setValue(value && Number.isFinite(Number(value)) && Number(value)>0 ? value : "");
+    }
+    const location = params.get("location") || "";
+    setLocRaw(location);setLoc(resolveBuyLocValue(location,usedCities));
+    const selectedYear = params.get("year") || "";
+    setYearRaw(selectedYear);setYear(resolveBuyYearValue(selectedYear));
+    const requestedSort = params.get("sort");
+    setSort(['cheap','exp','love'].includes(requestedSort || '') ? requestedSort! : 'new');
+    const matchPreset=PRICE_PRESETS.find(p=>String(p.min) === (params.get('min') || '') && String(p.max) === (params.get('max') || ''));
+    setPreset(matchPreset?.id || 'custom');
     const d = params.get("detail");
-    if (d) setDetailId(d);
+    setDetailId(d || null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
+
+  React.useEffect(() => () => {
+    if (locTimer.current) clearTimeout(locTimer.current);
+    if (yearTimer.current) clearTimeout(yearTimer.current);
+  }, []);
 
   function onLocChange(v: string) {
     setLocRaw(v);
@@ -127,6 +160,9 @@ export default function BeliClient() {
     setMax(p.max === "" ? "" : String(p.max));
   }
   function resetFilters() {
+    if(locTimer.current) clearTimeout(locTimer.current);
+    if(yearTimer.current) clearTimeout(yearTimer.current);
+    setBrand("all");setModel("all");setGroup("all");
     setQ("");
     setCat("all");
     setSort("new");
@@ -137,16 +173,19 @@ export default function BeliClient() {
     setYearRaw("");
     setYear("all");
     setPreset("all");
+    window.history.replaceState(null, "", window.location.pathname);
     toast("Filter dikembalikan ke awal.");
   }
 
   const list = React.useMemo(() => {
-    let out = store.all().filter((c) => c.status === "running");
+    let out = available.filter(c=>matchesDiscovery(c,{brand,model,group}));
     const needle = q.trim().toLowerCase();
     if (needle)
       out = out.filter(
         (c) =>
           c.title.toLowerCase().includes(needle) ||
+          vehicleBrand(c).toLowerCase().includes(needle) ||
+          vehicleModel(c).toLowerCase().includes(needle) ||
           (c.location || "").toLowerCase().includes(needle) ||
           (c.category || "").toLowerCase().includes(needle) ||
           (c.description || "").toLowerCase().includes(needle),
@@ -183,9 +222,10 @@ export default function BeliClient() {
       out.sort((a, b) => (b.interest || 0) - (a.interest || 0));
     else out.sort((a, b) => b.createdAt - a.createdAt);
     return out;
-  }, [store.cars, q, cat, sort, min, max, loc, year]);
+  }, [available, brand, model, group, q, cat, sort, min, max, loc, year]);
 
   const dirty =
+    brand !== "all" || model !== "all" || group !== "all" ||
     cat !== "all" ||
     loc !== "all" ||
     year !== "all" ||
@@ -194,14 +234,32 @@ export default function BeliClient() {
     q.trim() !== "" ||
     sort !== "new";
 
-  return (
-    <div>
-      <section className="hero-panel catalog-hero"><div className="hero-photo" /><p className="hero-eyebrow">KATALOG MOBIL</p><h1>Temukan mobil pilihanmu.</h1><p>Cari kendaraan sesuai kebutuhan dan anggaranmu.</p></section>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow !mb-1">KATALOG KENDARAAN</p><h2 className="text-base font-semibold">{list.length} pilihan untuk dijelajahi</h2></div><Link href="/simulasi" className="button-secondary"><Icon name="calculator" className="h-4 w-4" />Hitung rencana cicilan</Link></div>
+  const activeFilters = [
+    ...(brand!=='all'?[{label:brand,clear:()=>chooseBrand('all')}]:[]),
+    ...(model!=='all'?[{label:model,clear:()=>setModel('all')}]:[]),
+    ...(activeGroup?[{label:activeGroup.label,clear:()=>setGroup('all')}]:[]),
+    ...(cat!=='all'?[{label:cat,clear:()=>setCat('all')}]:[]),
+    ...(q.trim()?[{label:`Cari: ${q}`,clear:()=>setQ('')}]:[]),
+    ...(min || max?[{label:`Rp${Number(min || 0).toLocaleString('id-ID')} – ${max ? 'Rp'+Number(max).toLocaleString('id-ID') : 'tanpa batas'}`,clear:()=>{setMin('');setMax('');setPreset('all');}}]:[]),
+    ...(loc!=='all'?[{label:locRaw,clear:()=>{if(locTimer.current)clearTimeout(locTimer.current);setLoc('all');setLocRaw('');}}]:[]),
+    ...(year!=='all'?[{label:yearRaw,clear:()=>{if(yearTimer.current)clearTimeout(yearTimer.current);setYear('all');setYearRaw('');}}]:[]),
+  ];
+  const searchSummary = [activeGroup?.label,brand!=='all'?brand:'',model!=='all'?model:'',cat!=='all'?cat:'',max?`anggaran sampai Rp${Number(max).toLocaleString('id-ID')}`:'',locRaw,q].filter(Boolean).join(', ');
+  async function copySearch() {
+    const query=new URLSearchParams();
+    for(const [key,value] of Object.entries({q,brand:brand==='all'?'':brand,model:model==='all'?'':model,group:group==='all'?'':group,category:cat==='all'?'':cat,min,max,location:locRaw,year:yearRaw,sort:sort==='new'?'':sort}))if(value)query.set(key,value);
+    try {await navigator.clipboard.writeText(`${window.location.origin}/beli?${query.toString()}`);toast('Tautan pencarian disalin.');}catch{toast('Tautan belum dapat disalin. Izinkan akses clipboard lalu coba lagi.');}
+  }
 
-      <div className="surface filter-bar flex flex-col gap-3">
-        <div className="flex flex-col gap-3 md:flex-row">
-          <div className="relative flex-1">
+  return (
+    <div className={role === "buyer" || role === "guest" ? "buyer-catalog" : ""}>
+      <section className="hero-panel catalog-hero"><div className="hero-photo" /><p className="hero-eyebrow">KATALOG MOBIL</p><h1>Cari mobil dengan mudah.</h1><p>Cari nama mobil, pilih anggaran, lalu buka foto untuk melihat detail.</p></section>
+      {available.some(c=>c.isDemo) && <p className="catalog-demo-note mb-5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">Katalog demo: foto referensi model, harga dan spesifikasi contoh. Mobil tidak untuk dijual.</p>}
+      <div className="catalog-results-heading mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow !mb-1">KATALOG KENDARAAN</p><h2 className="text-base font-semibold">{list.length} mobil tersedia</h2></div><Link href="/simulasi" className="button-secondary"><Icon name="calculator" className="h-4 w-4" />Hitung cicilan</Link></div>
+
+      <div className="surface filter-bar buyer-search flex flex-col gap-3"><label htmlFor="catalog-search" className="text-sm font-semibold">Mobil apa yang kamu cari?</label>
+        <div className="grid grid-cols-2 gap-3 md:flex md:flex-row">
+          <div className="relative col-span-2 flex-1">
             <svg
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
               viewBox="0 0 20 20"
@@ -214,11 +272,11 @@ export default function BeliClient() {
               />
             </svg>
             <input
-              aria-label="Cari merek, model, atau kota"
+              id="catalog-search" aria-label="Cari merek, model, atau kota"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               type="search"
-              placeholder="Cari merek, model, atau kota..."
+              placeholder="Contoh: Toyota Avanza atau Bandung"
               className={inputCls}
             />
           </div>
@@ -247,8 +305,10 @@ export default function BeliClient() {
             <option value="love">Paling diminati</option>
           </select>
         </div>
-        <button type="button" onClick={() => setAdvancedOpen(!advancedOpen)} aria-expanded={advancedOpen} aria-controls="advanced-catalog-filters" className="button-secondary self-start lg:hidden"><Icon name="cog" className="h-3.5 w-3.5" />{advancedOpen ? "Tutup filter tambahan" : "Filter harga, kota & tahun"}</button>
+        <button type="button" onClick={() => setAdvancedOpen(!advancedOpen)} aria-expanded={advancedOpen} aria-controls="advanced-catalog-filters" className="button-secondary self-start catalog-advanced-toggle"><Icon name="cog" className="h-3.5 w-3.5" />{advancedOpen ? "Tutup filter tambahan" : "Filter lainnya"}</button>
         <div id="advanced-catalog-filters" className={`advanced-filters ${advancedOpen ? "is-open" : ""}`}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><div><label htmlFor="discovery-brand" className="filter-label">Merek mobil</label><select id="discovery-brand" value={brand} onChange={e=>chooseBrand(e.target.value)} className={`${selectCls} w-full`}><option value="all">Semua merek</option>{brand!=='all' && !brands.includes(brand)?<option value={brand}>{brand}</option>:null}{brands.map(b=><option key={b} value={b}>{b}</option>)}</select></div><div><label htmlFor="discovery-model" className="filter-label">Model mobil</label><select id="discovery-model" value={model} onChange={e=>setModel(e.target.value)} disabled={brand === 'all'} className={`${selectCls} w-full disabled:opacity-50`}><option value="all">{brand === 'all' ? 'Pilih merek terlebih dahulu' : 'Semua model'}</option>{model!=='all' && !models.includes(model)?<option value={model}>{model}</option>:null}{models.map(m=><option key={m} value={m}>{m}</option>)}</select></div></div>
+
           <input
             aria-label="Harga minimum"
             value={min}
@@ -332,7 +392,7 @@ export default function BeliClient() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap gap-2">
+          <div className="catalog-price-options flex flex-wrap gap-2">
             {PRICE_PRESETS.map((p) => (
               <button
                 key={p.id}
@@ -373,6 +433,11 @@ export default function BeliClient() {
         </div>
       </div>
 
+      <details className="catalog-browse-options mb-5 rounded-xl border border-sky-100 bg-white dark:border-slate-800 dark:bg-slate-900"><summary className="cursor-pointer px-5 py-4 text-sm font-semibold">Pilih berdasarkan kebutuhan, merek, atau tipe <span className="ml-1 text-xs font-normal text-slate-500">(opsional)</span></summary>
+      <CarDiscovery cars={available} brand={brand} category={cat} group={group} onBrand={chooseBrand} onCategory={setCat} onGroup={setGroup} resultCount={list.length} onViewResults={()=>{resultsRef.current?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth",block:"start"});resultsRef.current?.focus({preventScroll:true});}}/>
+      </details>
+      {activeFilters.length ? <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Kelompok aktif"><span className="text-[11px] text-slate-500">Dipilih:</span>{activeFilters.map((f,i)=><button key={f.label+i} type="button" aria-label={`Hapus filter ${f.label}`} onClick={f.clear} className="active-discovery-chip">{f.label}<span aria-hidden="true">×</span></button>)}<button type="button" onClick={copySearch} className="ml-auto text-[11px] font-semibold text-sky-700 dark:text-sky-300">Salin pencarian</button></div>:null}
+      <p ref={resultsRef} tabIndex={-1} aria-live="polite" className="scroll-mt-24 outline-none mb-4 text-xs text-slate-500">Menampilkan <strong className="font-semibold">{list.length}</strong> dari {available.length} mobil aktif{activeGroup ? ` · ${activeGroup.label}` : ''}.</p>
       {list.length === 0 ? (
         <div className="surface"><EmptyState icon="car" title={dirty ? "Belum menemukan yang cocok?" : "Pilihan berikutnya sedang dipersiapkan."} description={dirty ? "Coba rentang harga yang lebih luas, atau mulai kembali dengan semua kategori." : "Belum ada mobil yang ditayangkan pada browser ini. Sambil menunggu, kamu bisa merencanakan anggaran pembelian."}>{dirty ? <button onClick={resetFilters} className="button-primary">Reset pencarian<Icon name="arrow" className="h-4 w-4" /></button> : <div className="flex flex-wrap justify-center gap-2"><Link href="/simulasi" className="button-primary">Rencanakan anggaran<Icon name="arrow" className="h-4 w-4" /></Link>{["admin", "dealer"].includes(role) ? <Link href="/jual" className="button-secondary">Tambahkan listing</Link> : null}</div>}</EmptyState></div>
       ) : (
@@ -389,6 +454,7 @@ export default function BeliClient() {
         </div>
       )}
 
+      {role !== 'admin' ? <section className="surface discovery-help"><span className="soft-icon"><Icon name="chat" className="h-5 w-5"/></span><div className="min-w-0 flex-1"><h2 className="text-sm font-semibold">Belum menemukan yang cocok?</h2><p className="page-description !mt-1">Ceritakan kebutuhan dan anggaranmu kepada admin. Pesan dapat kamu tinjau sebelum dikirim.</p></div><Link href={role === 'guest' ? '/login' : `/chat?pesan=${encodeURIComponent('Halo Admin, saya mencari mobil'+(searchSummary ? `: ${searchSummary}` : ' sesuai kebutuhan saya')+'. Bisa bantu saya?')}`} className="button-primary">Bantu cari mobil<Icon name="arrow" className="h-4 w-4"/></Link></section>:null}
       <p className="mt-5 flex items-start gap-2 text-[10px] leading-relaxed text-gray-400"><Icon name="help" className="h-3.5 w-3.5 shrink-0" />Katalog saat ini menggunakan data pada browser ini. Listing belum tersinkron antarperangkat.</p>
 
       {detailId ? (

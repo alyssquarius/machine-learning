@@ -1,6 +1,6 @@
 # PRD AutoBuyCars — Workspace otomotif dan pembaruan pengalaman pengguna
 
-Versi dokumen: 1.6 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
+Versi dokumen: 1.7 · Tanggal: 28 Oktober 2026 · Bahasa produk: Indonesia.
 Status: perbaikan data akun dan trigger Supabase sudah diterapkan; pembaruan tampilan, simulator dan perbaikan role/store/profil tersedia pada kode dan preview lokal, belum dideploy ke Vercel. Lihat AUDIT.md untuk bukti dan batas pengujian.
 
 ## 1. Ringkasan produk
@@ -216,3 +216,65 @@ Batas: balas pesan dengan dua akun melalui UI belum diuji karena hanya kredensia
 
 
 Transisi tema: perubahan light/dark kini menginterpolasi latar, teks, border, ikon dan bayangan selama420 ms. Ikon bulan/matahari memakai crossfade dan rotasi ringan. Efek berlaku juga untuk pemilihan tema di Pengaturan dan perubahan preferensi sistem, tanpa mengubah durasi hover biasa. prefers-reduced-motion tetap menonaktifkan transisi. Build dan typecheck lulus.
+
+
+## 17. Penemuan dan pengelompokan mobil — versi 1.7
+
+Katalog menyediakan kelompok kebutuhan (MPV/SUV keluarga, anggaran sampaiRp200 juta, kilometer tercatat1–30.000, dan kategori listrik), merek, model, serta tipe kendaraan. Jumlah kelompok dihitung dari listing aktif pada browser; nol tidak diganti angka contoh. Tipe ditambah Wagon, Coupe, Van, dan Pickup. Filter kebutuhan/merek/model dapat dikombinasikan dengan harga, kota, tahun, kategori dan pencarian. Tombol Lihat hasil membawa fokus ke hasil; kelompok aktif dapat dihapus satu per satu.
+
+Formulir listing mempunyai merek/model terpisah. Listing lama memakai inferensi merek dari awal judul dan model dari kata pertama setelah merek yang dikenal; nilai eksplisit lebih diutamakan. Listing yang tidak dapat diidentifikasi masuk Lainnya, tanpa menebak atribut kendaraan dari foto. Data yang disimpan dan diubah dibatasi panjangnya.
+
+Fitur relevansi tambahan: salin tautan pencarian yang menyertakan merek/model/kelompok/tipe/harga/kota/tahun/urutan; model disaring berdasarkan merek; permintaan Bantu cari mobil menyiapkan draf kebutuhan dan anggaran pada chat admin untuk pembeli/dealer. Tidak ada pengiriman pesan otomatis. Pengunjung diarahkan login. Kelompok bukan klaim inspeksi, jaminan kondisi, persetujuan kredit atau prediksiAI.
+
+Validasi otomatis:38 tes lulus, mencakup inferensi listing lama, batas harga/km, kombinasi merek-model-kelompok, serta penyimpanan merek/model/tipe tambahan melalui store. Typecheck dan production build lulus. Data katalog tetap lokal pada browser; frontend versi1.7 belum dipush/deploy pada saat dokumen diperbarui.
+
+
+Pemeriksaan browser versi1.7: kombinasi Toyota+Mobil keluarga mengaktifkan kedua penanda; tautan /beli?brand=Toyota&group=family memulihkan pilihan; salin tautan mendapat konfirmasi sukses; Lihat hasil memindahkan fokus ke ringkasan hasil; reset menghapus pilihan. Desktop1440 px dan ponsel375 px diperiksa, tanpa overflow horizontal pada375 px. Tidak ada listing contoh yang diterbitkan untuk pengujian.
+
+Identitas visual katalog: 24 merek memiliki aset logo lokal dengan pemetaan sesuai nama merek. Proporsi dan warna logo dipertahankan; latar putih menjaga keterbacaan pada tema terang dan gelap. Merek yang tidak dikenal menggunakan ikon mobil umum. Sumber aset dicatat pada public/images/brands/sources.json dan README.md. Sembilan tipe kendaraan memakai siluet SVG berbeda, termasuk bak terbuka Pickup, bodi Van, serta simbol petir Listrik. Label teks dan fungsi filter tetap tersedia. Logo yang ditampilkan berhasil dimuat pada browser; susunan desktop dan ponsel375 px serta tema gelap diperiksa. Typecheck dan production build lulus setelah penambahan aset. Perubahan ini masih lokal.
+
+## 18. Katalog dummy — versi 1.8
+
+Pada pembukaan katalog pertama, aplikasi menambahkan tepat50 listing demo:24 merek,9 tipe bodi,10 kota, serta variasi harga/tahun/kilometer. ID tetap dan penanda inisialisasi mencegah duplikasi saat refresh atau ganti akun; listing lama tetap disimpan. Jika listing demo dihapus setelah inisialisasi, refresh tidak membuatnya kembali. Total katalog dapat melebihi50 apabila sudah ada listing pengguna.
+
+Data diberi label Data demo pada kartu/detail dan keterangan katalog. Harga dan spesifikasi adalah contoh buatan, bukan penilaian pasar. Sembilan ilustrasi SVG lokal sesuai tipe digunakan sebagai gambar; tidak diklaim sebagai foto model/unit asli. Kontak penjual demo tidak tersedia; tidak ada nomor pribadi atau pesan WhatsApp yang dihasilkan. Favorit, filter, detail, dan simulasi tetap dapat dicoba. Listing pengguna tetap memakai kontak seperti biasa.
+
+Penyimpanan tetap pada browser (shared localStorage), bukan tabel listing Supabase.41 tes lulus, termasuk jumlah/keunikan/cakupan demo, aset ilustrasi tersedia, preservasi listing lama, dan idempotensi setelah penghapusan. Typecheck dan production build lulus. Browser menunjukkan50 dari50 mobil aktif; filter Toyota+keluarga menghasilkan3 mobil, dan seluruh50 ilustrasi berhasil dimuat. Perubahan versi1.8 masih lokal, belum dipush/deploy.
+
+## 19. Foto referensi dan kemudahan penggunaan pembeli — versi 1.9
+
+Seluruh50 listing demo sekarang memakai foto referensi merek/model dari Wikimedia Commons, menggantikan ilustrasi tipe. Warna, varian, pasar, dan tahun foto dapat berbeda dari spesifikasi dummy; keterangan ini tersedia pada detail. Penulis, tautan sumber dan lisensi ditampilkan pada kartu serta detail; manifest lengkap disimpan di public/images/demo-cars/photo-sources.json. Foto dioptimalkan menjadi total sekitar5,7 MB dan kartu memuat gambar secara bertahap. Pembaruan data browser hanya mengganti gambar SVG bawaan pada ID demo yang sesuai, mempertahankan listing pengguna, perubahan identitas model, foto khusus, harga, catatan, dan penghapusan sebelumnya.
+
+Alur awal pembeli/pengunjung mengutamakan pencarian nama mobil dan anggaran. Merek/model/kota/tahun berada di Filter lainnya; pengelompokan kebutuhan/merek/tipe tersedia dalam panel opsional. Delapan merek utama tampil saat panel dibuka, merek lain melalui tombol perluasan. Filter aktif tetap terlihat di luar panel dan dapat dibatalkan satu per satu. Reset membersihkan parameter URL agar refresh tidak memulihkan filter lama. Kartu menyediakan petunjuk Lihat detail; statistik minat/waktu buatan tidak ditampilkan pada mobil demo.
+
+Navigasi pembeli memakai istilah Cari Mobil, Mobil Favorit, Hitung Cicilan, Chat Admin, dan Aktivitas Saya. Hak akses tetap mengikuti role; pembeli tidak mendapat kontrol widget dashboard penjualan. Panduan menjelaskan pencarian, foto/detail, favorit, perkiraan cicilan, serta kontak penjual/admin. Pengaturan memakai bahasa akun/tampilan. Perbaikan ini bertujuan mengurangi pilihan yang perlu dipahami sekaligus; keberhasilan penggunaan dengan klien belum diuji langsung.
+
+Validasi:43 tes otomatis, typecheck dan production build lulus. Pengujian foto mencakup asetJPEG, kecocokan metadata merek/model, atribusi50 foto, serta migrasi yang mempertahankan data/foto khusus. Tampilan dan pencarian diperiksa pada browser desktop1440 px dan ponsel375 px; pencarian Brio menghasilkan1 mobil. Perubahan masih lokal, belum dipush/deploy.
+
+## 20. Navigasi etalase pembeli dan detail mobil — versi 1.10
+
+Pembeli dan pengunjung memakai navigasi atas pada desktop (Cari Mobil, Favorit, Chat, Hitung Cicilan dan menu akun); pada layar di bawah1024 px tersedia menu bawah Cari Mobil, Favorit, Chat dan Akun. Halaman akun tetap menyediakan profil, aktivitas, pengaturan, dan cicilan; pengunjung yang membuka halaman terlindungi diarahkan login. Admin/dealer mempertahankan sidebar dan pemeriksaan hak akses. Tombol chat melayang pembeli dihapus karena chat tersedia pada navigasi; dealer tetap mendapat tombol tersebut.
+
+Banner dan keterangan katalog dipadatkan. Pada ponsel penjelasan pembuka disembunyikan, jumlah hasil serta tautan cicilan berada dalam satu baris, dan pilihan anggaran dapat digeser horizontal. Panel merek/tipe tetap opsional. Kartu memakai foto lebih besar dan tidak mengulang tahun/km pada deretan label. Kredit foto tetap tersedia. Detail menyediakan galeri, harga, tabel spesifikasi tahun/km/lokasi/tipe, deskripsi, favorit dan kontak pada footer yang tetap terlihat selama isi digulir. Listing tanpa nomor penjual tidak membuat nomor kontak contoh. Mobil demo tetap tidak dapat dihubungi sebagai barang jualan.
+
+Tautan Hitung cicilan mobil ini meneruskan harga ke simulator. Istilah menggunakan uang muka, lama cicilan dan sisa harga yang dicicil; bantuan singkat menjelaskan uang muka serta konversi12 bulan menjadi1 tahun. Rumus pembiayaan tidak berubah.
+
+Validasi: typecheck,43 pengujian otomatis dan build produksi lulus. Browser desktop1440 px dan ponsel375 px diperiksa. Pada375×812 foto pertama dimulai sekitar619 px, di atas menu bawah sekitar749 px; lebar konten375 px. Menu Akun pengunjung menuju login; detail dan footer diperiksa pada ponsel; Avanza meneruskan harga185000000 ke simulator. Uji kegunaan langsung dengan klien belum dilakukan. Perubahan masih lokal dan belum dipush/deploy.
+
+## 21. Penyempurnaan kartu, detail, dan bahasa cicilan — versi 1.11
+
+Kartu katalog mengutamakan nama lalu harga dengan aksen biru; kilometer/kota dan tipe menjadi informasi pendukung. Nama dapat dibuka melalui tombol yang mendukung keyboard. Tombol favorit menyebutkan nama mobil dan status simpan melalui label aksesibel serta aria-pressed. Kredit foto tetap ditampilkan di bawah informasi listing.
+
+Detail menampilkan nama panjang tanpa pemotongan satu baris. Spesifikasi membedakan kilometer yang belum diisi; listing asli memiliki bagian penjual dan petunjuk membuka WhatsApp untuk menanyakan ketersediaan, kondisi, serta jadwal melihat unit. Tombol kontak diperbesar pada ponsel, dalam footer di luar area gulir isi. Data demo tetap tidak menghasilkan kontak penjual.
+
+Cicilan dibagi menjadi tiga langkah: harga mobil, uang muka, dan lama cicilan. Pilihan menampilkan tahun sekaligus bulan; penjelasan bunga flat dan isian bunga berada di panel yang dapat dibuka. Ponsel/tablet mendapat ringkasan perkiraan di atas formulir; ringkasan lengkap tetap tersedia di bawah/di samping. Isian harga/bunga mempunyai petunjuk dan status validasi; penyimpanan hasil dinonaktifkan untuk isian tidak valid. Rumus tidak berubah. Pergantian halaman sekarang mereset posisi gulir wadah aplikasi dan menutup menu yang terbuka.
+
+Validasi: typecheck,43 tes otomatis, serta build produksi lulus. Browser memeriksa kartu desktop, pembukaan detail melalui nama, perpindahan harga185000000 dari Avanza ke cicilan, serta lebar375 px tanpa overflow. Contoh harga185 juta/uang muka30%/bunga flat8%:24 bulan menampilkan6259167 per bulan;36 bulan menampilkan4460556. Mengosongkan harga memberi aria-invalid=true dan menonaktifkan simpan. Navigasi detail→cicilan mengembalikan scrollTop wadah ke0. Perubahan masih lokal, belum dipush/deploy; evaluasi kegunaan langsung dengan klien belum dilakukan.
+
+## 22. Penyempurnaan visual dan interaksi (v1.12)
+
+Tampilan pembeli mengambil inspirasi hierarki visual dan penyajian produk dari https://www.apple.com, dengan identitas biru langit AutoBuyCars. Judul lebih tegas, permukaan netral, kartu membulat, navigasi transparan, dan foto kendaraan menjadi fokus. Alur katalog, kontak penjual, chat, serta rumus simulasi tetap menggunakan implementasi sebelumnya.
+
+Interaksi: transisi masuk halaman 450 ms, dialog 320 ms, kartu terangkat dan foto membesar ringan pada perangkat dengan hover, penanda tenor terpilih, serta animasi singkat saat hasil cicilan berubah. Efek baru menghormati prefers-reduced-motion. Ringkasan cicilan tetap terlihat saat menggulir di desktop lebar; ponsel mempertahankan ringkasan di atas formulir.
+
+Validasi: build produksi, TypeScript, dan git diff --check lulus. Pratinjau katalog dan simulasi diperiksa pada desktop 1440 px; simulasi mode gelap pada 375 px tidak meluap horizontal. Pilihan 24 bulan dengan harga Rp185 juta, DP30%, bunga flat8% menghasilkan Rp6.259.167 per bulan. Perubahan masih lokal, belum dipush atau dideploy.

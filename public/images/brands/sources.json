@@ -1,0 +1,146 @@
+{
+  "Toyota": {
+    "file": "toyota.png",
+    "source": "https://www.carlogos.org/car-logos/toyota-logo-2020-europe-640.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/toyota.png",
+    "bytes": 6141
+  },
+  "Honda": {
+    "file": "honda.png",
+    "source": "https://www.carlogos.org/car-logos/honda-logo-2000-full-640.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/honda.png",
+    "bytes": 18692
+  },
+  "Suzuki": {
+    "file": "suzuki.png",
+    "source": "https://www.carlogos.org/logo/Suzuki-logo-5000x2500.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/suzuki.png",
+    "bytes": 48775
+  },
+  "Daihatsu": {
+    "file": "daihatsu.png",
+    "source": "https://www.carlogos.org/logo/Daihatsu-logo-1997-1280x233.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/daihatsu.png",
+    "bytes": 6433
+  },
+  "Mitsubishi": {
+    "file": "mitsubishi.png",
+    "source": "https://www.carlogos.org/logo/Mitsubishi-logo-2000x2500.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/mitsubishi.png",
+    "bytes": 41240
+  },
+  "Nissan": {
+    "file": "nissan.png",
+    "source": "https://www.carlogos.org/car-logos/nissan-logo-2020-black-show.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/nissan.png",
+    "bytes": 5098
+  },
+  "Hyundai": {
+    "file": "hyundai.png",
+    "source": "https://www.carlogos.org/car-logos/hyundai-logo-2011-640.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/hyundai.png",
+    "bytes": 16440
+  },
+  "Wuling": {
+    "file": "wuling.png",
+    "source": "https://www.carlogos.org/logo/Wuling-logo-1920x1080.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/wuling.png",
+    "bytes": 77748
+  },
+  "Kia": {
+    "file": "kia.png",
+    "source": "https://www.carlogos.org/logo/Kia-logo-2560x1440.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/kia.png",
+    "bytes": 115458
+  },
+  "Mazda": {
+    "file": "mazda.png",
+    "source": "https://www.carlogos.org/car-logos/mazda-logo-2018-vertical-640.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/mazda.png",
+    "bytes": 18853
+  },
+  "BMW": {
+    "file": "bmw.png",
+    "source": "https://www.carlogos.org/car-logos/bmw-logo-2020-gray.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/bmw.png",
+    "bytes": 6614
+  },
+  "Mercedes-Benz": {
+    "file": "mercedes-benz.png",
+    "source": "https://www.carlogos.org/logo/Mercedes-Benz-logo-2011-1920x1080.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/mercedes-benz.png",
+    "bytes": 42467
+  },
+  "BYD": {
+    "file": "byd.png",
+    "source": "https://www.carlogos.org/logo/BYD-logo-2007-2560x1440.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/byd.png",
+    "bytes": 25669
+  },
+  "Chery": {
+    "file": "chery.png",
+    "source": "https://www.carlogos.org/logo/Chery-logo-2013-3840x2160.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/chery.png",
+    "bytes": 234886
+  },
+  "MG": {
+    "file": "mg.png",
+    "source": "https://www.carlogos.org/logo/MG-logo-red-2010-1920x1080.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/mg.png",
+    "bytes": 142717
+  },
+  "Ford": {
+    "file": "ford.png",
+    "source": "https://www.carlogos.org/car-logos/ford-logo-2017-640.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/ford.png",
+    "bytes": 8143
+  },
+  "Chevrolet": {
+    "file": "chevrolet.png",
+    "source": "https://www.carlogos.org/logo/Chevrolet-logo-2013-2560x1440.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/chevrolet.png",
+    "bytes": 193474
+  },
+  "Isuzu": {
+    "file": "isuzu.png",
+    "source": "https://www.carlogos.org/logo/Isuzu-logo-1991-3840x2160.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/isuzu.png",
+    "bytes": 22685
+  },
+  "Lexus": {
+    "file": "lexus.png",
+    "source": "https://www.carlogos.org/logo/Lexus-logo-1988-1920x1080.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/lexus.png",
+    "bytes": 76095
+  },
+  "Peugeot": {
+    "file": "peugeot.png",
+    "source": "https://www.carlogos.org/logo/Peugeot-logo-2010-1920x1080.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/peugeot.png",
+    "bytes": 52938
+  },
+  "Volkswagen": {
+    "file": "volkswagen.png",
+    "source": "https://www.carlogos.org/logo/Volkswagen-logo-2019-1500x1500.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/volkswagen.png",
+    "bytes": 25101
+  },
+  "Volvo": {
+    "file": "volvo.png",
+    "source": "https://www.carlogos.org/logo/Volvo-logo-2014-1920x1080.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/volvo.png",
+    "bytes": 81312
+  },
+  "Subaru": {
+    "file": "subaru.png",
+    "source": "https://www.carlogos.org/car-logos/subaru-logo-2019-640.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/subaru.png",
+    "bytes": 23206
+  },
+  "Tesla": {
+    "file": "tesla.png",
+    "source": "https://www.carlogos.org/car-logos/tesla-logo-2007-full-640.png",
+    "dataset": "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/tesla.png",
+    "bytes": 2644
+  }
+}

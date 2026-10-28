@@ -264,3 +264,176 @@ html.dark .app-content :is(.surface,.filter-bar) { background:var(--panel); bord
     transition:background-color .42s cubic-bezier(.2,.7,.3,1),color .42s cubic-bezier(.2,.7,.3,1),border-color .42s cubic-bezier(.2,.7,.3,1),box-shadow .42s ease,fill .42s ease,stroke .42s ease,transform .3s ease,opacity .28s ease!important;
   }
 }
+
+.discovery-panel { padding:24px; margin-bottom:24px; }
+.discovery-groups { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.discovery-group { position:relative; display:flex; flex-direction:column; align-items:flex-start; text-align:left; min-width:0; gap:14px; padding:16px; border:1px solid var(--line); border-radius:10px; background:var(--canvas); }
+.discovery-group:hover,.discovery-brands button:hover,.discovery-bodies button:hover { border-color:var(--accent); }
+.discovery-group[aria-pressed=true],.discovery-brands button[aria-pressed=true],.discovery-bodies button[aria-pressed=true] { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.discovery-count { position:absolute; top:16px; right:16px; font-size:11px; color:var(--muted); }
+.discovery-section { border-top:1px solid var(--line); margin-top:20px; padding-top:18px; }
+.discovery-brands { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:8px; }
+.discovery-brands button { min-width:0; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px; padding:11px 6px; border:1px solid var(--line); border-radius:8px; font-size:11px; font-weight:600; }
+.discovery-brands small { font-size:9px; font-weight:400; color:var(--muted); }
+.discovery-bodies { display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); gap:8px; }
+.discovery-bodies button { min-width:0; display:flex; flex-direction:column; align-items:center; padding:10px 5px; border:1px solid transparent; border-radius:8px; font-size:10px; gap:4px; }
+.discovery-bodies svg { width:68px; max-width:100%; height:32px; color:var(--accent); }
+.discovery-bodies small { font-size:9px; color:var(--muted); }
+.active-discovery-chip { display:inline-flex; align-items:center; gap:12px; border:1px solid var(--line); background:var(--accent-soft); color:var(--accent); border-radius:6px; padding:6px 9px; font-size:11px; }
+.discovery-help { display:flex; align-items:center; gap:16px; margin-top:22px; padding:22px; }
+.catalog-hero { min-height:0; padding:22px 28px; }
+.catalog-hero h1 { max-width:none; font-size:27px; }
+@media(max-width:1100px) { .discovery-brands { grid-template-columns:repeat(4,minmax(0,1fr)); }.discovery-bodies { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+@media(max-width:639px) { .discovery-panel { padding:18px; }.discovery-groups { grid-template-columns:repeat(2,minmax(0,1fr)); }.discovery-group { padding:13px; gap:12px; }.discovery-brands { grid-template-columns:repeat(2,minmax(0,1fr)); }.discovery-bodies { grid-template-columns:repeat(3,minmax(0,1fr)); }.discovery-help { flex-wrap:wrap; padding:18px; }.discovery-help>a { width:100%; }.catalog-hero { padding:20px; }.catalog-hero h1 { font-size:24px; } }
+
+@media(min-width:1024px) { .catalog-advanced-toggle { display:none; } }
+
+.discovery-result-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; padding-top:18px; margin-top:14px; border-top:1px solid var(--line); }
+
+/* Original brand marks stay on a neutral plate in both themes. */
+.discovery-brands button { position:relative; flex-direction:column; gap:8px; padding:13px 8px 11px; min-height:94px; }
+.brand-logo-plate { display:flex; align-items:center; justify-content:center; width:80px; max-width:100%; height:46px; padding:3px 4px; border-radius:7px; background:#fff; }
+.brand-logo-image { width:72px; max-width:100%; height:40px; object-fit:contain; }
+.discovery-brands small { position:absolute; top:8px; right:9px; }
+.discovery-bodies svg { width:76px; height:42px; }
+@media(max-width:639px) { .discovery-brands { grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }.discovery-brands button { padding:14px 4px 9px; min-height:85px; font-size:9px; gap:6px; }.brand-logo-plate { width:58px; height:37px; padding:3px; }.brand-logo-image { width:52px; height:31px; }.discovery-brands small { font-size:8px; top:5px; right:6px; } }
+
+/* Keep optional catalogue filters out of the first-time buyer flow. */
+.advanced-filters { display:none; }
+.advanced-filters.is-open { display:grid; }
+.catalog-advanced-toggle { display:inline-flex; }
+.advanced-filters > .grid { grid-column:1/-1; }
+
+.catalog-browse-options .discovery-panel { border:0; box-shadow:none; margin:0; padding-top:6px; }
+
+/* Buyers use storefront navigation; seller workspaces retain their sidebar. */
+.buyer-header-main { display:flex; align-items:center; gap:36px; min-width:0; }
+.buyer-brand { display:flex; align-items:center; gap:10px; white-space:nowrap; font-size:20px; letter-spacing:-.7px; }
+.buyer-brand strong>span { color:var(--accent); }
+.buyer-top-nav { display:flex; align-items:center; gap:8px; }
+.buyer-top-nav a { padding:10px 14px; border-radius:9px; font-size:13px; font-weight:600; color:var(--muted); }
+.buyer-top-nav a:hover,.buyer-top-nav a[aria-current=page] { background:var(--accent-soft); color:var(--accent); }
+.buyer-bottom-nav { display:none; }
+.buyer-shell .app-content { max-width:1440px; padding-top:24px; }
+.buyer-catalog .catalog-hero { border:0; background:none; padding:0; margin-bottom:12px; }
+.buyer-catalog .catalog-hero .hero-eyebrow,.buyer-catalog .hero-photo { display:none; }
+.buyer-catalog .catalog-hero h1 { font-size:25px; margin:0 0 4px; }
+.buyer-catalog .catalog-hero p { max-width:none; font-size:12px; }
+.buyer-catalog .catalog-demo-note { padding:8px 12px; margin-bottom:14px; font-size:11px; }
+.buyer-catalog .catalog-results-heading { margin-bottom:12px; }
+.buyer-catalog .catalog-results-heading .eyebrow { display:none; }
+.buyer-catalog .buyer-search { padding:16px; margin-bottom:12px; }
+.buyer-catalog .catalog-browse-options { margin-bottom:12px; }
+.buyer-catalog .catalog-browse-options>summary { padding:12px 16px; }
+@media(max-width:1023px) {
+ .buyer-top-nav { display:none; }
+ .buyer-brand { font-size:17px; gap:8px; }
+ .buyer-brand .brand-symbol { height:34px; width:34px; }
+ .buyer-bottom-nav { position:fixed; z-index:35; bottom:0; left:0; right:0; display:grid; grid-template-columns:repeat(4,1fr); padding:6px 8px calc(6px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--panel); }
+ .buyer-bottom-nav a { position:relative; min-height:50px; display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; border-radius:9px; color:var(--muted); font-size:11px; font-weight:600; }
+ .buyer-bottom-nav a[aria-current=page] { background:var(--accent-soft); color:var(--accent); }
+ .buyer-bottom-nav small { position:absolute; top:1px; left:55%; background:var(--accent); color:white; border-radius:12px; min-width:16px; text-align:center; padding:1px 4px; font-size:9px; }
+ .buyer-shell .app-content { padding:18px 16px calc(90px + env(safe-area-inset-bottom)); }
+ .buyer-shell .workspace-header { padding:0 16px; gap:8px; }
+ .buyer-shell .account-button { padding:4px; }
+ .buyer-catalog .catalog-hero h1 { font-size:22px; max-width:none; }
+ .buyer-catalog .catalog-results-heading h2 { font-size:14px; }
+ .buyer-catalog .catalog-results-heading .button-secondary { padding:8px 10px; font-size:11px; }
+}
+.buyer-car-card > .relative > button > div { height:auto; aspect-ratio:16/10; }
+.buyer-car-card .card-feature-row { margin-top:8px; }
+.vehicle-specs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.vehicle-specs>div { border:1px solid var(--line); border-radius:10px; padding:12px; }
+.vehicle-specs dt { font-size:11px; color:var(--muted); }
+.vehicle-specs dd { margin-top:4px; font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.vehicle-detail .detail-actions { background:var(--panel); padding-bottom:max(14px,env(safe-area-inset-bottom)); }
+@media(max-width:639px) {
+ .buyer-catalog .catalog-hero p { display:none; }
+ .buyer-catalog .catalog-results-heading { flex-wrap:nowrap; }
+ .buyer-catalog .catalog-results-heading .button-secondary { white-space:nowrap; }
+ .buyer-catalog .catalog-price-options { flex-wrap:nowrap; overflow-x:auto; width:100%; padding-bottom:4px; }
+ .buyer-catalog .catalog-price-options button { flex-shrink:0; white-space:nowrap; }
+ .buyer-search>.flex.flex-wrap { min-width:0; }
+ .vehicle-detail .detail-action-buttons { gap:10px; }
+ .vehicle-detail .detail-action-buttons>span { font-size:10px; }
+ .vehicle-detail .detail-action-buttons>button { flex-shrink:0; }
+}
+/* Scan-friendly listing hierarchy and guided finance inputs. */
+.buyer-car-card { display:flex; flex-direction:column; }
+.buyer-car-card>.p-5 { display:flex; flex-direction:column; flex:1; }
+.buyer-car-card>.p-5>p.text-lg { color:var(--accent); font-size:22px; }
+.buyer-car-card>.p-5>p:last-child { padding:8px 0 0; font-size:9px; }
+.seller-info { padding:16px; border:1px solid var(--line); border-radius:12px; }
+.credit-step { display:flex; align-items:flex-start; gap:12px; }
+.credit-step-number { flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; height:28px; width:28px; border-radius:9px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; }
+.credit-period { padding:12px 4px; border:1px solid var(--line); border-radius:10px; color:var(--muted); }
+.credit-period strong { display:block; font-size:12px; font-weight:600; }
+.credit-period small { display:block; font-size:10px; margin-top:4px; }
+.credit-period.is-selected { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.credit-mobile-preview { display:none; }
+@media(max-width:1279px) {
+ .credit-mobile-preview { display:flex; flex-direction:column; gap:6px; margin-bottom:20px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--accent-soft); color:var(--ink); }
+ .credit-mobile-preview span { font-size:12px; }
+ .credit-mobile-preview strong { font-size:22px; }
+ .credit-mobile-preview small { font-size:11px; color:var(--muted); }
+}
+@media(max-width:639px) { .vehicle-detail .detail-contact { min-height:44px; flex:1; }.credit-period strong { font-size:11px; } }
+
+/* Refined storefront: generous hierarchy, restrained surfaces and purposeful motion. */
+:root { --motion-ease:cubic-bezier(.22,1,.36,1); }
+.buyer-shell { --canvas:#f5f7fa; --line:#e3e9f0; }
+html.dark .buyer-shell { --canvas:#0b1220; --line:#26364a; }
+.buyer-shell .workspace-header { background:color-mix(in srgb,var(--panel) 82%,transparent); backdrop-filter:blur(24px) saturate(140%); -webkit-backdrop-filter:blur(24px) saturate(140%); }
+.buyer-shell .app-content { max-width:1380px; }
+.buyer-top-nav a { font-weight:500; border-radius:999px; }
+.buyer-shell .page-header h1 { font-size:clamp(28px,3.2vw,42px); letter-spacing:-1.6px; line-height:1.15; }
+.buyer-shell .page-description { font-size:14px; line-height:1.65; max-width:620px; }
+.buyer-shell .eyebrow { color:var(--accent); letter-spacing:1.8px; }
+.buyer-catalog .catalog-hero { padding:16px 0 12px; margin-bottom:14px; }
+.buyer-catalog .catalog-hero h1 { font-size:clamp(28px,3.5vw,46px); font-weight:650; letter-spacing:-1.7px; line-height:1.12; margin-bottom:10px; }
+.buyer-catalog .catalog-hero p { color:var(--muted); font-size:14px; line-height:1.6; }
+.buyer-catalog .buyer-search,.buyer-catalog .catalog-browse-options,.buyer-car-card { border-radius:20px; border-color:var(--line); box-shadow:0 3px 14px #102b4804; }
+.buyer-car-card { overflow:hidden; }
+.buyer-car-card>.p-5 { padding:24px; }
+.buyer-car-card h3 { letter-spacing:-.45px; }
+.buyer-car-card>.p-5>p.text-lg { font-size:24px; letter-spacing:-.6px; font-variant-numeric:tabular-nums; }
+.buyer-car-card img { transition:transform .7s var(--motion-ease); }
+.buyer-shell .button-primary,.buyer-shell .button-secondary { border-radius:999px; min-height:42px; }
+.buyer-shell .surface { border-radius:20px; }
+.credit-page { max-width:1120px; margin:0 auto; }
+.credit-page .page-header { padding:14px 0 8px; margin-bottom:28px; }
+.credit-page .credit-summary { border:1px solid #21455d; border-radius:24px; background:radial-gradient(ellipse at top right,#165a7c 0%,#0d354e 45%,#10283b 100%); box-shadow:0 16px 40px #082f4914; }
+.credit-summary output { font-size:clamp(28px,3vw,40px); font-variant-numeric:tabular-nums; letter-spacing:-1.5px; }
+.credit-step-number { border-radius:50%; width:32px; height:32px; }
+.credit-period { border-radius:14px; transition:background .25s,border-color .25s,box-shadow .25s,transform .25s var(--motion-ease); }
+.credit-period.is-selected { box-shadow:0 0 0 1px var(--accent),0 4px 14px #0284c712; }
+.credit-mobile-preview { border-radius:20px; background:var(--accent-soft); }
+.vehicle-detail .vehicle-specs>div { background:var(--canvas); border-color:transparent; border-radius:14px; }
+.vehicle-detail .seller-info { background:var(--canvas); border-color:transparent; border-radius:16px; }
+.animate-page-enter { animation:pageEnter .45s var(--motion-ease) both; }
+.animate-zoom-in { animation:zoomIn .32s var(--motion-ease) both; }
+.credit-value-enter { animation:valueEnter .32s var(--motion-ease); }
+@keyframes valueEnter { from { opacity:.45; translate:0 4px; } to { opacity:1; translate:0 0; } }
+@media(hover:hover) and (pointer:fine) {
+ .buyer-car-card { transition:transform .4s var(--motion-ease),box-shadow .4s var(--motion-ease),border-color .3s; }
+ .buyer-car-card:hover { transform:translateY(-5px); box-shadow:0 18px 40px #102b4812; border-color:color-mix(in srgb,var(--accent) 25%,var(--line)); }
+ .buyer-car-card:hover img { transform:scale(1.035); }
+ .button-primary:hover { box-shadow:0 6px 18px #0284c724; transform:translateY(-1px); }
+ .discovery-group:hover,.discovery-brand:hover,.credit-period:hover { transform:translateY(-2px); }
+}
+@media(min-width:1280px) { .credit-page aside { position:sticky; top:94px; }.buyer-shell .app-content { padding-top:32px; } }
+@media(max-width:639px) {
+ .buyer-catalog .catalog-hero { padding:6px 0; }
+ .buyer-catalog .catalog-hero h1 { font-size:28px; letter-spacing:-1px; }
+ .buyer-shell .page-header h1 { font-size:29px; letter-spacing:-1px; }
+ .buyer-shell .page-description { font-size:13px; }
+ .credit-page .page-header { padding:4px 0; margin-bottom:20px; }
+ .buyer-car-card>.p-5 { padding:20px; }
+ .buyer-shell .surface,.buyer-catalog .buyer-search { border-radius:16px; }
+ .buyer-bottom-nav { background:color-mix(in srgb,var(--panel) 94%,transparent); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+}
+@media(prefers-reduced-motion:reduce) {
+ .animate-page-enter,.animate-zoom-in,.credit-value-enter { animation:none!important; }
+ .buyer-car-card,.buyer-car-card img,.credit-period,.button-primary,.discovery-group,.discovery-brand { transition:none!important; }
+ .buyer-car-card:hover,.buyer-car-card:hover img,.button-primary:hover,.discovery-group:hover,.discovery-brand:hover,.credit-period:hover { transform:none; }
+}

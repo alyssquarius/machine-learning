@@ -5,6 +5,7 @@ import { cleanCategory } from "@/lib/cities";
 import { canPerformAction, hasPermission, type Role } from "@/lib/roles";
 import { carPhotos } from "@/lib/car-photos";
 import { safeImageUrl } from "@/lib/format";
+import { seedDemoCatalog } from "@/lib/demo-cars";
 
 // ---------- Tipe ----------
 
@@ -38,8 +39,12 @@ export interface Purchase {
 }
 
 export interface Car {
+  photoCredit?: { author: string; source: string; license: string; licenseUrl: string };
+  isDemo?: boolean;
   id: string;
   title: string;
+  brand?: string;
+  model?: string;
   price: number;
   year: number;
   km: number;
@@ -156,7 +161,10 @@ function normalizeCars(arr: unknown): Car[] {
     .filter((c) => c && typeof c.id === "string")
     .map((c) => {
       const o: Car = { ...(c as Car) };
+      o.isDemo = o.isDemo === true;
       o.title = String(o.title || "Mobil").slice(0, 80);
+      o.brand = String(o.brand || "").trim().slice(0,40);
+      o.model = String(o.model || "").trim().slice(0,60);
       o.price = Math.max(0, Number(o.price) || 0);
       const my = new Date().getFullYear();
       o.year = Math.min(my, Math.max(1990, Number(o.year) || my));
@@ -397,6 +405,7 @@ export function StoreProvider({
 
   const loadForOwner = React.useCallback(
     (ownerId: string) => {
+      try { seedDemoCatalog(localStorage); } catch { /* storage unavailable; preserve existing catalogue */ }
       const k = (b: string) => (ownerId ? `${b}_${ownerId}` : b);
       let cars = normalizeCars(load(k(LS_CARS), []));
       let hist = normalizeHist(load(k(LS_HIST), []));
@@ -774,6 +783,8 @@ export function StoreProvider({
         const car: Car = {
           id: uid("c"),
           title: String(data.title || "").trim().slice(0, 80),
+          brand: String(data.brand || "").trim().slice(0,40),
+          model: String(data.model || "").trim().slice(0,60),
           price: Math.max(0, Number(data.price) || 0),
           year: yearNum,
           km: Math.max(0, Number(data.km) || 0),
@@ -812,11 +823,13 @@ export function StoreProvider({
         if (car && !canMutateListing(car, "canEditOwnListing")) return null;
         if (!car) return null;
         if (car.purchase && patch.status && patch.status !== "done") return null;
-        const allowed = ["title", "price", "year", "km", "location", "category", "status", "badge", "image", "images", "description", "interest"];
+        const allowed = ["brand", "model", "title", "price", "year", "km", "location", "category", "status", "badge", "image", "images", "description", "interest"];
         const clean: Partial<Car> = {};
         Object.keys(patch || {}).forEach((k) => {
           if (allowed.includes(k)) (clean as Record<string, unknown>)[k] = (patch as Record<string, unknown>)[k];
         });
+        if (typeof clean.brand === "string") clean.brand = clean.brand.trim().slice(0,40);
+        if (typeof clean.model === "string") clean.model = clean.model.trim().slice(0,60);
         if (typeof clean.title === "string") clean.title = clean.title.trim().slice(0, 80);
         if (clean.price != null) clean.price = Math.max(0, Number(clean.price) || 0);
         if (clean.year != null) {
@@ -905,6 +918,8 @@ export function StoreProvider({
         if (title.length < 4 || !price || price < 1000000 || !year || year < 1990 || year > maxYear)
           return null;
         car.title = title;
+        if (data.brand !== undefined) car.brand = String(data.brand || "").trim().slice(0,40);
+        if (data.model !== undefined) car.model = String(data.model || "").trim().slice(0,60);
         car.price = price;
         car.year = year;
         car.km = Math.max(0, Number(data.km) || 0);

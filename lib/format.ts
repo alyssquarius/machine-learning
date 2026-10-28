@@ -54,6 +54,7 @@ export function friendlyError(error: unknown): string {
 export function safeImageUrl(u: unknown): string {
   const s = String(u || "").trim();
   if (!s) return "";
+  if (/^\/images\/demo-cars\/(?:[a-z]+\.svg|demo-car-\d{3}\.jpg)$/.test(s)) return s;
   if (/^data:image\/(jpeg|png|webp|jpg);base64,/i.test(s)) return s;
   if (/^https?:\/\//i.test(s) && s.length <= 4096) return s;
   return "";

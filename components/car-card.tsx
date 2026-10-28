@@ -7,6 +7,7 @@ import { useStore, imageFor, type Car } from "@/components/store-provider";
 import { useToast } from "@/components/toast";
 import { useRole } from "@/components/role-provider";
 import { fmtRp, timeAgo } from "@/lib/format";
+import { DemoPhotoCredit } from "@/components/demo-photo-credit";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
 
 export const STATUS_LABEL: Record<string, string> = {
@@ -40,6 +41,8 @@ function CarImage({ car, big = false }: { car: Car; big?: boolean }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        loading="lazy"
+        decoding="async"
         src={error ? fallback : src}
         alt={car.title}
         onError={() => setError(true)}
@@ -49,7 +52,7 @@ function CarImage({ car, big = false }: { car: Car; big?: boolean }) {
         <span
           className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold backdrop-blur-md shadow-xs ${STATUS_CLS[car.status] || STATUS_CLS.running}`}
         >
-          {STATUS_LABEL[car.status] || "Dijual"}
+          {car.isDemo ? "Data demo" : STATUS_LABEL[car.status] || "Dijual"}
         </span>
       </div>
     </div>
@@ -96,9 +99,9 @@ export function CarCard({
   }
 
   return (
-    <div className="surface car-card-hover animate-fade-in overflow-hidden">
+    <div className={`surface car-card-hover animate-fade-in overflow-hidden ${!sell ? "buyer-car-card" : ""}`}>
       <div className="relative">
-        <button type="button" className="block w-full text-left" aria-label={`Lihat foto dan detail ${car.title}`} onClick={() => onDetail?.(car.id)}><CarImage car={car} /></button>
+        <button type="button" className="group relative block w-full text-left" aria-label={`Lihat foto dan detail ${car.title}`} onClick={() => onDetail?.(car.id)}><CarImage car={car} /><span className="absolute bottom-3 right-3 rounded-lg bg-white/95 px-3 py-1.5 text-xs font-semibold text-sky-800 shadow-sm">Lihat detail →</span></button>
         {!sell && (
           <button
             onClick={(e) => {
@@ -109,8 +112,9 @@ export function CarCard({
                 isFav ? "Dihapus dari favorit." : "Disimpan ke favorit.",
               );
             }}
-            title="Favorit"
-            aria-label="Favorit"
+            title={isFav ? "Hapus dari favorit" : "Simpan ke favorit"}
+            aria-label={`${isFav ? "Hapus" : "Simpan"} ${car.title} ${isFav ? "dari" : "ke"} favorit`}
+            aria-pressed={isFav}
             className="absolute left-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm backdrop-blur-sm transition hover:bg-white active:scale-97 dark:bg-zinc-900/90 dark:text-zinc-200 dark:hover:bg-zinc-900"
           >
             <svg
@@ -132,30 +136,25 @@ export function CarCard({
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-2">
-          <h3
-            onClick={() => onDetail?.(car.id)}
-            className="cursor-pointer line-clamp-1 font-bold text-black transition-colors hover:underline dark:text-white"
-          >
-            {car.title}
-          </h3>
+          <h3 className="min-w-0 text-base font-semibold leading-snug text-slate-950 dark:text-white"><button type="button" onClick={() => onDetail?.(car.id)} className="text-left hover:text-sky-700 dark:hover:text-sky-300" aria-label={`Buka detail ${car.title}`}>{car.title}</button></h3>
           <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-zinc-400">
             {car.year}
           </span>
         </div>
-        <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-          {car.km ? `${car.km.toLocaleString()} km` : "Km tidak tersedia"} •{" "}
-          {car.location || "Indonesia"}
-        </p>
         <p className="mt-2 text-lg font-bold text-black dark:text-white">
           {fmtRp(car.price)}
         </p>
-        <div className="card-feature-row"><span>{car.category}</span><span>{car.year}</span><span>{car.km.toLocaleString("id-ID")} km</span></div>
+        <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+          {car.km ? `${car.km.toLocaleString("id-ID")} km` : "Km tidak tersedia"} •{" "}
+          {car.location || "Indonesia"}
+        </p>
+        {sell ? <div className="card-feature-row"><span>{car.category}</span><span>{car.year}</span><span>{car.km.toLocaleString("id-ID")} km</span></div> : <span className="mt-2 inline-block text-xs text-slate-500">{car.category}</span>}
         {best ? (
           <p className="mt-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
             Tawaran tertinggi {fmtRp(best.amount)}
           </p>
         ) : null}
-        <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+        {!car.isDemo && <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
           <svg
             className="h-3.5 w-3.5"
             viewBox="0 0 24 24"
@@ -172,20 +171,22 @@ export function CarCard({
           </svg>
           {car.interest || 0}% diminati<span>•</span>
           <span>{timeAgo(car.createdAt)}</span>
-        </div>
+        </div>}
 
         {/* Tombol Kontak WhatsApp langsung pada listing */}
         {!sell && (
           <div className="mt-3">
-            <WhatsAppContact
+            {car.isDemo ? <p className="rounded-lg bg-sky-50 px-3 py-2 text-center text-xs text-sky-800 dark:bg-sky-950/50 dark:text-sky-200">Data demo · Tidak untuk dijual</p> : <WhatsAppContact
               phoneNumber={car.sellerPhone || undefined}
               message={`Halo, saya tertarik dengan mobil ${car.title} seharga ${fmtRp(car.price)} di AutoBuyCars.`}
               className="w-full justify-center py-2 text-xs font-semibold"
             >
               Hubungi Penjual
-            </WhatsAppContact>
+            </WhatsAppContact>}
           </div>
         )}
+
+        <DemoPhotoCredit car={car} />
 
         {/* Indikator status penayangan untuk penjual */}
         {sell && car.status === "running" && (

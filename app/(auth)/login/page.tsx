@@ -70,6 +70,7 @@ export default function LoginPage() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading || googleLoading) return;
     const email = emailInput.trim();
     const password = passwordInput;
     if (!email || !password) {
@@ -112,6 +113,7 @@ export default function LoginPage() {
   }
 
   async function onGoogle() {
+    if (loading || googleLoading) return;
     setError("");
     setGoogleLoading(true);
     try {
@@ -130,6 +132,9 @@ export default function LoginPage() {
       }
       if (data?.url) {
         window.location.href = data.url;
+      } else {
+        setError("Tautan masuk Google belum tersedia. Silakan coba lagi.");
+        setGoogleLoading(false);
       }
     } catch (err) {
       console.error("Google login error:", err);
@@ -226,7 +231,7 @@ export default function LoginPage() {
         {/* Tombol Submit Masuk */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || googleLoading}
           className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-black py-3 px-4 text-sm font-bold text-white shadow-md transition-all hover:bg-zinc-800 active:scale-97 disabled:cursor-not-allowed disabled:opacity-65 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
         >
           {loading ? (
@@ -264,7 +269,7 @@ export default function LoginPage() {
       <button
         type="button"
         onClick={onGoogle}
-        disabled={googleLoading}
+        disabled={googleLoading || loading}
         className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-gray-200/90 bg-white/95 py-2.5 px-4 text-xs font-bold text-gray-700 shadow-2xs transition-all hover:bg-gray-50/80 hover:border-gray-300 active:scale-97 disabled:opacity-65 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-200 dark:hover:bg-zinc-800"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24">

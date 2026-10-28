@@ -31,6 +31,7 @@ Build menggunakan webpack. Font memakai font sistem sehingga proses build tidak 
 
 - Workspace responsif dengan tema terang/gelap, panduan fitur, dan kondisi kosong yang memberikan arahan.
 - Simulator kredit `/simulasi` dengan DP, tenor, bunga flat, unduhan ringkasan, dan pencarian sesuai anggaran.
+- Pengelompokan katalog menurut kebutuhan, merek/model, tipe dan anggaran; tautan pencarian serta draf permintaan bantuan ke chat admin.
 - Katalog, pencarian/filter, detail kendaraan, favorit, dashboard, listing, penawaran, simulasi checkout/invoice, riwayat, tema, profil, dan kontak WhatsApp.
 - Chat pembeli–admin di `/chat` dengan pesan tersimpan di Supabase dan pembaruan otomatis; jalankan migrasi `supabase/migrations/20261028_support_chat.sql` satu kali pada database baru.
 - Galeri listing maksimal10 foto, unggahan multi-file ke Storage dan pilihan sampul.

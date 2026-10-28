@@ -226,7 +226,7 @@ export default function PengaturanPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-12">
-      <PageHeader eyebrow="PREFERENSI WORKSPACE" title="Buat nyaman, dengan caramu." description="Kelola akun, pilih tampilan, dan sesuaikan workspace dengan kebutuhanmu." actions={<div className="flex items-center gap-3"><RoleBadge role={role} /><SavedBadge show={saved} /></div>} />
+      <PageHeader eyebrow="PENGATURAN AKUN" title="Atur akun dan tampilan." description="Ubah nama, foto profil, dan tema sesuai kenyamananmu." actions={<div className="flex items-center gap-3"><RoleBadge role={role} /><SavedBadge show={saved} /></div>} />
 
       {/* SECTION: STATUS KEANGGOTAAN */}
       <div className="overflow-hidden surface shadow-xs backdrop-blur-md dark:border-zinc-800/90 dark:bg-zinc-900/95">
@@ -339,7 +339,7 @@ export default function PengaturanPage() {
         </div>
 
         {/* KARTU WIDGET DASHBOARD */}
-        <div className="surface settings-widgets p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        {(role === "admin" || role === "dealer") && <div className="surface settings-widgets p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <div className="mb-1 flex items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-bold text-black dark:text-white">Widget Dashboard</h2>
@@ -403,6 +403,8 @@ export default function PengaturanPage() {
             </button>
           </div>
         </div>
+
+        }
 
         {/* KARTU TARGET PENJUALAN (Khusus Dealer & Admin) */}
         {role !== "buyer" && (

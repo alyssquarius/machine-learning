@@ -4,6 +4,10 @@ export const CATEGORIES = [
   "MPV",
   "Hatchback",
   "Listrik",
+  "Wagon",
+  "Coupe",
+  "Van",
+  "Pickup",
   "Lainnya",
 ] as const;
 
