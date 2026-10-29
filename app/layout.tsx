@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { StoreProvider } from "@/components/store-provider";
 import { ToastProvider } from "@/components/toast";
 import { RoleProvider } from "@/components/role-provider";
+import { ConfirmActionProvider } from "@/components/confirm-action";
 
 export const metadata: Metadata = {
   title: {
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <StoreProvider>
             <RoleProvider>
-              <ToastProvider>{children}</ToastProvider>
+              <ToastProvider>
+                <ConfirmActionProvider>{children}</ConfirmActionProvider>
+              </ToastProvider>
             </RoleProvider>
           </StoreProvider>
         </ThemeProvider>

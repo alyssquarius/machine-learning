@@ -2,6 +2,7 @@
 import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { carPhotos, MAX_CAR_PHOTOS } from "@/lib/car-photos";
+import { useConfirmAction } from "@/components/confirm-action";
 
 export function CarImageUpload({
   value,
@@ -13,6 +14,7 @@ export function CarImageUpload({
   onBusyChange?: (busy: boolean) => void;
 }) {
   const [url, setUrl] = React.useState("");
+  const confirmAction = useConfirmAction();
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const input = React.useRef<HTMLInputElement>(null);
@@ -130,7 +132,18 @@ export function CarImageUpload({
                   type="button"
                   aria-label={`Hapus foto ${i + 1}`}
                   disabled={busy}
-                  onClick={() => onChange(value.filter((_, j) => j !== i))}
+                  onClick={() =>
+                    confirmAction({
+                      title: "Hapus foto mobil?",
+                      description: `Foto ${i + 1} akan dihapus dari formulir. Perubahan diterapkan ke listing setelah kamu menyimpannya.`,
+                      confirmLabel: "Hapus foto",
+                      success:
+                        "Foto dihapus dari formulir. Simpan listing untuk menerapkan perubahan.",
+                      action: () => {
+                        onChange(latest.current.filter((photo) => photo !== src));
+                      },
+                    })
+                  }
                   className="text-[10px] text-red-600"
                 >
                   Hapus

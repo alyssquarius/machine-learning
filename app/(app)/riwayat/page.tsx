@@ -9,6 +9,7 @@ import { timeAgo } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { HIST_OPTIONS, resolveHistFilterValue } from "@/lib/market";
+import { useConfirmAction } from "@/components/confirm-action";
 
 const TONE: Record<string, string> = {
   beli: "bg-zinc-950 dark:bg-white",
@@ -29,6 +30,7 @@ function histLabel(id: string): string {
 export default function RiwayatPage() {
   const store = useStore();
   const { toast } = useToast();
+  const confirmAction = useConfirmAction();
   const [filterRaw, setFilterRaw] = React.useState("Semua aktivitas");
   const [filter, setFilter] = React.useState("all");
   const [buyId, setBuyId] = React.useState<string | null>(null);
@@ -102,9 +104,16 @@ export default function RiwayatPage() {
             disabled={!total}
             onClick={() => {
               if (!total) return;
-              if (!confirm("Hapus semua riwayat?")) return;
-              store.clearHistory();
-              toast("Riwayat dihapus.");
+              confirmAction({
+                title: "Hapus semua riwayat?",
+                description: `${total} catatan aktivitas akun ini akan dihapus dari browser. Listing dan favorit tetap tersedia. Tindakan ini tidak dapat dibatalkan.`,
+                confirmLabel: "Hapus riwayat",
+                success: "Riwayat dihapus.",
+                action: () => {
+                  store.clearHistory();
+                  if (store.history().length) throw new Error("Riwayat belum berhasil dihapus.");
+                },
+              });
             }}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-500 transition hover:border-red-300 hover:text-red-600 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-400"
           >

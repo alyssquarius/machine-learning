@@ -21,6 +21,7 @@ import { CarImageUpload } from "@/components/car-image-upload";
 import { ReceiptModal } from "@/components/invoice-modal";
 import { canPerformAction } from "@/lib/roles";
 import { getAdminWhatsApp } from "@/lib/config";
+import { useConfirmAction } from "@/components/confirm-action";
 
 function ModalShell({
   onClose,
@@ -447,6 +448,7 @@ export function DetailModal({
   const store = useStore();
   const { toast } = useToast();
   const car = store.get(carId);
+  const confirmAction = useConfirmAction();
 
   function requireAuth(actionName: string): boolean {
     if (role === "guest") {
@@ -669,8 +671,28 @@ export function DetailModal({
           <button
             onClick={() => {
               if (!requireAuth("menyimpan mobil ke favorit")) return;
-              store.toggleFav(c.id);
-              toast(on ? "Dihapus dari favorit." : "Ditambahkan ke favorit.");
+              if (on) {
+                confirmAction({
+                  title: "Hapus dari favorit?",
+                  description: `${c.title} akan dihapus dari daftar favoritmu. Listing mobil tetap tersedia.`,
+                  confirmLabel: "Hapus favorit",
+                  success: "Mobil dihapus dari favorit.",
+                  action: () => {
+                    if (!store.isFav(c.id))
+                      throw new Error("Mobil ini sudah tidak ada di favorit.");
+                    store.toggleFav(c.id);
+                    if (store.isFav(c.id)) throw new Error("Favorit belum berhasil dihapus.");
+                  },
+                });
+              } else {
+                try {
+                  if (!store.toggleFav(c.id))
+                    throw new Error("Favorit belum tersimpan. Silakan coba lagi.");
+                  toast("Ditambahkan ke favorit.");
+                } catch (error) {
+                  toast(error instanceof Error ? error.message : "Favorit belum tersimpan.");
+                }
+              }
             }}
             className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition active:scale-95 ${
               on

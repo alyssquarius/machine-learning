@@ -10,6 +10,7 @@ import { useRole } from "@/components/role-provider";
 import { PageHeader } from "@/components/ui";
 import { RoleBadge } from "@/components/role-badge";
 import { AvatarUpload } from "@/components/avatar-upload";
+import { useConfirmAction } from "@/components/confirm-action";
 
 function SavedBadge({ show }: { show: boolean }) {
   if (!show) return null;
@@ -36,6 +37,7 @@ function SavedBadge({ show }: { show: boolean }) {
 export default function PengaturanPage() {
   const store = useStore();
   const { toast } = useToast();
+  const confirmAction = useConfirmAction();
   const { role, logout } = useRole();
   const { theme, setTheme } = useTheme();
 
@@ -602,10 +604,16 @@ export default function PengaturanPage() {
             <button
               type="button"
               onClick={() => {
-                if (!confirm("Hapus semua data riwayat & listing lokal akun ini di perangkat ini?"))
-                  return;
-                store.reset();
-                toast("Data lokal perangkat dibersihkan.");
+                confirmAction({
+                  title: "Hapus data lokal akun?",
+                  description:
+                    "Listing milik akun ini, favorit, riwayat, dan preferensi akan dihapus dari browser ini. Nama tampilan dipertahankan. Akun, chat, dan listing milik akun lain tidak dihapus. Tindakan ini tidak dapat dibatalkan.",
+                  confirmLabel: "Hapus data lokal",
+                  success: "Data lokal akun berhasil dihapus.",
+                  action: () => {
+                    store.reset();
+                  },
+                });
               }}
               className="text-xs font-semibold text-gray-500 hover:text-black dark:text-zinc-400 dark:hover:text-white"
             >

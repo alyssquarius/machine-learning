@@ -5,6 +5,7 @@ import { repairLegacyAvatarSession } from "@/lib/supabase/session-hygiene";
 import { createClient } from "@/lib/supabase/client";
 import { Dialog } from "@/components/dialog";
 import { useToast } from "@/components/toast";
+import { useConfirmAction } from "@/components/confirm-action";
 
 interface AvatarUploadProps {
   userId: string;
@@ -221,6 +222,7 @@ export function AvatarUpload({
   size = 80,
 }: AvatarUploadProps) {
   const { toast } = useToast();
+  const confirmAction = useConfirmAction();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = React.useState(false);
   const [preview, setPreview] = React.useState(currentUrl);
@@ -306,42 +308,40 @@ export function AvatarUpload({
   }
 
   async function handleRemove() {
-    if (!confirm("Hapus foto profil?")) return;
     setUploading(true);
     try {
-      if (typeof window !== "undefined" && userId) {
-        try {
-          localStorage.removeItem(`abc_avatar_${userId}`);
-          localStorage.setItem(`abc_avatar_cleared_${userId}`, "true");
-        } catch {
-          /* abaikan */
-        }
-      }
-
       const supabase = createClient();
       const { data: authUser, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       if (authUser.user) await repairLegacyAvatarSession(supabase, authUser.user);
 
-      try {
-        await supabase.from("profiles").upsert(
+      if (!authUser.user || authUser.user.id !== userId)
+        throw new Error("Sesi akun berubah. Masuk kembali sebelum menghapus foto.");
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(
           {
             id: userId,
             avatar_url: null,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "id" },
-        );
+        )
+        .select("id")
+        .single();
+      if (error) throw error;
+      try {
+        localStorage.removeItem(`abc_avatar_${userId}`);
+        localStorage.setItem(`abc_avatar_cleared_${userId}`, "true");
       } catch {
-        /* abaikan */
+        /* Profile changes are already acknowledged by the server. */
       }
 
       setPreview("");
       onUploaded("");
       window.dispatchEvent(new CustomEvent("avatar-updated", { detail: "" }));
-      toast("Foto profil dihapus.");
     } catch {
-      toast("Gagal menghapus foto.");
+      throw new Error("Foto profil belum berhasil dihapus. Periksa koneksi dan coba lagi.");
     } finally {
       setUploading(false);
     }
@@ -419,7 +419,16 @@ export function AvatarUpload({
           {preview && (
             <button
               type="button"
-              onClick={handleRemove}
+              onClick={() =>
+                confirmAction({
+                  title: "Hapus foto profil?",
+                  description:
+                    "Foto profil akan diganti dengan inisial akun. Kamu dapat mengunggah foto baru nanti.",
+                  confirmLabel: "Hapus foto",
+                  success: "Foto profil dihapus.",
+                  action: handleRemove,
+                })
+              }
               disabled={uploading}
               className="rounded-lg px-4 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60 dark:text-red-400 dark:hover:bg-red-950/30"
             >

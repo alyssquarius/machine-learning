@@ -106,6 +106,7 @@ export function imageFor(category: string, explicit?: string): string {
 
 const LS_CARS = "abc_cars_v3";
 const LS_SHARED_CARS = "abc_cars_shared_v2";
+const LS_DELETED_CARS = "abc_deleted_cars_v1";
 const LS_FAVS = "abc_favs_v2";
 const LS_HIST = "abc_hist_v2";
 const LS_SET = "abc_settings_v2";
@@ -147,6 +148,13 @@ function save(key: string, val: unknown) {
   } catch {
     /* mode privat / penyimpanan diblokir */
   }
+}
+
+function deletedCarIds() {
+  const ids = load<unknown>(LS_DELETED_CARS, []);
+  return new Set(
+    Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [],
+  );
 }
 
 function normalizeCars(arr: unknown): Car[] {
@@ -354,38 +362,53 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const persist = React.useCallback(
-    (next: Snapshot) => {
-      save(scoped(LS_CARS), next.cars);
-      save(scoped(LS_FAVS), next.favs);
-      save(scoped(LS_HIST), next.hist.slice(0, 60));
-      save(scoped(LS_SET), next.settings);
-
-      // Sinkronkan mobil ke katalog bersama agar tampil di katalog pembeli
-      try {
-        const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
-        const sharedMap = new Map(currentShared.map((c) => [c.id, c]));
-
-        // Lindungi status & purchase data dari katalog bersama agar tidak tertimpa data lokal usang
-        const mergedCars = next.cars.map((c) => {
+    (next: Snapshot, options?: { strict?: boolean; removeIds?: string[] }) => {
+      const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
+      const removed = deletedCarIds();
+      options?.removeIds?.forEach((id) => removed.add(id));
+      next.cars = next.cars.filter((c) => !removed.has(c.id));
+      next.favs = next.favs.filter((id) => !removed.has(id));
+      const sharedMap = new Map(currentShared.map((c) => [c.id, c]));
+      const mergedCars = next.cars
+        .filter((c) => !removed.has(c.id))
+        .map((c) => {
           const sc = sharedMap.get(c.id);
-          if (sc && sc.purchase && !c.purchase) {
-            return {
-              ...c,
-              status: sc.status,
-              badge: sc.badge || (sc.status === "done" ? "Terjual" : c.badge),
-              purchase: sc.purchase,
-            };
-          }
-          return c;
+          return sc?.purchase && !c.purchase
+            ? { ...c, status: sc.status, badge: sc.badge || "Terjual", purchase: sc.purchase }
+            : c;
         });
-
-        const currentOwnerIds = new Set(mergedCars.map((c) => c.id));
-        const otherCars = currentShared.filter((c) => !currentOwnerIds.has(c.id));
-        const updatedShared = [...mergedCars, ...otherCars];
-        save(LS_SHARED_CARS, updatedShared);
-      } catch {
-        /* abaikan */
-      }
+      const ids = new Set(mergedCars.map((c) => c.id));
+      const updatedShared = [
+        ...mergedCars,
+        ...currentShared.filter((c) => !ids.has(c.id) && !removed.has(c.id)),
+      ];
+      const entries: [string, unknown][] = [
+        [scoped(LS_CARS), next.cars],
+        [scoped(LS_FAVS), next.favs],
+        [scoped(LS_HIST), next.hist.slice(0, 60)],
+        [scoped(LS_SET), next.settings],
+        [LS_SHARED_CARS, updatedShared],
+        [LS_DELETED_CARS, [...removed]],
+      ];
+      if (options?.strict) {
+        const previous = new Map<string, string | null>();
+        try {
+          entries.forEach(([key]) => previous.set(key, localStorage.getItem(key)));
+          entries.forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+        } catch {
+          previous.forEach((value, key) => {
+            try {
+              if (value === null) localStorage.removeItem(key);
+              else localStorage.setItem(key, value);
+            } catch {
+              /* Keep the in-memory snapshot unchanged on failure. */
+            }
+          });
+          throw new Error(
+            "Perubahan gagal disimpan karena penyimpanan browser tidak tersedia atau penuh. Izinkan penyimpanan lalu coba lagi.",
+          );
+        }
+      } else entries.forEach(([key, value]) => save(key, value));
 
       snapRef.current = next;
       setSnap({ ...next, cars: [...next.cars] });
@@ -400,12 +423,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       /* storage unavailable; preserve existing catalogue */
     }
     const k = (b: string) => (ownerId ? `${b}_${ownerId}` : b);
-    let cars = normalizeCars(load(k(LS_CARS), []));
+    const deleted = deletedCarIds();
+    let cars = normalizeCars(load(k(LS_CARS), [])).filter((c) => !deleted.has(c.id));
     let hist = normalizeHist(load(k(LS_HIST), []));
 
     // Gabungkan dengan katalog mobil bersama (shared marketplace)
     try {
-      const sharedCars = normalizeCars(load(LS_SHARED_CARS, []));
+      const sharedCars = normalizeCars(load(LS_SHARED_CARS, [])).filter((c) => !deleted.has(c.id));
       const sharedMap = new Map(sharedCars.map((c) => [c.id, c]));
 
       // Sinkronkan mobil lokal penjual jika sudah dibeli oleh pembeli lain di shared marketplace
@@ -485,6 +509,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (
         e.key === LS_SHARED_CARS ||
         e.key === "abc_order_broadcast" ||
+        e.key === LS_DELETED_CARS ||
         (e.key && (e.key.startsWith(LS_CARS) || e.key.startsWith(LS_HIST)))
       ) {
         setSnap(loadForOwner(ownerRef.current));
@@ -506,7 +531,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const cur = () => snapRef.current;
     const latestSnapshot = () => {
       const snapshot = clone(cur());
-      const shared = normalizeCars(load(LS_SHARED_CARS, []));
+      const deleted = deletedCarIds();
+      snapshot.cars = snapshot.cars.filter((c) => !deleted.has(c.id));
+      const shared = normalizeCars(load(LS_SHARED_CARS, [])).filter((c) => !deleted.has(c.id));
       const cars = new Map(snapshot.cars.map((car) => [car.id, car]));
       shared.forEach((car) => cars.set(car.id, car));
       snapshot.cars = [...cars.values()];
@@ -775,7 +802,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           carId: null,
         });
         s.hist = s.hist.slice(0, 60);
-        persist(s);
+        persist(s, { strict: true });
         return on;
       },
       add(data) {
@@ -901,15 +928,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!car) return false;
         s.cars = s.cars.filter((c) => c.id !== id);
         s.favs = s.favs.filter((f) => f !== id);
-        try {
-          const currentShared = normalizeCars(load(LS_SHARED_CARS, []));
-          save(
-            LS_SHARED_CARS,
-            currentShared.filter((c) => c.id !== id),
-          );
-        } catch {
-          /* abaikan */
-        }
         s.hist.unshift({
           id: uid("h"),
           type: "hapus",
@@ -918,7 +936,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           carId: null,
         });
         s.hist = s.hist.slice(0, 60);
-        persist(s);
+        persist(s, { strict: true, removeIds: [id] });
         return true;
       },
       setStatus(id, status) {
@@ -1218,20 +1236,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         });
       },
       clearHistory() {
-        mutate((s) => {
-          s.hist = [];
-          return s;
-        });
+        const s = latestSnapshot();
+        s.hist = [];
+        persist(s, { strict: true });
       },
       reset() {
-        const keep = cur().settings.displayName || "";
-        mutate((s) => {
-          s.cars = [];
-          s.favs = [];
-          s.hist = [];
-          s.settings = { target: 10, displayName: keep, notifRead: Date.now(), hiddenWidgets: [] };
-          return s;
-        });
+        const s = latestSnapshot();
+        const removed = s.cars
+          .filter((c) => !!ownerRef.current && c.sellerId === ownerRef.current)
+          .map((c) => c.id);
+        const removeIds = new Set(removed);
+        const keep = s.settings.displayName || "";
+        s.cars = s.cars.filter((c) => !removeIds.has(c.id));
+        s.favs = [];
+        s.hist = [];
+        s.settings = { target: 10, displayName: keep, notifRead: Date.now(), hiddenWidgets: [] };
+        persist(s, { strict: true, removeIds: removed });
       },
       setOwner(id, role = "guest") {
         const nextId = String(id || "");
@@ -1281,7 +1301,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             carId: null,
           });
         s.hist = s.hist.slice(0, 60);
-        persist(s);
+        persist(s, { strict: true });
         return n;
       },
     };

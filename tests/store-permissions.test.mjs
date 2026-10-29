@@ -170,3 +170,65 @@ test("brand, model and extended body types survive listing create, update and ed
   assert.equal(edited.model, "D-Max");
   assert.equal(edited.category, "Pickup");
 });
+
+test("deleted listings stay deleted after stale buyer snapshots are saved and accounts reload", () => {
+  const s = store();
+  s.setOwner("admin", "admin");
+  const c = s.add(listing);
+  s.setOwner("buyer", "buyer");
+  s.toggleFav(c.id);
+  s.setOwner("admin", "admin");
+  assert.equal(s.remove(c.id), true);
+  s.setOwner("buyer", "buyer");
+  assert.equal(s.get(c.id), undefined);
+  assert.equal(s.isFav(c.id), false);
+  s.setDisplayName("Buyer");
+  s.setOwner("admin", "admin");
+  assert.equal(s.get(c.id), undefined);
+  assert.equal(
+    JSON.parse(localStorage.getItem("abc_cars_shared_v2")).some((row) => row.id === c.id),
+    false,
+  );
+});
+
+test("reset removes owned listings from the shared catalogue but preserves other owners", () => {
+  const s = store();
+  s.setOwner("admin-a", "admin");
+  const a = s.add(listing);
+  s.setDisplayName("Admin A");
+  s.setOwner("admin-b", "admin");
+  const b = s.add({ ...listing, title: "Other owner's vehicle" });
+  s.setOwner("admin-a", "admin");
+  s.reset();
+  assert.equal(s.get(a.id), undefined);
+  assert.ok(s.get(b.id));
+  assert.equal(s.getDisplayName(), "Admin A");
+  assert.equal(s.history().length, 0);
+  s.setOwner("admin-b", "admin");
+  assert.equal(s.get(a.id), undefined);
+  assert.ok(s.get(b.id));
+});
+
+test("storage failure rejects deletion without reporting success or changing the snapshot", () => {
+  for (const action of ["remove", "clearHistory", "clearFavs", "reset", "toggleFav"]) {
+    const s = store();
+    s.setOwner("admin", "admin");
+    const c = s.add(listing);
+    s.toggleFav(c.id);
+    const before = { cars: s.all(), history: s.history(), favorites: s.favorites() };
+    const original = localStorage.setItem;
+    localStorage.setItem = (key, value) => {
+      if (key === "abc_hist_v2_admin") throw new Error("Quota exceeded");
+      return original(key, value);
+    };
+    assert.throws(() => s[action](c.id), /penyimpanan browser/);
+    assert.deepEqual(s.all(), before.cars);
+    assert.deepEqual(s.history(), before.history);
+    assert.deepEqual(s.favorites(), before.favorites);
+    localStorage.setItem = original;
+    s.setOwner("other", "buyer");
+    s.setOwner("admin", "admin");
+    assert.ok(s.get(c.id));
+    assert.equal(s.isFav(c.id), true);
+  }
+});

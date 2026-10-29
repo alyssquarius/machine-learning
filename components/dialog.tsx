@@ -77,7 +77,8 @@ export function Dialog({
         element.inert = inert;
       });
       panel?.removeEventListener("keydown", key);
-      previous?.focus();
+      if (previous?.isConnected) previous.focus();
+      else document.querySelector<HTMLElement>("main")?.focus();
     };
   }, [mounted]);
   if (!mounted) return null;

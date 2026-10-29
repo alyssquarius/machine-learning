@@ -7,11 +7,11 @@ import { CarCard } from "@/components/car-card";
 import { CheckoutModal, DetailModal, OfferModal } from "@/components/modals";
 import { PageHeader, EmptyState } from "@/components/ui";
 import { Icon } from "@/components/icons";
-import { useToast } from "@/components/toast";
+import { useConfirmAction } from "@/components/confirm-action";
 
 export default function FavoritPage() {
   const store = useStore();
-  const { toast } = useToast();
+  const confirmAction = useConfirmAction();
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [offerId, setOfferId] = React.useState<string | null>(null);
   const [buyId, setBuyId] = React.useState<string | null>(null);
@@ -33,10 +33,17 @@ export default function FavoritPage() {
               <button
                 className="button-secondary"
                 onClick={() => {
-                  if (confirm("Hapus semua mobil dari favorit?")) {
-                    store.clearFavs();
-                    toast("Daftar favorit sudah dikosongkan.");
-                  }
+                  confirmAction({
+                    title: "Kosongkan favorit?",
+                    description: `${list.length} mobil akan dihapus dari daftar favoritmu. Listing mobil tetap tersedia.`,
+                    confirmLabel: "Kosongkan favorit",
+                    success: "Daftar favorit sudah dikosongkan.",
+                    action: () => {
+                      store.clearFavs();
+                      if (store.favorites().length)
+                        throw new Error("Daftar favorit belum berhasil dikosongkan.");
+                    },
+                  });
                 }}
               >
                 Kosongkan favorit

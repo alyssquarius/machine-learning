@@ -9,6 +9,7 @@ import { useRole } from "@/components/role-provider";
 import { fmtRp, timeAgo } from "@/lib/format";
 import { DemoPhotoCredit } from "@/components/demo-photo-credit";
 import { WhatsAppContact } from "@/components/whatsapp-contact";
+import { useConfirmAction } from "@/components/confirm-action";
 
 export const STATUS_LABEL: Record<string, string> = {
   done: "Terjual",
@@ -77,6 +78,7 @@ export function CarCard({
   const { role } = useRole();
   const store = useStore();
   const { toast } = useToast();
+  const confirmAction = useConfirmAction();
   const best = store.bestOffer(car.id);
   const isFav = store.isFav(car.id);
 
@@ -90,7 +92,8 @@ export function CarCard({
   }
 
   function act(fn: () => unknown, msg: string) {
-    if (fn() === null) {
+    const result = fn();
+    if (result === null || result === false) {
       toast("Aksi tidak diizinkan atau listing sudah berubah.");
       return;
     }
@@ -118,10 +121,26 @@ export function CarCard({
             onClick={(e) => {
               e.stopPropagation();
               if (!requireAuth("menyimpan mobil ke favorit")) return;
-              act(
-                () => store.toggleFav(car.id),
-                isFav ? "Dihapus dari favorit." : "Disimpan ke favorit.",
-              );
+              if (isFav) {
+                confirmAction({
+                  title: "Hapus dari favorit?",
+                  description: `${car.title} akan dihapus dari daftar favoritmu. Listing mobil tetap tersedia.`,
+                  confirmLabel: "Hapus favorit",
+                  success: "Mobil dihapus dari favorit.",
+                  action: () => {
+                    if (!store.isFav(car.id))
+                      throw new Error("Mobil ini sudah tidak ada di favorit.");
+                    store.toggleFav(car.id);
+                    if (store.isFav(car.id)) throw new Error("Favorit belum berhasil dihapus.");
+                  },
+                });
+              } else {
+                try {
+                  act(() => store.toggleFav(car.id), "Disimpan ke favorit.");
+                } catch (error) {
+                  toast(error instanceof Error ? error.message : "Favorit belum tersimpan.");
+                }
+              }
             }}
             title={isFav ? "Hapus dari favorit" : "Simpan ke favorit"}
             aria-label={`${isFav ? "Hapus" : "Simpan"} ${car.title} ${isFav ? "dari" : "ke"} favorit`}
@@ -358,8 +377,18 @@ export function CarCard({
               </button>
               <button
                 onClick={() => {
-                  if (confirm(`Hapus "${car.title}"?`))
-                    act(() => store.remove(car.id), "Listing dihapus.");
+                  confirmAction({
+                    title: "Hapus listing?",
+                    description: `${car.title} akan dihapus dari katalog browser ini dan daftar favorit terkait. Tindakan ini tidak dapat dibatalkan.`,
+                    confirmLabel: "Hapus listing",
+                    success: "Listing dihapus.",
+                    action: () => {
+                      if (!store.remove(car.id))
+                        throw new Error(
+                          "Listing belum dihapus. Hak akses mungkin berubah atau listing sudah tidak tersedia.",
+                        );
+                    },
+                  });
                 }}
                 title="Hapus"
                 className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-500 transition hover:border-red-300 hover:text-red-600 active:scale-97 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:text-red-400"
