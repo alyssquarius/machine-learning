@@ -1162,14 +1162,6 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
 }
 @media (max-width: 767px) {
   .floating-car-help {
-    right: 16px;
-    bottom: calc(84px + env(safe-area-inset-bottom));
-  }
-  .floating-car-help > summary {
-    min-width: 54px;
-    padding: 14px;
-  }
-  .floating-car-help > summary > span {
     display: none;
   }
 }
