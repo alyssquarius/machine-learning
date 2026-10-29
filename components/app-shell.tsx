@@ -330,7 +330,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   ];
   const pageTitle = NAV.find((n) => pathname.startsWith(n.href))?.label || "AutoBuyCars";
   return (
-    <div className={`workspace ${buyerView ? "buyer-shell" : ""}`}>
+    <div
+      className={`workspace ${buyerView ? `buyer-shell ${pathname === "/beli" ? "catalogue-header-view" : ""}` : ""}`}
+    >
       <a href="#main-content" className="skip-link">
         Lewati ke konten
       </a>

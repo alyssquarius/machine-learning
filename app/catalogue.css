@@ -1184,17 +1184,35 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
   }
 }
 
-/* The smaller sticky header leaves more room for vehicles after scrolling. */
+/* Header colour separates navigation from results after leaving the hero. */
 .buyer-shell .workspace-header {
   transition:
-    height 220ms ease,
-    min-height 220ms ease,
-    box-shadow 220ms ease;
+    background-color 240ms ease,
+    color 240ms ease,
+    box-shadow 240ms ease;
 }
 .buyer-shell .workspace-header.is-scrolled {
-  height: 56px;
-  min-height: 56px;
   box-shadow: 0 3px 12px #17324d12;
+}
+.catalogue-header-view .workspace-header:not(.is-scrolled) {
+  background: #123a5c;
+  border-bottom-color: #ffffff24;
+  color: #fff;
+}
+.catalogue-header-view
+  .workspace-header:not(.is-scrolled)
+  :is(
+    .buyer-brand,
+    .buyer-brand strong > span,
+    .buyer-brand .brand-symbol,
+    .buyer-top-nav a,
+    .icon-button
+  ) {
+  color: #fff;
+}
+.catalogue-header-view .workspace-header:not(.is-scrolled) .buyer-top-nav a[aria-current="page"],
+.catalogue-header-view .workspace-header:not(.is-scrolled) .buyer-top-nav a:hover {
+  background: #ffffff1f;
 }
 .buyer-top-nav a {
   transition:
@@ -1204,23 +1222,22 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
 .buyer-top-nav a:hover {
   background: var(--accent-soft);
 }
-.buyer-brand {
-  transition: scale 220ms ease;
-  transform-origin: left center;
-}
-.buyer-shell .is-scrolled .buyer-brand {
-  scale: 0.96;
-}
-@media (max-width: 639px) {
-  .buyer-shell .workspace-header.is-scrolled {
-    height: 56px;
-    min-height: 56px;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .buyer-shell .workspace-header,
-  .buyer-brand,
   .buyer-top-nav a {
     transition: none;
   }
+}
+.catalogue-header-view
+  .workspace-header:not(.is-scrolled)
+  :is(.header-theme, .header-theme svg, .account-button, .account-button strong) {
+  color: #fff;
+}
+.catalogue-header-view .workspace-header:not(.is-scrolled) .account-button small {
+  color: #c9e4f8;
+}
+.catalogue-header-view
+  .workspace-header:not(.is-scrolled)
+  :is(.header-theme:hover, .icon-button:hover, .account-button:hover) {
+  background: #ffffff1f;
 }
