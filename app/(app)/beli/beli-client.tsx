@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useStore, imageFor } from "@/components/store-provider";
 import { CarCard } from "@/components/car-card";
 import { CheckoutModal, DetailModal, OfferModal } from "@/components/modals";
@@ -55,6 +56,7 @@ export default function BeliClient() {
   const { toast } = useToast();
   const params = useSearchParams();
   const [advancedOpen, setAdvancedOpen] = React.useState(false);
+  const helpRef = React.useRef<HTMLDetailsElement>(null);
   const [q, setQ] = React.useState("");
   const [brand, setBrand] = React.useState("all");
   const [model, setModel] = React.useState("all");
@@ -885,31 +887,62 @@ export default function BeliClient() {
         </p>
       ) : null}
 
-      {role !== "admin" ? (
-        <section className="surface discovery-help">
-          <span className="soft-icon">
-            <Icon name="chat" className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-semibold">Belum menemukan yang cocok?</h2>
-            <p className="page-description mt-1!">
-              Ceritakan kebutuhan dan anggaranmu kepada admin. Pesan dapat kamu tinjau sebelum
-              dikirim.
-            </p>
-          </div>
-          <Link
-            href={
-              role === "guest"
-                ? "/login"
-                : `/chat?pesan=${encodeURIComponent("Halo Admin, saya mencari mobil" + (searchSummary ? `: ${searchSummary}` : " sesuai kebutuhan saya") + ". Bisa bantu saya?")}`
-            }
-            className="button-primary"
-          >
-            Bantu cari mobil
-            <Icon name="arrow" className="h-4 w-4" />
-          </Link>
-        </section>
-      ) : null}
+      {store.ready && role !== "admin" && !detailId && !buyId && !offerId
+        ? createPortal(
+            <details
+              className="floating-car-help"
+              ref={helpRef}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && helpRef.current?.open) {
+                  helpRef.current.open = false;
+                  helpRef.current.querySelector("summary")?.focus();
+                }
+              }}
+            >
+              <summary aria-label="Buka bantuan chat mobil">
+                <Icon name="chat" className="h-6 w-6" />
+                <span>Chat admin</span>
+              </summary>
+              <div
+                className="floating-car-help-panel"
+                role="region"
+                aria-label="Bantuan mencari mobil"
+              >
+                <div className="floating-car-help-heading">
+                  <h2>Butuh bantuan cari mobil?</h2>
+                  <button
+                    type="button"
+                    aria-label="Tutup bantuan chat"
+                    onClick={() => {
+                      if (helpRef.current) {
+                        helpRef.current.open = false;
+                        helpRef.current.querySelector("summary")?.focus();
+                      }
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                <p>
+                  Ceritakan kebutuhan dan anggaranmu kepada admin. Kamu bisa meninjau pesan sebelum
+                  mengirimnya.
+                </p>
+                <Link
+                  href={
+                    role === "guest"
+                      ? "/login"
+                      : `/chat?pesan=${encodeURIComponent("Halo Admin, saya mencari mobil" + (searchSummary ? `: ${searchSummary}` : " sesuai kebutuhan saya") + ". Bisa bantu saya?")}`
+                  }
+                  className="button-primary"
+                >
+                  {role === "guest" ? "Masuk untuk chat" : "Mulai chat"}
+                  <Icon name="arrow" className="h-4 w-4" />
+                </Link>
+              </div>
+            </details>,
+            document.body,
+          )
+        : null}
       <p className="mt-5 flex items-start gap-2 text-[10px] leading-relaxed text-gray-400">
         <Icon name="help" className="h-3.5 w-3.5 shrink-0" />
         Katalog saat ini menggunakan data pada browser ini. Listing belum tersinkron antarperangkat.

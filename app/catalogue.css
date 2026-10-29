@@ -1096,3 +1096,80 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
     transition-delay: 0ms;
   }
 }
+
+.floating-car-help {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 35;
+}
+.floating-car-help > summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 14px 20px;
+  border-radius: 28px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px #17324d26;
+}
+.floating-car-help > summary::-webkit-details-marker {
+  display: none;
+}
+.floating-car-help-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: min(340px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 8px 28px #17324d20;
+}
+.floating-car-help-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.floating-car-help-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.floating-car-help-heading button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 26px;
+  color: var(--muted);
+}
+.floating-car-help-panel p {
+  margin: 8px 0 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.floating-car-help-panel .button-primary {
+  width: 100%;
+  justify-content: center;
+}
+@media (max-width: 767px) {
+  .floating-car-help {
+    right: 16px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+  .floating-car-help > summary {
+    min-width: 54px;
+    padding: 14px;
+  }
+  .floating-car-help > summary > span {
+    display: none;
+  }
+}
