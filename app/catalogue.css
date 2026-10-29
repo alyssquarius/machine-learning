@@ -1183,3 +1183,44 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
     width: 100%;
   }
 }
+
+/* The smaller sticky header leaves more room for vehicles after scrolling. */
+.buyer-shell .workspace-header {
+  transition:
+    height 220ms ease,
+    min-height 220ms ease,
+    box-shadow 220ms ease;
+}
+.buyer-shell .workspace-header.is-scrolled {
+  height: 56px;
+  min-height: 56px;
+  box-shadow: 0 3px 12px #17324d12;
+}
+.buyer-top-nav a {
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+.buyer-top-nav a:hover {
+  background: var(--accent-soft);
+}
+.buyer-brand {
+  transition: scale 220ms ease;
+  transform-origin: left center;
+}
+.buyer-shell .is-scrolled .buyer-brand {
+  scale: 0.96;
+}
+@media (max-width: 639px) {
+  .buyer-shell .workspace-header.is-scrolled {
+    height: 56px;
+    min-height: 56px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .buyer-shell .workspace-header,
+  .buyer-brand,
+  .buyer-top-nav a {
+    transition: none;
+  }
+}

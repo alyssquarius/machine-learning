@@ -76,6 +76,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [profileAvatarUrl, setProfileAvatarUrl] = React.useState("");
   const [liveDisplayName, setLiveDisplayName] = React.useState("");
   const workspaceBodyRef = React.useRef<HTMLDivElement>(null);
+  const [headerCompact, setHeaderCompact] = React.useState(false);
+
+  React.useEffect(() => {
+    const scroller = workspaceBodyRef.current;
+    if (!scroller) return;
+    let frame = 0;
+    let compact = false;
+    const update = () => {
+      frame = 0;
+      const next = compact ? scroller.scrollTop > 24 : scroller.scrollTop > 96;
+      if (next !== compact) {
+        compact = next;
+        setHeaderCompact(next);
+      }
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      scroller.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   React.useEffect(() => {
     workspaceBodyRef.current?.scrollTo({ top: 0, behavior: "instant" });
@@ -394,7 +419,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className="workspace-body"
         inert={!buyerView && mobileViewport && mobileOpen}
       >
-        <header className="workspace-header">
+        <header className={`workspace-header ${headerCompact ? "is-scrolled" : ""}`}>
           {buyerView ? (
             <div className="buyer-header-main">
               <Link href="/beli" className="buyer-brand" aria-label="AutoBuyCars, cari mobil">
