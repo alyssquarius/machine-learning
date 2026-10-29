@@ -1241,3 +1241,66 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
   :is(.header-theme:hover, .icon-button:hover, .account-button:hover) {
   background: #ffffff1f;
 }
+
+/* Fade only the surface so navigation stays readable and usable throughout. */
+.catalogue-header-view .workspace-header {
+  isolation: isolate;
+  background: #123a5c;
+  transition:
+    border-color 360ms ease,
+    box-shadow 360ms ease;
+}
+.catalogue-header-view .workspace-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 360ms cubic-bezier(0.2, 0.65, 0.2, 1);
+}
+.catalogue-header-view .workspace-header.is-scrolled::before {
+  opacity: 1;
+}
+html.dark .catalogue-header-view .workspace-header::before {
+  background: #192f40;
+}
+.catalogue-header-view
+  .workspace-header
+  :is(
+    .buyer-brand,
+    .buyer-brand strong > span,
+    .buyer-brand .brand-symbol,
+    .buyer-top-nav a,
+    .icon-button,
+    .header-theme,
+    .header-theme svg,
+    .account-button,
+    .account-button strong,
+    .account-button small
+  ) {
+  transition:
+    color 360ms ease,
+    background-color 360ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .catalogue-header-view .workspace-header,
+  .catalogue-header-view .workspace-header::before,
+  .catalogue-header-view
+    .workspace-header
+    :is(
+      .buyer-brand,
+      .buyer-brand strong > span,
+      .buyer-brand .brand-symbol,
+      .buyer-top-nav a,
+      .icon-button,
+      .header-theme,
+      .header-theme svg,
+      .account-button,
+      .account-button strong,
+      .account-button small
+    ) {
+    transition: none;
+  }
+}
