@@ -649,7 +649,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main id="main-content" className="app-content" tabIndex={-1}>
-          {!authChecked ? (
+          {!authChecked && pathname !== "/beli" ? (
             <div className="workspace-loading" role="status">
               <span className="loading-mark">
                 <CarLogo className="h-7 w-7" />

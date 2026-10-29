@@ -100,7 +100,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setRole("guest");
         store.setOwner("");
-        router.replace("/login");
+        router.replace("/beli");
       } else if (event === "SIGNED_IN" && session?.user) {
         const eventVersion = ++authVersion;
         setAuthChecked(false);
@@ -144,8 +144,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setRole("guest");
-      // Selalu navigasi penuh kembali ke /login
-      window.location.href = "/login";
+      window.location.href = "/beli";
     }
   }
 

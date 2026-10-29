@@ -106,7 +106,11 @@ const user = { id: "user-1", email: "admin@autobuycars.com", user_metadata: {} }
 
 test("public catalogue remains accessible without authentication", async () => {
   fixture();
-  assert.equal((await updateSession(request("/beli"))).status, 200);
+  for (const path of ["/", "/beli", "/beli?q=Toyota", "/login"]) {
+    const response = await updateSession(request(path));
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("location"), null);
+  }
 });
 test("protected pages redirect guests and keep refreshed cookies", async () => {
   for (const path of [
