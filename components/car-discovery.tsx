@@ -32,14 +32,6 @@ export function CarDiscovery({
       <div className="discovery-section">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">Merek mobil</h3>
-          <button
-            type="button"
-            aria-pressed={brand === "all"}
-            onClick={() => onBrand("all")}
-            className="catalogue-clear-choice"
-          >
-            {brand === "all" ? "Semua merek" : "Reset merek"}
-          </button>
         </div>
         <p className="catalogue-mobile-brand-hint">Geser untuk melihat merek lainnya.</p>
         <div className="discovery-brands">

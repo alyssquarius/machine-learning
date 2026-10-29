@@ -632,94 +632,96 @@ export default function BeliClient() {
             ) : null}
           </div>
         ) : null}
-        <button
-          type="button"
-          onClick={() => setAdvancedOpen(!advancedOpen)}
-          aria-expanded={advancedOpen}
-          aria-controls="advanced-catalog-filters"
-          className="button-secondary self-start catalog-advanced-toggle"
-        >
-          <Icon name="cog" className="h-3.5 w-3.5" />
-          {advancedOpen ? "Tutup filter tambahan" : "Filter tambahan"}
-          <span className="catalogue-disclosure-chevron" aria-hidden="true">
-            ⌄
-          </span>
-        </button>
-        <div
-          className={`catalogue-advanced-shell ${advancedOpen ? "is-open" : ""}`}
-          inert={!advancedOpen}
-          aria-hidden={!advancedOpen}
-        >
-          <div className="catalogue-advanced-clip">
-            <div id="advanced-catalog-filters" className="advanced-filters is-open">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="discovery-model" className="filter-label">
-                    Model mobil
-                  </label>
-                  <select
-                    id="discovery-model"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    disabled={brand === "all"}
-                    className={`${selectCls} w-full disabled:opacity-50`}
-                  >
-                    <option value="all">
-                      {brand === "all" ? "Pilih merek terlebih dahulu" : "Semua model"}
-                    </option>
-                    {model !== "all" && !models.includes(model) ? (
-                      <option value={model}>{model}</option>
-                    ) : null}
-                    {models.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
+        <div className="catalogue-filter-actions">
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen(!advancedOpen)}
+            aria-expanded={advancedOpen}
+            aria-controls="advanced-catalog-filters"
+            className="button-secondary self-start catalog-advanced-toggle"
+          >
+            <Icon name="cog" className="h-3.5 w-3.5" />
+            {advancedOpen ? "Tutup filter tambahan" : "Filter tambahan"}
+            <span className="catalogue-disclosure-chevron" aria-hidden="true">
+              ⌄
+            </span>
+          </button>
+          <div
+            className={`catalogue-advanced-shell ${advancedOpen ? "is-open" : ""}`}
+            inert={!advancedOpen}
+            aria-hidden={!advancedOpen}
+          >
+            <div className="catalogue-advanced-clip">
+              <div id="advanced-catalog-filters" className="advanced-filters is-open">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="discovery-model" className="filter-label">
+                      Model mobil
+                    </label>
+                    <select
+                      id="discovery-model"
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                      disabled={brand === "all"}
+                      className={`${selectCls} w-full disabled:opacity-50`}
+                    >
+                      <option value="all">
+                        {brand === "all" ? "Pilih merek terlebih dahulu" : "Semua model"}
                       </option>
-                    ))}
-                  </select>
+                      {model !== "all" && !models.includes(model) ? (
+                        <option value={model}>{model}</option>
+                      ) : null}
+                      {models.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
 
-              <label className="catalog-filter-field">
-                <span>Tahun kendaraan</span>
-                <input
-                  aria-label="Tahun kendaraan"
-                  value={yearRaw}
-                  onChange={(e) => onYearChange(e.target.value)}
-                  onBeforeInput={(e) => {
-                    if (
-                      e.nativeEvent instanceof InputEvent &&
-                      e.nativeEvent.data &&
-                      /[^\d]/.test(e.nativeEvent.data)
-                    )
+                <label className="catalog-filter-field">
+                  <span>Tahun kendaraan</span>
+                  <input
+                    aria-label="Tahun kendaraan"
+                    value={yearRaw}
+                    onChange={(e) => onYearChange(e.target.value)}
+                    onBeforeInput={(e) => {
+                      if (
+                        e.nativeEvent instanceof InputEvent &&
+                        e.nativeEvent.data &&
+                        /[^\d]/.test(e.nativeEvent.data)
+                      )
+                        e.preventDefault();
+                    }}
+                    onPaste={(e) => {
+                      const t = e.clipboardData.getData("text").replace(/[^\d]/g, "").slice(0, 4);
                       e.preventDefault();
-                  }}
-                  onPaste={(e) => {
-                    const t = e.clipboardData.getData("text").replace(/[^\d]/g, "").slice(0, 4);
-                    e.preventDefault();
-                    onYearChange(t);
-                  }}
-                  list="buy-year-list"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={4}
-                  placeholder="Ketik tahun..."
-                  autoComplete="off"
-                  className={inputPlain}
-                />
-                <datalist id="buy-year-list">
-                  {years.map((y) => (
-                    <option key={y} value={y} />
-                  ))}
-                </datalist>
-              </label>
+                      onYearChange(t);
+                    }}
+                    list="buy-year-list"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={4}
+                    placeholder="Ketik tahun..."
+                    autoComplete="off"
+                    className={inputPlain}
+                  />
+                  <datalist id="buy-year-list">
+                    {years.map((y) => (
+                      <option key={y} value={y} />
+                    ))}
+                  </datalist>
+                </label>
+              </div>
             </div>
           </div>
+          <button type="submit" className="button-primary catalogue-submit catalogue-show-results">
+            <Icon name="search" className="h-4 w-4" />
+            Lihat {list.length} mobil
+          </button>
         </div>
-        <button type="submit" className="button-primary catalogue-submit catalogue-show-results">
-          <Icon name="search" className="h-4 w-4" />
-          Lihat {list.length} mobil
-        </button>
         <div className="catalogue-search-footer">
           <span>
             <Icon name="calculator" className="h-4 w-4" />

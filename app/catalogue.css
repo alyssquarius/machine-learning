@@ -1407,3 +1407,47 @@ html.dark .catalogue-header-view .workspace-header::before {
     font-size: 18px;
   }
 }
+
+.catalogue-filter-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 16px;
+}
+.catalogue-filter-actions .catalog-advanced-toggle {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  min-height: 48px;
+}
+.catalogue-filter-actions .catalogue-show-results {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+.catalogue-filter-actions .catalogue-advanced-shell {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: 0;
+}
+.catalogue-filter-actions .catalogue-advanced-shell.is-open {
+  margin-top: 14px;
+}
+.catalogue-search-page .catalogue-search-footer {
+  margin-top: 0;
+  padding-top: 14px;
+}
+@media (max-width: 639px) {
+  .catalogue-filter-actions {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .catalogue-filter-actions .catalog-advanced-toggle {
+    width: 100%;
+  }
+  .catalogue-filter-actions .catalogue-show-results {
+    grid-column: 1;
+    grid-row: 3;
+    margin-top: 12px;
+  }
+}

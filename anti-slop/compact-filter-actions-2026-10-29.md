@@ -1,0 +1,3 @@
+# Compact filter actions
+AntiSlop during. Grouped additional filter toggle and results CTA on one desktop row; expanded fields occupy following row. Mobile retains stacked controls and full-width results action. Reduced footer spacing. Removed redundant Semua merek control as explicitly requested; brand toggle, active chips and Reset filter still clear selections.
+Delivery gate PASS for scope: TypeScript and diff checks passed. Browser verified desktop buttons share identical top coordinate; additional filter disclosure opens and closes. Screenshot /tmp/autobuycars-compact-filter-actions.png (before redundant brand control removal). No new assets or claims.
