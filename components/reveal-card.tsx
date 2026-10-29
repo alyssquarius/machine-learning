@@ -5,10 +5,12 @@ export function RevealCard({
   children,
   className = "",
   focusRef,
+  delay = 0,
 }: {
   children: React.ReactNode;
   className?: string;
   focusRef?: React.Ref<HTMLDivElement>;
+  delay?: number;
 }) {
   const element = React.useRef<HTMLDivElement>(null);
   const [waiting, setWaiting] = React.useState(false);
@@ -25,7 +27,7 @@ export function RevealCard({
           observer.disconnect();
         }
       },
-      { threshold: 0.06 },
+      { threshold: 0.06, rootMargin: "0px 0px -24px 0px" },
     );
     observer.observe(target);
     const show = () => {
@@ -47,6 +49,7 @@ export function RevealCard({
         if (typeof focusRef === "function") focusRef(node);
         else if (focusRef) focusRef.current = node;
       }}
+      style={{ "--reveal-delay": `${Math.min(180, Math.max(0, delay))}ms` } as React.CSSProperties}
       tabIndex={-1}
       className={`viewport-reveal ${waiting ? "reveal-waiting" : "reveal-visible"} ${className}`}
       onFocusCapture={() => setWaiting(false)}
