@@ -14,13 +14,22 @@ import { Icon } from "@/components/icons";
 import { useRole } from "@/components/role-provider";
 import { CarDiscovery } from "@/components/car-discovery";
 import {
-  CAR_BRANDS,
   DISCOVERY_GROUPS,
   vehicleBrand,
   vehicleModel,
   matchesDiscovery,
 } from "@/lib/vehicle-discovery";
 import { PRICE_PRESETS, resolveBuyYearValue } from "@/lib/market";
+import { RevealCard } from "@/components/reveal-card";
+import {
+  CAR_VIEWS_KEY,
+  readCarViews,
+  incrementCarView,
+  recommendCars,
+  sortByLocalInterest,
+} from "@/lib/car-recommendations";
+import { fmtRp } from "@/lib/format";
+import { DemoPhotoCredit } from "@/components/demo-photo-credit";
 
 const inputCls =
   "w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-white dark:focus:ring-white";
@@ -62,6 +71,43 @@ export default function BeliClient() {
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [offerId, setOfferId] = React.useState<string | null>(null);
   const [buyId, setBuyId] = React.useState<string | null>(null);
+  const [viewCounts, setViewCounts] = React.useState<Record<string, number>>({});
+  const lastCountedDetail = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    const sync = () => {
+      try {
+        setViewCounts(readCarViews(localStorage.getItem(CAR_VIEWS_KEY)));
+      } catch {
+        /* Recommendations remain available without storage. */
+      }
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+  React.useEffect(() => {
+    if (!detailId) {
+      lastCountedDetail.current = null;
+      return;
+    }
+    if (!store.get(detailId) || lastCountedDetail.current === detailId) return;
+    lastCountedDetail.current = detailId;
+    let previous = viewCounts;
+    try {
+      previous = readCarViews(localStorage.getItem(CAR_VIEWS_KEY));
+    } catch {
+      /* Retain session counts. */
+    }
+    const next = incrementCarView(previous, detailId);
+    try {
+      localStorage.setItem(CAR_VIEWS_KEY, JSON.stringify(next));
+    } catch {
+      /* Counts are optional. */
+    }
+    setViewCounts(next);
+  }, [detailId, store.ready]);
+  const [pagination, setPagination] = React.useState({ key: "", count: 12, focusIndex: 0 });
+  const revealedCarRef = React.useRef<HTMLDivElement>(null);
   const resultsRef = React.useRef<HTMLParagraphElement>(null);
   const locTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const yearTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -70,7 +116,6 @@ export default function BeliClient() {
     () => store.all().filter((c) => c.status === "running"),
     [store.cars],
   );
-  const brands = [...new Set([...CAR_BRANDS, ...available.map(vehicleBrand)])];
   const models = [
     ...new Set(
       available
@@ -244,10 +289,15 @@ export default function BeliClient() {
     if (maxN != null) out = out.filter((c) => Number(c.price) <= maxN);
     if (sort === "cheap") out.sort((a, b) => a.price - b.price);
     else if (sort === "exp") out.sort((a, b) => b.price - a.price);
-    else if (sort === "love") out.sort((a, b) => (b.interest || 0) - (a.interest || 0));
+    else if (sort === "love")
+      out = sortByLocalInterest(
+        out,
+        viewCounts,
+        store.favorites().map((car) => car.id),
+      );
     else out.sort((a, b) => b.createdAt - a.createdAt);
     return out;
-  }, [available, brand, model, group, q, cat, sort, min, max, loc, year]);
+  }, [available, brand, model, group, q, cat, sort, min, max, loc, year, viewCounts]);
 
   const dirty =
     brand !== "all" ||
@@ -338,66 +388,82 @@ export default function BeliClient() {
     }
   }
 
+  const paginationKey = JSON.stringify([q, brand, model, group, cat, sort, min, max, loc, year]);
+  if (pagination.key !== paginationKey) {
+    setPagination({ key: paginationKey, count: 12, focusIndex: 0 });
+  }
+  const visibleCount = pagination.key === paginationKey ? pagination.count : 12;
+  const visibleCars = list.slice(0, visibleCount);
+  const nextCount = Math.min(12, list.length - visibleCars.length);
+  const suggestions = recommendCars(
+    list,
+    viewCounts,
+    store.favorites().map((car) => car.id),
+  );
+  React.useEffect(() => {
+    if (pagination.key === paginationKey && pagination.focusIndex > 0)
+      revealedCarRef.current?.focus({ preventScroll: true });
+  }, [pagination, paginationKey]);
+  function viewResults() {
+    resultsRef.current?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+      block: "start",
+    });
+    resultsRef.current?.focus({ preventScroll: true });
+  }
+
   return (
-    <div className={role === "buyer" || role === "guest" ? "buyer-catalog" : ""}>
+    <div
+      className={`catalogue-search-page ${role === "buyer" || role === "guest" ? "buyer-catalog" : ""}`}
+    >
       <section className="hero-panel catalog-hero">
         <div className="catalog-intro">
-          <h1>
-            Mobil pilihanmu.
-            <br />
-            Cerita berikutnya.
-          </h1>
-          <p>
-            Temukan mobil yang cocok untuk keseharianmu.
-            <br className="hidden sm:block" /> Mulai dari model, kebutuhan, atau anggaran.
-          </p>
-          <div className="catalog-hero-actions">
-            <a href="#pilihan-mobil" className="button-primary">
-              Lihat pilihan mobil
+          <h1>Cari mobil yang cocok untukmu.</h1>
+          <p>Sesuaikan kebutuhan dan anggaran. Pilihan berikutnya dimulai di sini.</p>
+          {list.length > 0 ? (
+            <a className="catalogue-suggestion-link" href="#saran-mobil">
+              Lihat saran mobil <span aria-hidden="true">↓</span>
             </a>
-            <Link href="/simulasi" className="catalog-text-link">
-              Hitung cicilan <span aria-hidden="true">›</span>
-            </Link>
-          </div>
+          ) : null}
         </div>
         <div className="catalog-hero-image">
           <Image
-            src="/images/car-hero.jpg"
-            alt="Detail bodi dan spoiler mobil sport putih"
+            src="/images/catalogue-road.jpg"
+            alt=""
             fill
             priority
-            sizes="(max-width: 639px) 100vw, 1200px"
+            sizes="(max-width: 1200px) 100vw, 1200px"
             className="object-cover"
           />
-          <span>Setiap detail. Sebuah pilihan.</span>
         </div>
       </section>
-      {available.some((c) => c.isDemo) && (
-        <p className="catalog-demo-note mb-5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
-          Katalog demo: foto referensi model, harga dan spesifikasi contoh. Mobil tidak untuk
-          dijual.
-        </p>
-      )}
-      <div
-        id="pilihan-mobil"
-        className="catalog-results-heading mb-5 flex flex-wrap items-center justify-between gap-3"
+      <form
+        className="surface filter-bar buyer-search flex flex-col gap-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          viewResults();
+        }}
       >
-        <div>
-          <p className="eyebrow mb-1!">KATALOG KENDARAAN</p>
-          <h2 className="text-base font-semibold">{list.length} mobil tersedia</h2>
+        <div className="catalogue-need-options" role="group" aria-label="Pilih kebutuhan mobil">
+          {[{ id: "all", label: "Semua mobil", icon: "car" }, ...DISCOVERY_GROUPS].map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={group === option.id}
+              onClick={() => setGroup(option.id)}
+            >
+              <Icon name={option.icon} className="h-5 w-5" />
+              <span>{option.label}</span>
+            </button>
+          ))}
         </div>
-        <Link href="/simulasi" className="button-secondary">
-          <Icon name="calculator" className="h-4 w-4" />
-          Hitung cicilan
-        </Link>
-      </div>
-
-      <div className="surface filter-bar buyer-search flex flex-col gap-3">
-        <label htmlFor="catalog-search" className="text-sm font-semibold">
-          Mobil apa yang kamu cari?
-        </label>
-        <div className="grid grid-cols-2 gap-3 md:flex md:flex-row">
+        <div className="catalogue-search-fields grid grid-cols-2 gap-3 md:flex md:flex-row">
           <div className="relative col-span-2 flex-1">
+            <label htmlFor="catalog-search" className="catalogue-field-label">
+              Nama mobil atau kota
+            </label>
             <svg
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
               viewBox="0 0 20 20"
@@ -427,7 +493,7 @@ export default function BeliClient() {
               onChange={(e) => setCat(e.target.value)}
               className={selectCls}
             >
-              <option value="all">Semua kategori</option>
+              <option value="all">Semua tipe</option>
               {[...new Set([...CATEGORIES, ...cats])].map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -446,10 +512,42 @@ export default function BeliClient() {
               <option value="new">Terbaru</option>
               <option value="cheap">Termurah</option>
               <option value="exp">Termahal</option>
-              <option value="love">Paling diminati</option>
+              <option value="love">Minat di browser</option>
             </select>
           </label>
+          <button type="submit" className="button-primary catalogue-submit">
+            <Icon name="search" className="h-4 w-4" />
+            Cari mobil
+          </button>
         </div>
+        <div className="catalogue-budget-row" role="group" aria-label="Pilih anggaran mobil">
+          <span className="catalogue-budget-label">Anggaran</span>
+          <div className="catalog-price-options">
+            {PRICE_PRESETS.map((p) => (
+              <button
+                type="button"
+                key={p.id}
+                onClick={() => applyPreset(p.id)}
+                aria-pressed={preset === p.id}
+                className="filter-pill"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {dirty ? (
+            <button type="button" onClick={resetFilters} className="catalogue-reset">
+              Reset filter
+            </button>
+          ) : null}
+        </div>
+        <CarDiscovery
+          cars={available}
+          brand={brand}
+          category={cat}
+          onBrand={chooseBrand}
+          onCategory={setCat}
+        />
         <button
           type="button"
           onClick={() => setAdvancedOpen(!advancedOpen)}
@@ -458,215 +556,148 @@ export default function BeliClient() {
           className="button-secondary self-start catalog-advanced-toggle"
         >
           <Icon name="cog" className="h-3.5 w-3.5" />
-          {advancedOpen ? "Tutup filter tambahan" : "Filter lainnya"}
+          {advancedOpen ? "Tutup filter rinci" : "Filter rinci"}
+          <span className="catalogue-disclosure-chevron" aria-hidden="true">
+            ⌄
+          </span>
         </button>
         <div
-          id="advanced-catalog-filters"
-          className={`advanced-filters ${advancedOpen ? "is-open" : ""}`}
+          className={`catalogue-advanced-shell ${advancedOpen ? "is-open" : ""}`}
+          inert={!advancedOpen}
+          aria-hidden={!advancedOpen}
         >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label htmlFor="discovery-brand" className="filter-label">
-                Merek mobil
+          <div className="catalogue-advanced-clip">
+            <div id="advanced-catalog-filters" className="advanced-filters is-open">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="discovery-model" className="filter-label">
+                    Model mobil
+                  </label>
+                  <select
+                    id="discovery-model"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                    disabled={brand === "all"}
+                    className={`${selectCls} w-full disabled:opacity-50`}
+                  >
+                    <option value="all">
+                      {brand === "all" ? "Pilih merek terlebih dahulu" : "Semua model"}
+                    </option>
+                    {model !== "all" && !models.includes(model) ? (
+                      <option value={model}>{model}</option>
+                    ) : null}
+                    {models.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <label className="catalog-filter-field">
+                <span>Harga minimum (Rp)</span>
+                <input
+                  aria-label="Harga minimum"
+                  value={min}
+                  onChange={(e) => {
+                    setMin(e.target.value.replace(/[^\d]/g, ""));
+                    setPreset("custom");
+                  }}
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  placeholder="Harga min (Rp)"
+                  className={inputPlain}
+                />
               </label>
-              <select
-                id="discovery-brand"
-                value={brand}
-                onChange={(e) => chooseBrand(e.target.value)}
-                className={`${selectCls} w-full`}
-              >
-                <option value="all">Semua merek</option>
-                {brand !== "all" && !brands.includes(brand) ? (
-                  <option value={brand}>{brand}</option>
-                ) : null}
-                {brands.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="discovery-model" className="filter-label">
-                Model mobil
+              <label className="catalog-filter-field">
+                <span>Harga maksimum (Rp)</span>
+                <input
+                  aria-label="Harga maksimum"
+                  value={max}
+                  onChange={(e) => {
+                    setMax(e.target.value.replace(/[^\d]/g, ""));
+                    setPreset("custom");
+                  }}
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  placeholder="Harga maks (Rp)"
+                  className={inputPlain}
+                />
               </label>
-              <select
-                id="discovery-model"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                disabled={brand === "all"}
-                className={`${selectCls} w-full disabled:opacity-50`}
-              >
-                <option value="all">
-                  {brand === "all" ? "Pilih merek terlebih dahulu" : "Semua model"}
-                </option>
-                {model !== "all" && !models.includes(model) ? (
-                  <option value={model}>{model}</option>
-                ) : null}
-                {models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+              <label className="catalog-filter-field">
+                <span>Kota kendaraan</span>
+                <input
+                  aria-label="Kota kendaraan"
+                  value={locRaw}
+                  onChange={(e) => onLocChange(e.target.value)}
+                  list="buy-loc-list"
+                  type="text"
+                  placeholder="Ketik & pilih kota..."
+                  autoComplete="off"
+                  className={inputPlain}
+                />
+                <datalist id="buy-loc-list">
+                  {[...new Set([...INDONESIA_CITIES, ...usedCities])]
+                    .sort((a, b) => a.localeCompare(b, "id"))
+                    .map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                </datalist>
+              </label>
+              <label className="catalog-filter-field">
+                <span>Tahun kendaraan</span>
+                <input
+                  aria-label="Tahun kendaraan"
+                  value={yearRaw}
+                  onChange={(e) => onYearChange(e.target.value)}
+                  onBeforeInput={(e) => {
+                    if (
+                      e.nativeEvent instanceof InputEvent &&
+                      e.nativeEvent.data &&
+                      /[^\d]/.test(e.nativeEvent.data)
+                    )
+                      e.preventDefault();
+                  }}
+                  onPaste={(e) => {
+                    const t = e.clipboardData.getData("text").replace(/[^\d]/g, "").slice(0, 4);
+                    e.preventDefault();
+                    onYearChange(t);
+                  }}
+                  list="buy-year-list"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  placeholder="Ketik tahun..."
+                  autoComplete="off"
+                  className={inputPlain}
+                />
+                <datalist id="buy-year-list">
+                  {years.map((y) => (
+                    <option key={y} value={y} />
+                  ))}
+                </datalist>
+              </label>
+              {min !== "" && max !== "" && Number(min) > Number(max) ? (
+                <p role="alert" className="catalog-filter-error">
+                  Harga maksimum harus sama atau lebih besar dari harga minimum.
+                </p>
+              ) : null}
             </div>
           </div>
-
-          <label className="catalog-filter-field">
-            <span>Harga minimum (Rp)</span>
-            <input
-              aria-label="Harga minimum"
-              value={min}
-              onChange={(e) => {
-                setMin(e.target.value.replace(/[^\d]/g, ""));
-                setPreset("custom");
-              }}
-              type="number"
-              min={0}
-              inputMode="numeric"
-              placeholder="Harga min (Rp)"
-              className={inputPlain}
-            />
-          </label>
-          <label className="catalog-filter-field">
-            <span>Harga maksimum (Rp)</span>
-            <input
-              aria-label="Harga maksimum"
-              value={max}
-              onChange={(e) => {
-                setMax(e.target.value.replace(/[^\d]/g, ""));
-                setPreset("custom");
-              }}
-              type="number"
-              min={0}
-              inputMode="numeric"
-              placeholder="Harga maks (Rp)"
-              className={inputPlain}
-            />
-          </label>
-          <label className="catalog-filter-field">
-            <span>Kota kendaraan</span>
-            <input
-              aria-label="Kota kendaraan"
-              value={locRaw}
-              onChange={(e) => onLocChange(e.target.value)}
-              list="buy-loc-list"
-              type="text"
-              placeholder="Ketik & pilih kota..."
-              autoComplete="off"
-              className={inputPlain}
-            />
-            <datalist id="buy-loc-list">
-              {[...new Set([...INDONESIA_CITIES, ...usedCities])]
-                .sort((a, b) => a.localeCompare(b, "id"))
-                .map((c) => (
-                  <option key={c} value={c} />
-                ))}
-            </datalist>
-          </label>
-          <label className="catalog-filter-field">
-            <span>Tahun kendaraan</span>
-            <input
-              aria-label="Tahun kendaraan"
-              value={yearRaw}
-              onChange={(e) => onYearChange(e.target.value)}
-              onBeforeInput={(e) => {
-                if (
-                  e.nativeEvent instanceof InputEvent &&
-                  e.nativeEvent.data &&
-                  /[^\d]/.test(e.nativeEvent.data)
-                )
-                  e.preventDefault();
-              }}
-              onPaste={(e) => {
-                const t = e.clipboardData.getData("text").replace(/[^\d]/g, "").slice(0, 4);
-                e.preventDefault();
-                onYearChange(t);
-              }}
-              list="buy-year-list"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={4}
-              placeholder="Ketik tahun..."
-              autoComplete="off"
-              className={inputPlain}
-            />
-            <datalist id="buy-year-list">
-              {years.map((y) => (
-                <option key={y} value={y} />
-              ))}
-            </datalist>
-          </label>
-          {min !== "" && max !== "" && Number(min) > Number(max) ? (
-            <p role="alert" className="catalog-filter-error">
-              Harga maksimum harus sama atau lebih besar dari harga minimum.
-            </p>
-          ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="catalog-price-options flex flex-wrap gap-2">
-            {PRICE_PRESETS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => applyPreset(p.id)}
-                aria-pressed={preset === p.id}
-                className={`filter-pill rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                  preset === p.id
-                    ? "border-zinc-950 bg-zinc-950 text-white shadow-xs dark:border-white dark:bg-white dark:text-zinc-950"
-                    : "border-gray-300 text-gray-600 hover:border-gray-400 hover:text-black dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-          {dirty ? (
-            <button
-              onClick={resetFilters}
-              className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 transition hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400"
-            >
-              <svg
-                className="h-3.5 w-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Reset filter
-            </button>
-          ) : null}
+        <div className="catalogue-search-footer">
+          <span>
+            <Icon name="calculator" className="h-4 w-4" />
+            Sudah punya anggaran?
+          </span>
+          <Link href="/simulasi">Hitung perkiraan cicilan</Link>
         </div>
-      </div>
+      </form>
 
-      <details className="catalog-browse-options mb-5 rounded-xl border border-sky-100 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold">
-          Pilih berdasarkan kebutuhan, merek, atau tipe{" "}
-          <span className="ml-1 text-xs font-normal text-slate-500">(opsional)</span>
-        </summary>
-        <CarDiscovery
-          cars={available}
-          brand={brand}
-          category={cat}
-          group={group}
-          onBrand={chooseBrand}
-          onCategory={setCat}
-          onGroup={setGroup}
-          resultCount={list.length}
-          onViewResults={() => {
-            resultsRef.current?.scrollIntoView({
-              behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-                ? "instant"
-                : "smooth",
-              block: "start",
-            });
-            resultsRef.current?.focus({ preventScroll: true });
-          }}
-        />
-      </details>
       {activeFilters.length ? (
         <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Kelompok aktif">
           <span className="text-[11px] text-slate-500">Dipilih:</span>
@@ -691,14 +722,88 @@ export default function BeliClient() {
           </button>
         </div>
       ) : null}
+      {suggestions.cars.length > 0 ? (
+        <section
+          id="saran-mobil"
+          className="catalogue-suggestions"
+          aria-labelledby="suggestions-title"
+        >
+          <div className="catalogue-suggestions-heading">
+            <div>
+              <h2 id="suggestions-title">
+                {suggestions.hasActivity ? "Mobil yang kamu minati" : "Saran untuk mulai mencari"}
+              </h2>
+              <p>
+                {suggestions.hasActivity
+                  ? "Favoritmu ditampilkan lebih dulu, lalu mobil yang paling sering kamu buka di browser ini."
+                  : "Pilihan dari beberapa tipe mobil dalam hasil pencarian. Belum ada data minat di browser ini."}
+              </p>
+            </div>
+          </div>
+          <div className="catalogue-suggestions-grid">
+            {suggestions.cars.map((car) => (
+              <RevealCard key={car.id} className="catalogue-suggestion-item">
+                <button
+                  type="button"
+                  className="catalogue-suggestion-button"
+                  aria-label={`Lihat saran ${car.title}`}
+                  onClick={() => setDetailId(car.id)}
+                >
+                  <img
+                    src={car.image || imageFor(car.category)}
+                    width={180}
+                    height={130}
+                    alt={car.title}
+                    loading="lazy"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = imageFor(car.category);
+                    }}
+                  />
+                  <span className="catalogue-suggestion-copy">
+                    <small>{car.isDemo ? "Data demo" : car.category}</small>
+                    <strong>{car.title}</strong>
+                    <span>{fmtRp(car.price)}</span>
+                    <small>
+                      {viewCounts[car.id] > 0
+                        ? `Dibuka ${viewCounts[car.id]} kali di browser ini`
+                        : `${car.year} · ${car.category}`}
+                    </small>
+                  </span>
+                </button>
+                <DemoPhotoCredit car={car} />
+              </RevealCard>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      <div
+        id="pilihan-mobil"
+        className="catalog-results-heading mb-5 flex flex-wrap items-center justify-between gap-3"
+      >
+        <div>
+          <h2 className="text-base font-semibold">{list.length} mobil sesuai pilihanmu</h2>
+          <p className="page-description">Buka foto untuk melihat spesifikasi dan detail mobil.</p>
+        </div>
+        <span className="catalogue-result-count">
+          {visibleCars.length} dari {list.length} mobil
+        </span>
+      </div>
+      {available.some((c) => c.isDemo) && (
+        <p className="catalog-demo-note">
+          Katalog demo: foto referensi model, harga dan spesifikasi contoh. Mobil tidak untuk
+          dijual.
+        </p>
+      )}
       <p
         ref={resultsRef}
         tabIndex={-1}
         aria-live="polite"
         className="scroll-mt-24 outline-none mb-4 text-xs text-slate-500"
       >
-        Menampilkan <strong className="font-semibold">{list.length}</strong> dari {available.length}{" "}
-        mobil aktif{activeGroup ? ` · ${activeGroup.label}` : ""}.
+        Menampilkan <strong className="font-semibold">{visibleCars.length}</strong> dari{" "}
+        {list.length} hasil
+        {activeGroup ? ` · ${activeGroup.label}` : ""}.
       </p>
       {list.length === 0 ? (
         <div className="surface">
@@ -734,18 +839,49 @@ export default function BeliClient() {
           </EmptyState>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {list.map((c) => (
-            <CarCard
+        <div
+          id="catalogue-cars"
+          className="catalogue-car-grid grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3"
+        >
+          {visibleCars.map((c, index) => (
+            <RevealCard
               key={c.id}
-              car={{ ...c, image: c.image || imageFor(c.category) }}
-              onDetail={setDetailId}
-              onBuy={setBuyId}
-              onOffer={setOfferId}
-            />
+              className="catalogue-car-item"
+              focusRef={index === pagination.focusIndex ? revealedCarRef : undefined}
+            >
+              <CarCard
+                car={{ ...c, image: c.image || imageFor(c.category) }}
+                onDetail={setDetailId}
+                onBuy={setBuyId}
+                onOffer={setOfferId}
+              />
+            </RevealCard>
           ))}
         </div>
       )}
+      {nextCount > 0 ? (
+        <div className="catalogue-load-more">
+          <p>Masih ada {list.length - visibleCars.length} mobil lainnya.</p>
+          <button
+            type="button"
+            className="button-secondary"
+            aria-controls="catalogue-cars"
+            onClick={() =>
+              setPagination({
+                key: paginationKey,
+                count: visibleCount + 12,
+                focusIndex: visibleCars.length,
+              })
+            }
+          >
+            Lihat {nextCount} mobil berikutnya
+          </button>
+        </div>
+      ) : list.length > 0 ? (
+        <p className="catalogue-end-note">
+          Semua {list.length} mobil sesuai pencarian sudah ditampilkan.
+        </p>
+      ) : null}
 
       {role !== "admin" ? (
         <section className="surface discovery-help">

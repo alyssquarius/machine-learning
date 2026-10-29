@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./refinements.css";
+import "./catalogue.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StoreProvider } from "@/components/store-provider";
 import { ToastProvider } from "@/components/toast";
