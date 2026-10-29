@@ -1,0 +1,4 @@
+# Buyer filter flow
+AntiSlop during. Removed duplicate city input; main search still matches city (Bandung browser check returns5). Order: search/type, brand, budget, optional model/year, single results CTA with current count. Mobile search placeholder shortened to avoid clipping.
+Fast280ms ease-out scrolling targets the actual nearest scrolling container, cancels on manual wheel/touch/key input, respects reduced motion, cleans up on unmount and moves keyboard focus to destination. Modified link clicks preserve native link behavior.
+Delivery gate PASS for scope: production build passed, TypeScript passed after scroll-container correction. Browser verified suggestion target top88px with focus, city input absent, main city search yields5, and filter screenshot /tmp/autobuycars-filter-order.png. No new assets or claims.

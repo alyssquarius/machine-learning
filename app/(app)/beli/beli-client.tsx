@@ -214,11 +214,6 @@ export default function BeliClient() {
     [],
   );
 
-  function onLocChange(v: string) {
-    setLocRaw(v);
-    if (locTimer.current) clearTimeout(locTimer.current);
-    locTimer.current = setTimeout(() => setLoc(resolveBuyLocValue(v, usedCities)), 250);
-  }
   function onYearChange(v: string) {
     const digits = v.replace(/[^\d]/g, "").slice(0, 4);
     setYearRaw(digits);
@@ -406,14 +401,64 @@ export default function BeliClient() {
     if (pagination.key === paginationKey && pagination.focusIndex > 0)
       revealedCarRef.current?.focus({ preventScroll: true });
   }, [pagination, paginationKey]);
+  const cancelScroll = React.useRef<(() => void) | null>(null);
+  React.useEffect(() => () => cancelScroll.current?.(), []);
+  function fastScrollTo(target: HTMLElement) {
+    cancelScroll.current?.();
+    let parent = target.parentElement;
+    while (
+      parent &&
+      !(
+        /auto|scroll/.test(getComputedStyle(parent).overflowY) &&
+        parent.scrollHeight > parent.clientHeight
+      )
+    )
+      parent = parent.parentElement;
+    const container = parent;
+    const start = container ? container.scrollTop : window.scrollY;
+    const viewportTop = container ? container.getBoundingClientRect().top : 0;
+    const maxScroll = container
+      ? container.scrollHeight - container.clientHeight
+      : document.documentElement.scrollHeight - window.innerHeight;
+    const end = Math.max(
+      0,
+      Math.min(start + target.getBoundingClientRect().top - viewportTop - 88, maxScroll),
+    );
+    const scroll = (top: number) => {
+      if (container) container.scrollTo({ top, behavior: "instant" });
+      else window.scrollTo({ top, behavior: "instant" });
+    };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      scroll(end);
+      target.focus({ preventScroll: true });
+      return;
+    }
+    let frame = 0;
+    const started = performance.now();
+    const cancel = () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("wheel", cancel);
+      window.removeEventListener("touchstart", cancel);
+      window.removeEventListener("keydown", cancel);
+      cancelScroll.current = null;
+    };
+    cancelScroll.current = cancel;
+    window.addEventListener("wheel", cancel, { passive: true });
+    window.addEventListener("touchstart", cancel, { passive: true });
+    window.addEventListener("keydown", cancel);
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - started) / 280);
+      scroll(start + (end - start) * (1 - Math.pow(1 - progress, 3)));
+      if (progress < 1) frame = requestAnimationFrame(step);
+      else {
+        cancel();
+        target.focus({ preventScroll: true });
+      }
+    };
+    frame = requestAnimationFrame(step);
+  }
   function viewResults() {
-    resultsRef.current?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
-      block: "start",
-    });
-    resultsRef.current?.focus({ preventScroll: true });
+    if (resultsRef.current) fastScrollTo(resultsRef.current);
   }
 
   return (
@@ -425,7 +470,23 @@ export default function BeliClient() {
           <h1>Cari mobil yang cocok untukmu.</h1>
           <p>Sesuaikan kebutuhan dan anggaran. Pilihan berikutnya dimulai di sini.</p>
           {list.length > 0 ? (
-            <a className="catalogue-suggestion-link" href="#saran-mobil">
+            <a
+              className="catalogue-suggestion-link"
+              href="#saran-mobil"
+              onClick={(event) => {
+                if (
+                  event.button !== 0 ||
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.shiftKey ||
+                  event.altKey
+                )
+                  return;
+                event.preventDefault();
+                const target = document.getElementById("saran-mobil");
+                if (target) fastScrollTo(target);
+              }}
+            >
               Lihat saran mobil <span aria-hidden="true">↓</span>
             </a>
           ) : null}
@@ -474,7 +535,7 @@ export default function BeliClient() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               type="search"
-              placeholder="Contoh: Toyota Avanza atau Bandung"
+              placeholder="Cari model atau kota"
               className={inputCls}
             />
           </div>
@@ -494,12 +555,8 @@ export default function BeliClient() {
               ))}
             </select>
           </label>
-
-          <button type="submit" className="button-primary catalogue-submit">
-            <Icon name="search" className="h-4 w-4" />
-            Cari mobil
-          </button>
         </div>
+        <CarDiscovery cars={available} brand={brand} onBrand={chooseBrand} />
         <div className="catalogue-budget-row" role="group" aria-label="Pilih anggaran mobil">
           <span className="catalogue-budget-label">Anggaran</span>
           <div className="catalog-price-options">
@@ -571,7 +628,6 @@ export default function BeliClient() {
             ) : null}
           </div>
         ) : null}
-        <CarDiscovery cars={available} brand={brand} onBrand={chooseBrand} />
         <button
           type="button"
           onClick={() => setAdvancedOpen(!advancedOpen)}
@@ -620,26 +676,6 @@ export default function BeliClient() {
               </div>
 
               <label className="catalog-filter-field">
-                <span>Kota kendaraan</span>
-                <input
-                  aria-label="Kota kendaraan"
-                  value={locRaw}
-                  onChange={(e) => onLocChange(e.target.value)}
-                  list="buy-loc-list"
-                  type="text"
-                  placeholder="Ketik & pilih kota..."
-                  autoComplete="off"
-                  className={inputPlain}
-                />
-                <datalist id="buy-loc-list">
-                  {[...new Set([...INDONESIA_CITIES, ...usedCities])]
-                    .sort((a, b) => a.localeCompare(b, "id"))
-                    .map((c) => (
-                      <option key={c} value={c} />
-                    ))}
-                </datalist>
-              </label>
-              <label className="catalog-filter-field">
                 <span>Tahun kendaraan</span>
                 <input
                   aria-label="Tahun kendaraan"
@@ -676,6 +712,10 @@ export default function BeliClient() {
             </div>
           </div>
         </div>
+        <button type="submit" className="button-primary catalogue-submit catalogue-show-results">
+          <Icon name="search" className="h-4 w-4" />
+          Lihat {list.length} mobil
+        </button>
         <div className="catalogue-search-footer">
           <span>
             <Icon name="calculator" className="h-4 w-4" />
@@ -712,6 +752,7 @@ export default function BeliClient() {
       {suggestions.cars.length > 0 ? (
         <section
           id="saran-mobil"
+          tabIndex={-1}
           className="catalogue-suggestions"
           aria-labelledby="suggestions-title"
         >

@@ -1165,3 +1165,21 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
     display: none;
   }
 }
+
+.catalogue-search-page .catalogue-show-results {
+  align-self: flex-end;
+  min-width: 200px;
+  min-height: 50px;
+  justify-content: center;
+}
+.catalogue-suggestions:focus {
+  outline: none;
+}
+@media (max-width: 639px) {
+  .catalogue-search-page .catalogue-search-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .catalogue-search-page .catalogue-show-results {
+    width: 100%;
+  }
+}
