@@ -467,8 +467,12 @@ export default function BeliClient() {
     >
       <section className="hero-panel catalog-hero">
         <div className="catalog-intro">
+          <span className="catalogue-hero-label">Katalog mobil</span>
           <h1>Cari mobil yang cocok untukmu.</h1>
-          <p>Sesuaikan kebutuhan dan anggaran. Pilihan berikutnya dimulai di sini.</p>
+          <p>
+            Bandingkan model, harga, dan tahun kendaraan. Temukan pilihan sesuai kebutuhan dan
+            anggaranmu.
+          </p>
           {list.length > 0 ? (
             <a
               className="catalogue-suggestion-link"
@@ -510,8 +514,8 @@ export default function BeliClient() {
         }}
       >
         <div className="catalogue-filter-intro">
-          <h2>Temukan mobil pilihanmu</h2>
-          <p>Cukup isi yang kamu butuhkan. Hasil langsung mengikuti pilihanmu.</p>
+          <h2>Mulai pencarianmu</h2>
+          <p>Pilih yang penting untukmu. Jumlah mobil akan mengikuti filter yang dipilih.</p>
         </div>
         <div className="catalogue-search-fields grid grid-cols-2 gap-3 md:flex md:flex-row">
           <div className="relative col-span-2 flex-1">

@@ -1304,3 +1304,106 @@ html.dark .catalogue-header-view .workspace-header::before {
     transition: none;
   }
 }
+
+.catalogue-search-page .catalog-hero {
+  min-height: 352px;
+  border-radius: 0 0 20px 20px;
+}
+.catalogue-search-page .catalog-intro {
+  padding: 40px 40px 82px;
+}
+.catalogue-hero-label {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #c9e4f8;
+}
+.catalogue-search-page .catalog-hero h1 {
+  max-width: 540px;
+  margin-bottom: 18px;
+  font-size: clamp(34px, 3.6vw, 46px);
+  letter-spacing: -1.5px;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.catalogue-search-page .catalog-hero .catalog-intro > p {
+  max-width: 440px;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.catalogue-search-page .catalogue-suggestion-link {
+  gap: 18px;
+  min-height: 44px;
+  margin-top: 20px;
+  padding: 0 16px;
+  border: 1px solid #ffffff70;
+  border-radius: 8px;
+  text-decoration: none;
+  background: #123a5c55;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+.catalogue-search-page .catalogue-suggestion-link:hover {
+  background: #123a5c;
+  border-color: #fff;
+}
+.catalogue-search-page .catalog-hero-image::after {
+  background: linear-gradient(
+    90deg,
+    rgba(6, 35, 60, 0.94),
+    rgba(6, 35, 60, 0.72) 46%,
+    rgba(6, 35, 60, 0.12) 78%
+  );
+}
+.catalogue-search-page .buyer-search {
+  margin-top: -36px;
+}
+.catalogue-filter-intro {
+  padding-top: 26px;
+}
+.catalogue-filter-intro h2 {
+  font-size: 20px;
+  letter-spacing: -0.4px;
+}
+@media (max-width: 639px) {
+  .catalogue-search-page .catalog-hero {
+    min-height: 320px;
+    border-radius: 0 0 16px 16px;
+  }
+  .catalogue-search-page .catalog-intro {
+    padding: 26px 22px 64px;
+  }
+  .catalogue-hero-label {
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .catalogue-search-page .catalog-hero h1 {
+    max-width: 350px;
+    font-size: 32px;
+    letter-spacing: -1px;
+    margin-bottom: 14px;
+  }
+  .catalogue-search-page .catalog-hero .catalog-intro > p {
+    max-width: 330px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .catalogue-search-page .catalogue-suggestion-link {
+    margin-top: 16px;
+  }
+  .catalogue-search-page .catalog-hero-image::after {
+    background: rgba(6, 35, 60, 0.8);
+  }
+  .catalogue-search-page .buyer-search {
+    margin-top: -28px;
+  }
+  .catalogue-filter-intro {
+    padding-top: 20px;
+  }
+  .catalogue-filter-intro h2 {
+    font-size: 18px;
+  }
+}
