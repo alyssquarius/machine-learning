@@ -1,10 +1,10 @@
-/* Sky surfaces connect the search tools; white keeps the vehicle results readable. */
+/* Ocean blue identifies actions; white surfaces keep vehicle results readable. */
 :root {
   --canvas: #f4faff;
   --hero: #e3f3ff;
   --ink: #17324d;
   --muted: #50677c;
-  --accent: #0073ce;
+  --accent: #006b9e;
   --accent-soft: #e8f5ff;
   --line: #d8e8f4;
 }
@@ -17,7 +17,7 @@
 }
 .buyer-brand strong > span,
 .buyer-brand .brand-symbol {
-  color: #0073ce;
+  color: var(--accent);
 }
 .buyer-top-nav a[aria-current="page"] {
   color: #0067b8;
@@ -131,11 +131,13 @@
   padding-inline: 24px;
   flex-shrink: 0;
   font-size: 15px;
-  background: #0073ce;
-  border-color: #0073ce;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
 }
 .catalogue-search-page .catalogue-submit:hover {
-  background: #005fae;
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 .catalogue-search-page .catalog-advanced-toggle {
   min-height: 36px;
@@ -1255,7 +1257,7 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: #fff;
+  background: var(--panel);
   opacity: 0;
   pointer-events: none;
   transition: opacity 360ms cubic-bezier(0.2, 0.65, 0.2, 1);
@@ -1264,7 +1266,7 @@ html.dark .catalogue-search-page .catalog-hero .catalog-intro > p {
   opacity: 1;
 }
 html.dark .catalogue-header-view .workspace-header::before {
-  background: #192f40;
+  background: var(--panel);
 }
 .catalogue-header-view
   .workspace-header

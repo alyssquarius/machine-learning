@@ -603,11 +603,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
               {userOpen ? (
                 <div id="user-menu" className="header-dropdown account-menu">
-                  <div className="border-b border-gray-100 p-4 dark:border-zinc-800">
+                  <div className="account-menu-heading">
                     <p className="truncate text-sm font-bold">{displayName}</p>
-                    <p className="mt-1 truncate text-xs text-gray-500">
-                      {email || "Masuk untuk menyimpan pilihanmu"}
-                    </p>
+                    <p className="mt-1 text-xs">{email || "Masuk untuk menyimpan pilihanmu"}</p>
                   </div>
                   <div className="p-2">
                     {isGuest ? (
